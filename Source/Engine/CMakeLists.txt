@@ -12,6 +12,9 @@ add_library(McBopomofoLMLib
         AssociatedPhrasesV2.cpp
         ByteBlockBackedDictionary.h
         ByteBlockBackedDictionary.cpp
+        ContextualScorer.h
+        DeterministicContextualScorer.h
+        DeterministicContextualScorer.cpp
         McBopomofoLM.cpp
         McBopomofoLM.h
         MemoryMappedFile.h
@@ -30,6 +33,8 @@ add_library(McBopomofoLMLib
         UserPhrasesLM.cpp
         VariantAnnotator.h
         VariantAnnotator.cpp)
+
+target_include_directories(McBopomofoLMLib PUBLIC ..)
 
 if (ENABLE_CLANG_TIDY)
     set_target_properties(McBopomofoLMLib PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
@@ -86,6 +91,7 @@ if (ENABLE_TEST)
         add_executable(McBopomofoLMLibTest
                 AssociatedPhrasesV2Test.cpp
                 ByteBlockBackedDictionaryTest.cpp
+                DeterministicContextualScorerTest.cpp
                 McBopomofoLMTest.cpp
                 MemoryMappedFileTest.cpp
                 ParselessLMTest.cpp
@@ -95,6 +101,7 @@ if (ENABLE_TEST)
                 UserOverrideModelTest.cpp
                 UserPhrasesLMTest.cpp
                 VariantAnnotatorTest.cpp)
+        target_include_directories(McBopomofoLMLibTest PRIVATE ..)
         target_link_libraries(McBopomofoLMLibTest GTest::gtest_main McBopomofoLMLib gramambular2_lib)
         include(GoogleTest)
         gtest_discover_tests(McBopomofoLMLibTest)
