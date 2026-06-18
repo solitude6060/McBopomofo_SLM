@@ -1,0 +1,528 @@
+// Copyright (c) 2026 McBopomofo SLM Authors
+//
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+// HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+
+// Phase 0 baseline evaluator.
+// readings from JSONL test fixtures, records accuracy, candidate rank,
+// latency, and missing readings.
+//   ./evaluator /path/to/data.txt < test_cases.jsonl
+//   ./evaluator /path/to/data.txt /path/to/test_cases.jsonl
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <filesystem>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+#include "Engine/McBopomofoLM.h"
+#include "Engine/gramambular2/reading_grid.h"
+
+namespace fs = std::filesystem;
+
+// No dependency on nlohmann/json.
+
+static std::string trim(const std::string& s) {
+  size_t start = 0;
+  while (start < s.size() && (s[start] == ' ' || s[start] == '\t')) ++start;
+  size_t end = s.size();
+  while (end > start && (s[end - 1] == ' ' || s[end - 1] == '\t')) --end;
+  return s.substr(start, end - start);
+}
+
+static std::string unescapeJSON(const std::string& s) {
+  std::string out;
+  out.reserve(s.size());
+  for (size_t i = 0; i < s.size(); ++i) {
+    if (s[i] == '\\' && i + 1 < s.size()) {
+      switch (s[i + 1]) {
+        case '"':  out.push_back('"'); ++i; break;
+        case '\\': out.push_back('\\'); ++i; break;
+        case '/':  out.push_back('/'); ++i; break;
+        case 'n':  out.push_back('\n'); ++i; break;
+        case 't':  out.push_back('\t'); ++i; break;
+        case 'u': {
+          // Simplified: skip 4 hex digits for uXXXX
+          if (i + 5 < s.size()) {
+            // We don't fully decode; treat as raw for now
+            out.push_back('?');
+            i += 5;
+          }
+          break;
+        }
+        default: out.push_back(s[i + 1]); ++i; break;
+      }
+    } else {
+      out.push_back(s[i]);
+    }
+  }
+  return out;
+}
+
+// Handles both "key": "value" and "key":"value"
+static std::string extractJSONString(const std::string& json, const std::string& key) {
+  std::string search = "\"" + key + "\":";
+  size_t pos = json.find(search);
+  if (pos == std::string::npos) return "";
+  pos = json.find('"', pos + search.size());
+  if (pos == std::string::npos) return "";
+  size_t end = pos + 1;
+  while (end < json.size()) {
+    if (json[end] == '"' && json[end - 1] != '\\') break;
+    ++end;
+  }
+  if (end >= json.size()) return "";
+  return unescapeJSON(json.substr(pos + 1, end - pos - 1));
+}
+
+static std::vector<std::string> extractJSONStringArray(const std::string& json,
+                                                       const std::string& key) {
+  std::vector<std::string> result;
+  std::string search = "\"" + key + "\":[";
+  size_t pos = json.find(search);
+  if (pos == std::string::npos) return result;
+  pos += search.size();
+  // Skip whitespace
+  while (pos < json.size() && (json[pos] == ' ' || json[pos] == '\t')) ++pos;
+  if (pos >= json.size() || json[pos] != '"') {
+    // Might be empty array
+    if (json[pos] == ']') return result;
+    return result;
+  }
+  // Parse string elements
+  while (pos < json.size()) {
+    // Find opening quote
+    while (pos < json.size() && json[pos] != '"') {
+      if (json[pos] == ']') return result; // end of array
+      ++pos;
+    }
+    if (pos >= json.size()) break;
+    size_t start = pos + 1;
+    size_t end = start;
+    while (end < json.size()) {
+      if (json[end] == '\\') { end += 2; continue; }
+      if (json[end] == '"') break;
+      ++end;
+    }
+    if (end >= json.size()) break;
+    result.push_back(unescapeJSON(json.substr(start, end - start)));
+    pos = end + 1;
+    // Skip to next element or ']'
+    while (pos < json.size() && json[pos] != ',' && json[pos] != ']') ++pos;
+    if (pos < json.size() && json[pos] == ',') ++pos;
+  }
+  return result;
+}
+
+static bool extractJSONBool(const std::string& json, const std::string& key,
+                            bool defaultVal = false) {
+  std::string search = "\"" + key + "\":";
+  size_t pos = json.find(search);
+  if (pos == std::string::npos) return defaultVal;
+  pos += search.size();
+  while (pos < json.size() && (json[pos] == ' ' || json[pos] == '\t')) ++pos;
+  if (pos + 4 <= json.size() && json.substr(pos, 4) == "true") return true;
+  if (pos + 5 <= json.size() && json.substr(pos, 5) == "false") return false;
+  return defaultVal;
+}
+
+struct TestCase {
+  std::string id;
+  std::vector<std::string> readings;
+  std::string expected;
+  std::vector<std::string> protectedEnglishSpans;
+  bool redistributable;
+};
+
+static TestCase parseTestCase(const std::string& line) {
+  TestCase tc;
+  tc.id = extractJSONString(line, "id");
+  tc.readings = extractJSONStringArray(line, "readings");
+  tc.expected = extractJSONString(line, "expected");
+  tc.protectedEnglishSpans = extractJSONStringArray(line, "protected_english_spans");
+  tc.redistributable = extractJSONBool(line, "redistributable", true);
+  return tc;
+}
+
+struct CandidateInfo {
+  std::string value;
+  std::string reading;
+  double score;
+  size_t spanIndex;
+  size_t length;
+};
+
+struct PerCaseResult {
+  std::string id;
+  bool exactMatch = false;
+  size_t totalCJKChars = 0;
+  size_t matchedCJKChars = 0;
+  int targetRank = -1;        // 1-based rank of expected in all candidates; 0 = not found
+  int bestCandidateRank = -1; // rank of best candidate matching ANY expected token
+  uint64_t elapsedMicroseconds = 0;
+  bool missingReading = false;
+  size_t missingReadingIndex = 0;
+  std::string engineOutput;
+};
+
+static size_t countCJK(const std::string& s) {
+  size_t count = 0;
+  for (unsigned char c : s) {
+    // CJK Unified Ideographs range: U+4E00 to U+9FFF
+    // In UTF-8: 4E00 = E4 B8 80, 9FFF = E9 BF BF
+    // We detect 3-byte UTF-8 sequences in this range
+    if ((c & 0xF0) == 0xE0) {
+      // Start of 3-byte sequence
+      count++;
+    }
+  }
+  return count;
+}
+
+static void debugUTF8(const std::string& label, const std::string& s) {
+  fprintf(stderr, "[%s] bytes (%zu): ", label.c_str(), s.size());
+  for (unsigned char c : s) {
+    fprintf(stderr, "%02x ", c);
+  }
+  fprintf(stderr, "\n");
+}
+
+static double nodeTopScore(const Formosa::Gramambular2::ReadingGrid::NodePtr& node) {
+  auto unigrams = node->unigrams();
+  if (unigrams.empty()) return 0.0;
+  double best = unigrams[0].score();
+  for (const auto& u : unigrams) {
+    if (u.score() > best) best = u.score();
+  }
+  return best;
+}
+
+class Evaluator {
+ public:
+  explicit Evaluator(const char* dataPath) {
+    lm_ = std::make_shared<McBopomofo::McBopomofoLM>();
+    lm_->loadLanguageModel(dataPath);
+    if (!lm_->isDataModelLoaded()) {
+      fprintf(stderr, "FATAL: failed to load language model from %s\n", dataPath);
+      exit(1);
+    }
+  }
+
+  PerCaseResult evaluate(const TestCase& tc) {
+    PerCaseResult result;
+    result.id = tc.id;
+
+    Formosa::Gramambular2::ReadingGrid grid(
+        std::make_shared<Formosa::Gramambular2::ReadingGrid::ScoreRankedLanguageModel>(lm_));
+
+    for (size_t i = 0; i < tc.readings.size(); ++i) {
+      bool ok = grid.insertReading(tc.readings[i]);
+      if (!ok) {
+        result.missingReading = true;
+        result.missingReadingIndex = i;
+        return result;
+      }
+    }
+
+    Formosa::Gramambular2::ReadingGrid::WalkResult walkResult = grid.walk();
+    result.elapsedMicroseconds = walkResult.elapsedMicroseconds;
+
+    auto values = walkResult.valuesAsStrings();
+    std::string engineStr;
+    for (const auto& v : values) {
+      engineStr += v;
+    }
+    result.engineOutput = engineStr;
+
+    result.exactMatch = (engineStr == tc.expected);
+
+    std::string engineCJK;
+    std::string expectedCJK;
+    for (size_t i = 0; i < engineStr.size(); ) {
+      unsigned char c = static_cast<unsigned char>(engineStr[i]);
+      if ((c & 0xF0) == 0xE0) { // 3-byte UTF-8 = CJK
+        engineCJK += engineStr.substr(i, 3);
+        i += 3;
+      } else {
+        ++i;
+      }
+    }
+    for (size_t i = 0; i < tc.expected.size(); ) {
+      unsigned char c = static_cast<unsigned char>(tc.expected[i]);
+      if ((c & 0xF0) == 0xE0) {
+        expectedCJK += tc.expected.substr(i, 3);
+        i += 3;
+      } else {
+        ++i;
+      }
+    }
+
+    result.totalCJKChars = expectedCJK.size() / 3;
+    size_t matched = 0;
+    for (size_t ei = 0; ei + 3 <= engineCJK.size(); ei += 3) {
+      for (size_t xi = 0; xi + 3 <= expectedCJK.size(); xi += 3) {
+        if (engineCJK.substr(ei, 3) == expectedCJK.substr(xi, 3)) {
+          matched++;
+          break;
+        }
+      }
+    }
+    result.matchedCJKChars = matched;
+
+    // We check candidates at each position
+    result.targetRank = findTargetRank(grid, tc);
+    result.bestCandidateRank = findBestCandidateRank(grid, tc);
+
+    return result;
+  }
+
+ private:
+  int findTargetRank(Formosa::Gramambular2::ReadingGrid& grid,
+                     const TestCase& tc) {
+    std::string firstExpectedChar;
+    for (size_t i = 0; i < tc.expected.size(); ) {
+      unsigned char c = static_cast<unsigned char>(tc.expected[i]);
+      if ((c & 0xF0) == 0xE0) {
+        firstExpectedChar = tc.expected.substr(i, 3);
+        break;
+      }
+      ++i;
+    }
+    if (firstExpectedChar.empty()) return 0;
+
+    for (size_t loc = 0; loc < grid.length(); ++loc) {
+      auto candidates = grid.candidatesAt(loc);
+      for (int rank = 0; rank < static_cast<int>(candidates.size()); ++rank) {
+        if (candidates[rank].value == firstExpectedChar) {
+          return rank + 1; // 1-based
+        }
+        for (size_t i = 0; i + 3 <= candidates[rank].value.size(); i += 3) {
+          if (candidates[rank].value.substr(i, 3) == firstExpectedChar) {
+            return rank + 1;
+          }
+        }
+      }
+    }
+    return 0;
+  }
+
+  int findBestCandidateRank(Formosa::Gramambular2::ReadingGrid& grid,
+                            const TestCase& tc) {
+    int bestRank = 999;
+    for (size_t loc = 0; loc < grid.length(); ++loc) {
+      auto candidates = grid.candidatesAt(loc);
+      for (int rank = 0; rank < static_cast<int>(candidates.size()); ++rank) {
+        for (size_t ei = 0; ei + 3 <= tc.expected.size(); ei += 3) {
+          std::string expChar = tc.expected.substr(ei, 3);
+          for (size_t ci = 0; ci + 3 <= candidates[rank].value.size(); ci += 3) {
+            if (candidates[rank].value.substr(ci, 3) == expChar) {
+              if (rank + 1 < bestRank) bestRank = rank + 1;
+            }
+          }
+        }
+      }
+    }
+    return bestRank == 999 ? 0 : bestRank;
+  }
+
+  std::shared_ptr<McBopomofo::McBopomofoLM> lm_;
+};
+
+static std::string escapeJSON(const std::string& s) {
+  std::string out;
+  out.reserve(s.size());
+  for (char c : s) {
+    switch (c) {
+      case '"': out += "\\\""; break;
+      case '\\': out += "\\\\"; break;
+      case '\n': out += "\\n"; break;
+      case '\t': out += "\\t"; break;
+      default: out += c;
+    }
+  }
+  return out;
+}
+
+static void printResultJSON(const PerCaseResult& r) {
+  printf("{\"id\":\"%s\",\"exact_match\":%s,\"total_cjk_chars\":%zu,"
+         "\"matched_cjk_chars\":%zu,\"target_rank\":%d,"
+         "\"best_candidate_rank\":%d,\"elapsed_us\":%llu,"
+         "\"missing_reading\":%s,\"engine_output\":\"%s\"}\n",
+         r.id.c_str(),
+         r.exactMatch ? "true" : "false",
+         r.totalCJKChars,
+         r.matchedCJKChars,
+         r.targetRank,
+         r.bestCandidateRank,
+         static_cast<unsigned long long>(r.elapsedMicroseconds),
+         r.missingReading ? "true" : "false",
+         escapeJSON(r.engineOutput).c_str());
+}
+
+static void printSummaryJSON(const std::vector<PerCaseResult>& results, uint64_t totalElapsed) {
+  size_t total = results.size();
+  size_t exactMatch = 0;
+  size_t missingReading = 0;
+  size_t totalCJK = 0;
+  size_t matchedCJK = 0;
+  int totalRank = 0;
+  int rankCount = 0;
+  std::vector<uint64_t> latencies;
+
+  for (const auto& r : results) {
+    if (r.exactMatch) exactMatch++;
+    if (r.missingReading) missingReading++;
+    totalCJK += r.totalCJKChars;
+    matchedCJK += r.matchedCJKChars;
+
+    if (r.targetRank > 0) {
+      totalRank += r.targetRank;
+      rankCount++;
+    }
+
+    if (!r.missingReading) {
+      latencies.push_back(r.elapsedMicroseconds);
+    }
+  }
+
+  std::sort(latencies.begin(), latencies.end());
+
+  double p50 = latencies.empty() ? 0 : latencies[latencies.size() * 50 / 100];
+  double p95 = latencies.empty() ? 0 : latencies[latencies.size() * 95 / 100];
+  double p99 = latencies.empty() ? 0 : latencies[latencies.size() * 99 / 100];
+
+  double sentenceAcc = total > 0 ? (100.0 * exactMatch / total) : 0.0;
+  double tokenAcc = totalCJK > 0 ? (100.0 * matchedCJK / totalCJK) : 0.0;
+  double meanRank = rankCount > 0 ? (1.0 * totalRank / rankCount) : 0.0;
+
+  // We classify by checking which cases failed
+  size_t contextAmbiguity = 0;
+  size_t unknown = 0;
+  for (const auto& r : results) {
+    if (!r.exactMatch && !r.missingReading) {
+      contextAmbiguity++;
+    }
+  }
+
+  printf("{\"engine\":\"baseline-mcbopomofo\","
+         "\"data_version\":\"2026-06-18\","
+         "\"total_cases\":%zu,"
+         "\"exact_sentence_accuracy\":%.4f,"
+         "\"token_accuracy\":%.4f,"
+         "\"exact_match_count\":%zu,"
+         "\"candidate_rank_mean\":%.2f,"
+         "\"missing_reading_cases\":%zu,"
+         "\"latency_microseconds_p50\":%.0f,"
+         "\"latency_microseconds_p95\":%.0f,"
+         "\"latency_microseconds_p99\":%.0f,"
+         "\"total_elapsed_seconds\":%.3f,"
+         "\"context_ambiguity_errors\":%zu,"
+         "\"unknown_errors\":%zu}\n",
+         total,
+         sentenceAcc,
+         tokenAcc,
+         exactMatch,
+         meanRank,
+         missingReading,
+         p50, p95, p99,
+         totalElapsed / 1000000.0,
+         contextAmbiguity,
+         unknown);
+}
+
+int main(int argc, char* argv[]) {
+  if (argc < 2) {
+    fprintf(stderr, "Usage: %s <data.txt> [test_cases.jsonl]\n", argv[0]);
+    fprintf(stderr, "  If test_cases.jsonl is omitted, reads from stdin.\n");
+    return 1;
+  }
+
+  const char* dataPath = argv[1];
+  if (!fs::exists(dataPath)) {
+    fprintf(stderr, "FATAL: data.txt not found at %s\n", dataPath);
+    return 1;
+  }
+
+  Evaluator evaluator(dataPath);
+
+  FILE* input = stdin;
+  bool closeInput = false;
+  if (argc >= 3) {
+    input = fopen(argv[2], "r");
+    if (!input) {
+      fprintf(stderr, "FATAL: cannot open %s\n", argv[2]);
+      return 1;
+    }
+    closeInput = true;
+  }
+
+  std::vector<PerCaseResult> results;
+  char buffer[65536];
+  uint64_t totalStart = 0;
+
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  totalStart = ts.tv_sec * 1000000ULL + ts.tv_nsec / 1000;
+
+  size_t lineNum = 0;
+  while (fgets(buffer, sizeof(buffer), input)) {
+    lineNum++;
+    std::string line(buffer);
+    while (!line.empty() && (line.back() == '\n' || line.back() == '\r')) {
+      line.pop_back();
+    }
+    if (line.empty()) continue;
+
+    TestCase tc;
+    try {
+      tc = parseTestCase(line);
+    } catch (const std::exception& e) {
+      fprintf(stderr, "WARN: parse error at line %zu: %s\n", lineNum, e.what());
+      continue;
+    }
+    if (tc.id.empty()) {
+      fprintf(stderr, "WARN: empty id at line %zu, skipping\n", lineNum);
+      continue;
+    }
+
+    PerCaseResult r = evaluator.evaluate(tc);
+    results.push_back(r);
+    printResultJSON(r);
+  }
+
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  uint64_t totalEnd = ts.tv_sec * 1000000ULL + ts.tv_nsec / 1000;
+
+  printSummaryJSON(results, totalEnd - totalStart);
+
+  if (closeInput) {
+    fclose(input);
+  }
+
+  return 0;
+}
