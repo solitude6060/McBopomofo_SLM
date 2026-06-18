@@ -103,11 +103,15 @@ static std::string extractJSONString(const std::string& json, const std::string&
 static std::vector<std::string> extractJSONStringArray(const std::string& json,
                                                        const std::string& key) {
   std::vector<std::string> result;
-  std::string search = "\"" + key + "\":[";
+  std::string search = "\"" + key + "\":";
   size_t pos = json.find(search);
   if (pos == std::string::npos) return result;
   pos += search.size();
-  // Skip whitespace
+  // Skip whitespace between : and [
+  while (pos < json.size() && (json[pos] == ' ' || json[pos] == '\t')) ++pos;
+  if (pos >= json.size() || json[pos] != '[') return result;
+  ++pos; // skip '['
+  // Skip whitespace after [
   while (pos < json.size() && (json[pos] == ' ' || json[pos] == '\t')) ++pos;
   if (pos >= json.size() || json[pos] != '"') {
     // Might be empty array

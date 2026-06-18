@@ -1,0 +1,1 @@
+{"engine":"baseline-mcbopomofo","data_version":"2026-06-18","total_cases":60,"exact_sentence_accuracy":71.6667,"token_accuracy":94.9519,"exact_match_count":43,"candidate_rank_mean":1.00,"missing_reading_cases":0,"latency_microseconds_p50":1,"latency_microseconds_p95":2,"latency_microseconds_p99":2,"total_elapsed_seconds":0.035,"context_ambiguity_errors":17,"unknown_errors":0}
