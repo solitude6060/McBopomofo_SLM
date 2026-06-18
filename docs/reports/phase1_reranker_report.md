@@ -109,3 +109,28 @@ step should be either (1) fixing the bigram override mechanism in the scorer
 or (2) evaluating whether 88% english_mixed + 98.33% Taiwan accuracy is
 sufficient to proceed toward Phase 2 SLM or macOS runtime integration without
 further scorer investment.
+
+---
+
+## Phase 1.1 Update
+
+A mechanics fix applied on top of the Phase 1 commit (see
+`phase1_1_reranker_mechanics.md`):
+
+| Metric | Phase 1.1 | Delta |
+|--------|----------:|:------|
+| `taiwan_ambiguous` exact | **100.00% (60/60)** | +1.67pp (fixes tw-amb-042) |
+| `english_mixed` exact | **96.00% (24/25)** | +8.00pp (fixes en-mix-003/011) |
+| Taiwan latency p50 / p95 / p99 | 134 / 312 / 356 μs | Higher due to scorer overhead |
+| English latency p50 / p95 / p99 | 103 / 294 / 317 μs | Higher but well under 2 ms |
+
+The fix was a one-line change: `kOverrideValueWithScoreFromTopUnigram` →
+`kOverrideValueWithHighScore` in `evaluator.cpp`, which forces Viterbi to
+honor corrections from the scorer. The remaining English error
+(`en-mix-006`: `做鏡像` not overriding `作境相`) is a genuine dictionary
+coverage limitation — neither `做` nor `鏡像` are in the BPMFMappings as
+standalone entries for their respective readings. No deterministic rule can
+safely distinguish these.
+
+All quality gates remain passed. Phase 1.1 is the terminal state for the
+deterministic reranker evaluator prototype.

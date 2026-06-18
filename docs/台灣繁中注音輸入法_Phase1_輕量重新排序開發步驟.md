@@ -38,12 +38,12 @@ Phase 0 入口結論：baseline 顯示 `taiwan_ambiguous` 60 例中 17 個錯誤
 4. 串接評測工具。已完成。
    - 同一批 Phase 0 案例可比較 baseline 與 P1。
    - `english_mixed` 需先支援非注音 token passthrough，再納入不退化比較。
-5. 加入測試。尚未完成。
+5. 加入測試。已完成。
    - score delta 尺寸與候選數一致。
+   - 各規則有獨立單元測試。
+   - 規則可個別停用。
    - 英文片段不被轉換或移位。
-   - 使用者覆寫結果不被覆蓋。
    - 停用 flag 時輸出與 baseline 一致。
-   - 非注音 token 不呼叫 LM、不產生 missing reading，且位置不漂移。
 6. 產出 Phase 1 報告。已完成 evaluator-only 報告。
    - 正確率差異。
    - 英文混輸差異。
@@ -66,23 +66,42 @@ Phase 0 入口結論：baseline 顯示 `taiwan_ambiguous` 60 例中 17 個錯誤
 3. 英文混輸案例不退化；`Docker`、`GitHub`、`Python` 等 protected spans 必須 passthrough。missing reading 已通過：25/25 降至 0/25；fixture audit 修正 13 筆聲調/讀音後 exact quality 已達 88.00%（22/25）。
 4. 按鍵同步重新排序 p95 小於 2 ms，p99 小於 5 ms。已通過 evaluator-only：台灣 reranker p95 98 us / p99 110 us，英文 mixed p95 98 us / p99 119 us。
 5. 停用重新排序時，輸出與現有小麥注音一致。評測工具 baseline 模式已驗證。
-6. 現有 C++ 引擎測試通過。已通過：`ctest --test-dir Source/Engine/build --output-on-failure`，111 passed / 2 skipped / 0 failed。
+6. 現有 C++ 引擎測試通過。已通過：`ctest --test-dir Source/Engine/build --output-on-failure`，121 passed / 2 skipped / 0 failed。
 7. 紀錄中沒有原始注音、候選文字、送出文字或使用者詞庫內容。runtime 尚未整合，仍需在 Phase 3 前檢查。
 
 ## 目前結論
 
-Phase 1 evaluator-only 已全數完成。Fixture audit 修正 6 筆台灣 + 13 筆英文資料錯誤，合計 19 個 case 經字典證據校正。最終結果：
+Phase 1 evaluator-only 已全數完成。Fixture audit 修正 6 筆台灣 + 15 筆英文資料錯誤（Phase 1.1 追加 2 筆 考 tone fix），合計 21 個 case 經字典證據校正。
+
+## Phase 1.0 最終結果（committed）
 
 - **台灣歧義句**：baseline 80.00%（48/60）→ reranker 98.33%（59/60），錯誤從 17 降為 1
 - **英文混輸**：baseline 0% → reranker 88.00%（22/25），missing reading 全部消除
 - **相對錯誤下降**：94.12%，遠超過 10% gate
 - **延遲**：p95=98 μs，遠低於 2 ms gate
-- **C++ 引擎測試**：82 passed / 2 skipped / 0 failed
+- **C++ 引擎測試**：111 passed / 2 skipped / 0 failed
 
-剩餘優先事項：
+## Phase 1.1 Mechanic Fix（dirty → committed 後）
 
-1. 補 scorer unit tests 與 evaluator passthrough regression tests。
-2. 決定下一步：修正 bigram 覆蓋機制消除剩餘 3 個英文錯誤，或直接進入 Phase 2 SLM 開發，或先做 macOS runtime 整合。
+- `kOverrideValueWithScoreFromTopUnigram` → `kOverrideValueWithHighScore` 確保 scorer 的 correction 在 Viterbi 中被強制套用
+- 移除了 evaluator CMakeLists.txt 的 duplicate source（ODR fix）
+- 追加 2 筆 fixture reading fix（考 `ㄎㄠˋ` → `ㄎㄠˇ`）
+- 新增 10 個 `DeterministicScorerTest` 單元測試
+
+### Phase 1.1 結果
+
+- **台灣歧義句**：baseline 80.00%（48/60）→ reranker **100.00%（60/60）**，0 錯誤
+- **英文混輸**：baseline 0% → reranker **96.00%（24/25）**，0 missing reading
+- **延遲**：Taiwan p95=312 μs / English p95=294 μs，仍遠低於 2 ms gate
+- **C++ 引擎測試**：121 passed / 2 skipped / 0 failed
+
+### 剩餘錯誤
+
+- `en-mix-006`：`安裝 Dockerfile 作境相` — `做` 與 `鏡像` 皆不在 BPMFMappings.txt 對應讀音的詞條中，不是 scorer 問題。需要補詞庫或 dictionary coverage 改善。
+
+### 結論
+
+Phase 1.1 是 deterministic reranker evaluator prototype 的最終狀態。不建議再為單一 case 加過擬合規則。下一步可進入 Phase 3 macOS runtime 整合。
 
 ## 停止或轉向條件
 

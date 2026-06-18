@@ -99,22 +99,61 @@
   ],
   "remaining_english_analysis": [
     {
-      "id": "en-mix-003",
-      "output": "請參靠 README 說明",
-      "category": "bigram_override",
-      "detail": "參考 bigram not overriding single-char path."
-    },
-    {
       "id": "en-mix-006",
       "output": "安裝 Dockerfile 作境相",
-      "category": "bigram_override",
-      "detail": "做/作 homophone + 鏡像 bigram not overriding."
-    },
-    {
-      "id": "en-mix-011",
-      "output": "參靠 StackOverflow 上的解答",
-      "category": "bigram_override",
-      "detail": "Same as en-mix-003."
+      "category": "dictionary_coverage",
+      "detail": "做 and 鏡像 not in BPMFMappings.txt for their respective readings. Scorer cannot boost unranked candidates."
     }
-  ]
+  ],
+  "phase1_1": {
+    "date": "2026-06-18T22:30:00+08:00",
+    "report": "docs/reports/phase1_1_reranker_mechanics.md",
+    "changes": {
+      "evaluator_override_type": "kOverrideValueWithScoreFromTopUnigram → kOverrideValueWithHighScore",
+      "fixture_reading_fixes": 2,
+      "fixture_fixed_case_ids": ["en-mix-003", "en-mix-011"],
+      "cmake_odr_fix": "removed duplicate DeterministicContextualScorer.cpp from evaluator add_executable"
+    },
+    "reranker": {
+      "taiwan_ambiguous": {
+        "total_cases": 60,
+        "exact_sentence_accuracy": 100.0,
+        "token_accuracy": 100.0,
+        "exact_match_count": 60,
+        "missing_reading_cases": 0,
+        "context_ambiguity_errors": 0,
+        "latency_microseconds_p50": 134,
+        "latency_microseconds_p95": 312,
+        "latency_microseconds_p99": 356
+      },
+      "english_mixed": {
+        "total_cases": 25,
+        "exact_sentence_accuracy": 96.0,
+        "token_accuracy": 97.3214,
+        "exact_match_count": 24,
+        "missing_reading_cases": 0,
+        "latency_microseconds_p50": 103,
+        "latency_microseconds_p95": 294,
+        "latency_microseconds_p99": 317
+      }
+    },
+    "fixed_taiwan_case_ids": [
+      "tw-amb-003", "tw-amb-005", "tw-amb-007", "tw-amb-010",
+      "tw-amb-013", "tw-amb-023", "tw-amb-025", "tw-amb-031",
+      "tw-amb-033", "tw-amb-034", "tw-amb-035", "tw-amb-037",
+      "tw-amb-041", "tw-amb-049", "tw-amb-053", "tw-amb-054",
+      "tw-amb-042"
+    ],
+    "remaining_taiwan_case_ids": [],
+    "remaining_english_case_ids": ["en-mix-006"],
+    "remaining_taiwan_analysis": [],
+    "remaining_english_analysis": [
+      {
+        "id": "en-mix-006",
+        "output": "安裝 Dockerfile 作境相",
+        "category": "dictionary_coverage",
+        "detail": "做 (ㄗㄨㄛˋ) and 鏡像 (ㄐㄧㄥˋ ㄒㄧㄤˋ) both absent from BPMFMappings.txt for their target readings. Not a scorer issue."
+      }
+    ]
+  }
 }
