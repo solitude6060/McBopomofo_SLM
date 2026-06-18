@@ -541,7 +541,7 @@ class Evaluator {
                        Formosa::Gramambular2::ReadingGrid::Candidate(
                            correction.reading, correction.value),
                        Formosa::Gramambular2::ReadingGrid::Node::OverrideType::
-                           kOverrideValueWithScoreFromTopUnigram) ||
+                           kOverrideValueWithHighScore) ||
                    overridden;
     }
     if (overridden) {

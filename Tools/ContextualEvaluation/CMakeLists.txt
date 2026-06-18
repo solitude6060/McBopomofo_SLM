@@ -20,7 +20,6 @@ endif()
 
 add_executable(evaluator
     evaluator.cpp
-    "${ENGINE_SRC_DIR}/DeterministicContextualScorer.cpp"
 )
 
 # evaluator.cpp uses "Engine/..." and "Engine/gramambular2/..." includes,
