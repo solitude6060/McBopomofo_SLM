@@ -17,6 +17,8 @@ and English-mixed desktop writing are first-class requirements.
 
 Duration: 1-2 weeks.
 
+Status: complete as of 2026-06-18.
+
 Deliverables:
 
 - Curated ambiguous Bopomofo sentence fixture set.
@@ -32,6 +34,17 @@ Exit criteria:
 - At least 50 curated cases exist.
 - At least 20 English-mixed Taiwan cases exist.
 - Current top failure categories are ranked by frequency.
+
+Baseline result:
+
+- 60 `taiwan_ambiguous` cases, 43 exact matches.
+- Exact sentence accuracy: 71.67%.
+- CJK token accuracy: 94.95%.
+- Mean candidate rank: 1.00.
+- Missing readings: 0 for pure Bopomofo cases.
+- Latency p50 / p95 / p99: 1 / 2 / 2 microseconds.
+- All 17 wrong cases are context ambiguity errors.
+- The 25 `english_mixed` cases are currently all missing-reading cases because non-Bopomofo tokens such as `Docker`, `GitHub`, and `Python` are sent into the LM. Phase 1 must add passthrough handling before treating English-mixed accuracy as a reranker metric.
 
 ## Phase 1: Deterministic Contextual Reranker
 
@@ -158,7 +171,7 @@ Exit criteria:
 
 | Gate | Continue If | Stop Or Pivot If |
 |---|---|---|
-| After Phase 0 | Baseline errors are measurable and dominated by contextual ambiguity | Failures are mostly missing dictionary entries or bugs unrelated to context |
+| After Phase 0 | Passed: baseline errors are measurable and dominated by contextual ambiguity | Pivot only if later corpus manifest or licensing audit fails |
 | After Phase 1 | Deterministic reranker improves accuracy with low latency | Improvement is negligible or causes user override regressions |
 | After Phase 2 | SLM materially beats deterministic reranker under latency budget on Taiwan and English-mixed fixtures | SLM is slower, unstable, only matches deterministic features, or regresses English-mixed text |
 | After Phase 3 | macOS dogfood confirms lower correction work | Users disable it due to latency, surprising candidates, or instability |

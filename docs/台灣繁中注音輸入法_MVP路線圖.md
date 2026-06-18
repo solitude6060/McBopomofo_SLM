@@ -10,6 +10,8 @@ MVP 成功不是「模型跑在輸入法裡」，而是以本機評測與實際�
 
 期間：1 到 2 週。
 
+狀態：已完成，基準報告日期 2026-06-18。
+
 交付：
 
 - 台灣繁中注音歧義句測試集。
@@ -27,8 +29,11 @@ MVP 成功不是「模型跑在輸入法裡」，而是以本機評測與實際�
 
 決策：
 
-- 若錯誤主要來自詞庫缺漏，先補詞庫。
-- 若錯誤主要來自上下文選字，進入 Phase 1。
+- 本次 `taiwan_ambiguous` baseline 共 60 例，43 例完全正確，句子正確率 71.67%，CJK token accuracy 94.95%。
+- p50 / p95 / p99 延遲為 1 / 2 / 2 μs，baseline 速度不是目前瓶頸。
+- 17 個錯誤皆為 context ambiguity；高頻問題集中在同音替換、missing bigram 與 segmentation artifact。
+- `english_mixed` 25 例目前全部是 missing reading，原因是 `Docker`、`GitHub`、`Python` 等非注音 token 無法直接丟進 LM；這不是模型問題，而是 Phase 1 必須先補的 passthrough 問題。
+- 因主要錯誤不是 SLM 能立即解決的 runtime 問題，下一步先進入 Phase 1 deterministic reranker 與英文片段保護。
 
 ## Phase 1：輕量上下文重新排序
 
@@ -161,7 +166,7 @@ MVP 成功不是「模型跑在輸入法裡」，而是以本機評測與實際�
 
 | 閘門 | 繼續條件 | 停止或轉向條件 |
 |---|---|---|
-| Phase 0 後 | 錯誤可量測，且主要是上下文歧義 | 主要是詞庫缺漏或非上下文問題 |
+| Phase 0 後 | 已通過：60 例台灣歧義 baseline 可重現，主要錯誤是上下文歧義 | 若後續資料 audit 發現授權或 manifest 問題，先修正資料治理 |
 | Phase 1 後 | P1 低延遲且改善明確 | 改善小或破壞使用者覆寫 |
 | Phase 2 後 | 模型明顯優於 P1 且符合延遲 | 模型慢、不穩、或英文混輸退化 |
 | Phase 3 後 | 實際使用者修正成本下降 | 使用者因延遲、候選意外、穩定性而停用 |

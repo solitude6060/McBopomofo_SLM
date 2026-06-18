@@ -175,6 +175,17 @@ candidate scores only. Adding new candidates is a later feature.
 
 ## Evaluation Harness
 
+Current Phase 0 baseline, generated on 2026-06-18:
+
+- 60 `taiwan_ambiguous` cases, 43 exact matches.
+- Exact sentence accuracy: 71.67%.
+- CJK token accuracy: 94.95%.
+- Mean candidate rank: 1.00.
+- Missing readings: 0 for pure Bopomofo cases.
+- Latency p50 / p95 / p99: 1 / 2 / 2 microseconds.
+- 17 wrong cases are context ambiguity errors.
+- `english_mixed` is not yet a reranker metric because all 25 cases currently fail as missing readings when non-Bopomofo tokens are inserted into the LM. Phase 1 must introduce protected-span passthrough.
+
 Command-line target:
 
 - macOS: C++ or mixed Objective-C++ test executable using the existing engine.

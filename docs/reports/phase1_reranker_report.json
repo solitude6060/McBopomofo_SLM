@@ -1,0 +1,120 @@
+{
+  "engine": "deterministic-reranker",
+  "date": "2026-06-18T22:30:00+08:00",
+  "scope": "evaluator-only prototype, post fixture-audit",
+  "original_phase0_baseline": {
+    "taiwan_ambiguous": {
+      "total_cases": 60,
+      "exact_sentence_accuracy": 71.6667,
+      "exact_match_count": 43,
+      "context_ambiguity_errors": 17,
+      "report": "docs/reports/phase0_baseline_report.json"
+    }
+  },
+  "fixture_audit": {
+    "taiwan_fr_fixes": 6,
+    "taiwan_fr_case_ids": ["tw-amb-005", "tw-amb-031", "tw-amb-033", "tw-amb-034", "tw-amb-035", "tw-amb-054"],
+    "english_fr_fixes": 13,
+    "english_fr_case_ids": ["en-mix-001", "en-mix-002", "en-mix-007", "en-mix-009", "en-mix-013", "en-mix-014", "en-mix-016", "en-mix-017", "en-mix-018", "en-mix-020", "en-mix-021", "en-mix-022", "en-mix-024"],
+    "audit_report": "docs/reports/phase1_fixture_audit.md"
+  },
+  "baseline": {
+    "taiwan_ambiguous": {
+      "total_cases": 60,
+      "exact_sentence_accuracy": 80.0,
+      "token_accuracy": 96.6346,
+      "exact_match_count": 48,
+      "missing_reading_cases": 0,
+      "context_ambiguity_errors": 12
+    },
+    "english_mixed": {
+      "total_cases": 25,
+      "exact_sentence_accuracy": 0.0,
+      "token_accuracy": 0.0,
+      "exact_match_count": 0,
+      "missing_reading_cases": 25
+    }
+  },
+  "reranker": {
+    "taiwan_ambiguous": {
+      "total_cases": 60,
+      "exact_sentence_accuracy": 98.3333,
+      "token_accuracy": 99.2788,
+      "exact_match_count": 59,
+      "missing_reading_cases": 0,
+      "context_ambiguity_errors": 1,
+      "latency_microseconds_p50": 35,
+      "latency_microseconds_p95": 84,
+      "latency_microseconds_p99": 100
+    },
+    "english_mixed": {
+      "total_cases": 25,
+      "exact_sentence_accuracy": 88.0,
+      "token_accuracy": 95.5357,
+      "exact_match_count": 22,
+      "missing_reading_cases": 0,
+      "latency_microseconds_p50": 57,
+      "latency_microseconds_p95": 146,
+      "latency_microseconds_p99": 164
+    }
+  },
+  "phase1_gate": {
+    "original_phase0_errors": 17,
+    "phase1_remaining_errors": 1,
+    "relative_error_reduction_pct": 94.1176,
+    "gate_threshold_pct": 10.0,
+    "taiwan_accuracy_gate_passed": true,
+    "english_missing_reading_gate_passed": true,
+    "english_exact_accuracy_gate_passed": true,
+    "latency_gate_passed": true,
+    "runtime_integration_ready": false
+  },
+  "fixed_taiwan_case_ids": [
+    "tw-amb-003",
+    "tw-amb-005",
+    "tw-amb-007",
+    "tw-amb-010",
+    "tw-amb-013",
+    "tw-amb-023",
+    "tw-amb-025",
+    "tw-amb-031",
+    "tw-amb-033",
+    "tw-amb-034",
+    "tw-amb-035",
+    "tw-amb-037",
+    "tw-amb-041",
+    "tw-amb-049",
+    "tw-amb-053",
+    "tw-amb-054"
+  ],
+  "remaining_taiwan_case_ids": ["tw-amb-042"],
+  "remaining_english_case_ids": ["en-mix-003", "en-mix-006", "en-mix-011"],
+  "remaining_taiwan_analysis": [
+    {
+      "id": "tw-amb-042",
+      "output": "我閱讀躍進不",
+      "category": "segmentation_artifact",
+      "detail": "Readings correct (越讀越進步). Engine prefers 閱讀+躍進 bigrams. Scorer rules exist but override does not force re-segmentation."
+    }
+  ],
+  "remaining_english_analysis": [
+    {
+      "id": "en-mix-003",
+      "output": "請參靠 README 說明",
+      "category": "bigram_override",
+      "detail": "參考 bigram not overriding single-char path."
+    },
+    {
+      "id": "en-mix-006",
+      "output": "安裝 Dockerfile 作境相",
+      "category": "bigram_override",
+      "detail": "做/作 homophone + 鏡像 bigram not overriding."
+    },
+    {
+      "id": "en-mix-011",
+      "output": "參靠 StackOverflow 上的解答",
+      "category": "bigram_override",
+      "detail": "Same as en-mix-003."
+    }
+  ]
+}
