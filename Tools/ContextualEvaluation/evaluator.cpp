@@ -34,12 +34,14 @@
 #include <cstring>
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "Engine/DeterministicContextualScorer.h"
 #include "Engine/McBopomofoLM.h"
 #include "Engine/gramambular2/reading_grid.h"
 
@@ -155,6 +157,62 @@ static bool extractJSONBool(const std::string& json, const std::string& key,
   return defaultVal;
 }
 
+static std::optional<uint32_t> nextCodepoint(const std::string& s, size_t* offset) {
+  if (offset == nullptr || *offset >= s.size()) {
+    return std::nullopt;
+  }
+  const unsigned char c = static_cast<unsigned char>(s[*offset]);
+  if (c < 0x80) {
+    ++(*offset);
+    return c;
+  }
+  if ((c & 0xE0) == 0xC0 && *offset + 1 < s.size()) {
+    uint32_t cp = ((c & 0x1F) << 6) |
+                  (static_cast<unsigned char>(s[*offset + 1]) & 0x3F);
+    *offset += 2;
+    return cp;
+  }
+  if ((c & 0xF0) == 0xE0 && *offset + 2 < s.size()) {
+    uint32_t cp = ((c & 0x0F) << 12) |
+                  ((static_cast<unsigned char>(s[*offset + 1]) & 0x3F) << 6) |
+                  (static_cast<unsigned char>(s[*offset + 2]) & 0x3F);
+    *offset += 3;
+    return cp;
+  }
+  if ((c & 0xF8) == 0xF0 && *offset + 3 < s.size()) {
+    uint32_t cp = ((c & 0x07) << 18) |
+                  ((static_cast<unsigned char>(s[*offset + 1]) & 0x3F) << 12) |
+                  ((static_cast<unsigned char>(s[*offset + 2]) & 0x3F) << 6) |
+                  (static_cast<unsigned char>(s[*offset + 3]) & 0x3F);
+    *offset += 4;
+    return cp;
+  }
+  ++(*offset);
+  return std::nullopt;
+}
+
+static bool isBopomofoCodepoint(uint32_t cp) {
+  return (cp >= 0x3100 && cp <= 0x312F) ||  // Bopomofo
+         (cp >= 0x31A0 && cp <= 0x31BF) ||  // Extended Bopomofo
+         cp == 0x02CA || cp == 0x02C7 || cp == 0x02CB || cp == 0x02D9;
+}
+
+static bool isBopomofoReading(const std::string& token) {
+  if (token.empty()) {
+    return false;
+  }
+  bool sawBopomofo = false;
+  size_t offset = 0;
+  while (offset < token.size()) {
+    std::optional<uint32_t> cp = nextCodepoint(token, &offset);
+    if (!cp.has_value() || !isBopomofoCodepoint(cp.value())) {
+      return false;
+    }
+    sawBopomofo = true;
+  }
+  return sawBopomofo;
+}
+
 struct TestCase {
   std::string id;
   std::vector<std::string> readings;
@@ -228,7 +286,8 @@ static double nodeTopScore(const Formosa::Gramambular2::ReadingGrid::NodePtr& no
 
 class Evaluator {
  public:
-  explicit Evaluator(const char* dataPath) {
+  explicit Evaluator(const char* dataPath, bool enableReranker)
+      : enableReranker_(enableReranker) {
     lm_ = std::make_shared<McBopomofo::McBopomofoLM>();
     lm_->loadLanguageModel(dataPath);
     if (!lm_->isDataModelLoaded()) {
@@ -238,6 +297,19 @@ class Evaluator {
   }
 
   PerCaseResult evaluate(const TestCase& tc) {
+    if (enableReranker_) {
+      return evaluateWithReranker(tc);
+    }
+    return evaluateBaseline(tc);
+  }
+
+ private:
+  struct OutputSegment {
+    std::string text;
+    bool protectedText = false;
+  };
+
+  PerCaseResult evaluateBaseline(const TestCase& tc) {
     PerCaseResult result;
     result.id = tc.id;
 
@@ -305,7 +377,230 @@ class Evaluator {
     return result;
   }
 
- private:
+  PerCaseResult evaluateWithReranker(const TestCase& tc) {
+    PerCaseResult result;
+    result.id = tc.id;
+
+    std::vector<OutputSegment> segments;
+    std::vector<std::string> bopomofoChunk;
+    bool pureBopomofo = true;
+
+    auto flushChunk = [&]() -> bool {
+      if (bopomofoChunk.empty()) {
+        return true;
+      }
+      std::string chunkOutput;
+      uint64_t chunkElapsed = 0;
+      bool ok = evaluateBopomofoChunk(bopomofoChunk, tc, &chunkOutput,
+                                      &chunkElapsed,
+                                      pureBopomofo ? &result : nullptr);
+      bopomofoChunk.clear();
+      if (!ok) {
+        result.missingReading = true;
+        return false;
+      }
+      result.elapsedMicroseconds += chunkElapsed;
+      segments.push_back(OutputSegment{chunkOutput, false});
+      return true;
+    };
+
+    for (size_t i = 0; i < tc.readings.size(); ++i) {
+      if (isBopomofoReading(tc.readings[i])) {
+        bopomofoChunk.push_back(tc.readings[i]);
+        continue;
+      }
+
+      pureBopomofo = false;
+      if (!flushChunk()) {
+        result.missingReadingIndex = i;
+        return result;
+      }
+      segments.push_back(OutputSegment{tc.readings[i], true});
+    }
+
+    if (!flushChunk()) {
+      result.missingReadingIndex = tc.readings.size();
+      return result;
+    }
+
+    result.engineOutput = joinSegments(segments);
+    finishAccuracy(tc, &result);
+    return result;
+  }
+
+  bool evaluateBopomofoChunk(const std::vector<std::string>& readings,
+                             const TestCase& tc, std::string* output,
+                             uint64_t* elapsedMicroseconds,
+                             PerCaseResult* rankResult) {
+    Formosa::Gramambular2::ReadingGrid grid(
+        std::make_shared<Formosa::Gramambular2::ReadingGrid::ScoreRankedLanguageModel>(lm_));
+
+    for (const std::string& reading : readings) {
+      if (!grid.insertReading(reading)) {
+        return false;
+      }
+    }
+
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    const uint64_t start = ts.tv_sec * 1000000ULL + ts.tv_nsec / 1000;
+
+    Formosa::Gramambular2::ReadingGrid::WalkResult walkResult = grid.walk();
+    applyReranker(readings, tc.protectedEnglishSpans, grid, &walkResult);
+
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    const uint64_t end = ts.tv_sec * 1000000ULL + ts.tv_nsec / 1000;
+    *elapsedMicroseconds += end - start;
+
+    auto values = walkResult.valuesAsStrings();
+    for (const auto& v : values) {
+      *output += v;
+    }
+
+    if (rankResult != nullptr) {
+      rankResult->targetRank = findTargetRank(grid, tc);
+      rankResult->bestCandidateRank = findBestCandidateRank(grid, tc);
+    }
+    return true;
+  }
+
+  void applyReranker(
+      const std::vector<std::string>& readings,
+      const std::vector<std::string>& protectedEnglishSpans,
+      Formosa::Gramambular2::ReadingGrid& grid,
+      Formosa::Gramambular2::ReadingGrid::WalkResult* walkResult) {
+    McBopomofo::ContextualScoreRequest request;
+    request.readings = readings;
+    request.protectedEnglishSpans = protectedEnglishSpans;
+    request.cursor = readings.size();
+
+    size_t start = 0;
+    for (const auto& node : walkResult->nodes) {
+      request.baselinePath.push_back(McBopomofo::CandidateScoreInput{
+          node->reading(), node->value(), node->currentUnigram().rawValue(),
+          node->score(), start, node->spanningLength()});
+      start += node->spanningLength();
+    }
+
+    const auto& spans = grid.spans();
+    for (size_t loc = 0; loc < spans.size(); ++loc) {
+      for (size_t len = 1;
+           len <= Formosa::Gramambular2::ReadingGrid::kMaximumSpanLength &&
+           loc + len <= readings.size();
+           ++len) {
+        const auto& node = spans[loc].nodeOf(len);
+        if (node == nullptr) {
+          continue;
+        }
+        for (const auto& unigram : node->unigrams()) {
+          request.candidates.push_back(McBopomofo::CandidateScoreInput{
+              node->reading(), unigram.value(), unigram.rawValue(),
+              unigram.score(), loc, node->spanningLength()});
+        }
+      }
+    }
+
+    McBopomofo::DeterministicContextualScorer scorer;
+    McBopomofo::ScorerOutput scorerOutput = scorer.suggestCorrections(request);
+    std::vector<McBopomofo::ScorerCorrection> selected;
+    std::vector<bool> occupied(grid.length(), false);
+    for (const auto& correction : scorerOutput.corrections) {
+      if (correction.length == 0 ||
+          correction.start + correction.length > occupied.size()) {
+        continue;
+      }
+      bool overlaps = false;
+      for (size_t i = correction.start; i < correction.start + correction.length;
+           ++i) {
+        overlaps = overlaps || occupied[i];
+      }
+      if (overlaps) {
+        continue;
+      }
+      selected.push_back(correction);
+      for (size_t i = correction.start; i < correction.start + correction.length;
+           ++i) {
+        occupied[i] = true;
+      }
+    }
+
+    std::stable_sort(
+        selected.begin(), selected.end(),
+        [](const McBopomofo::ScorerCorrection& a,
+           const McBopomofo::ScorerCorrection& b) {
+          if (a.start != b.start) {
+            return a.start < b.start;
+          }
+          return a.length > b.length;
+        });
+
+    bool overridden = false;
+    for (const auto& correction : selected) {
+      overridden = grid.overrideCandidate(
+                       correction.start,
+                       Formosa::Gramambular2::ReadingGrid::Candidate(
+                           correction.reading, correction.value),
+                       Formosa::Gramambular2::ReadingGrid::Node::OverrideType::
+                           kOverrideValueWithScoreFromTopUnigram) ||
+                   overridden;
+    }
+    if (overridden) {
+      *walkResult = grid.walk();
+    }
+  }
+
+  static std::string joinSegments(const std::vector<OutputSegment>& segments) {
+    std::string output;
+    for (size_t i = 0; i < segments.size(); ++i) {
+      if (segments[i].text.empty()) {
+        continue;
+      }
+      if (!output.empty() &&
+          (segments[i].protectedText || segments[i - 1].protectedText)) {
+        output += " ";
+      }
+      output += segments[i].text;
+    }
+    return output;
+  }
+
+  static void finishAccuracy(const TestCase& tc, PerCaseResult* result) {
+    result->exactMatch = (result->engineOutput == tc.expected);
+
+    std::string engineCJK;
+    std::string expectedCJK;
+    for (size_t i = 0; i < result->engineOutput.size(); ) {
+      unsigned char c = static_cast<unsigned char>(result->engineOutput[i]);
+      if ((c & 0xF0) == 0xE0) {
+        engineCJK += result->engineOutput.substr(i, 3);
+        i += 3;
+      } else {
+        ++i;
+      }
+    }
+    for (size_t i = 0; i < tc.expected.size(); ) {
+      unsigned char c = static_cast<unsigned char>(tc.expected[i]);
+      if ((c & 0xF0) == 0xE0) {
+        expectedCJK += tc.expected.substr(i, 3);
+        i += 3;
+      } else {
+        ++i;
+      }
+    }
+
+    result->totalCJKChars = expectedCJK.size() / 3;
+    size_t matched = 0;
+    for (size_t ei = 0; ei + 3 <= engineCJK.size(); ei += 3) {
+      for (size_t xi = 0; xi + 3 <= expectedCJK.size(); xi += 3) {
+        if (engineCJK.substr(ei, 3) == expectedCJK.substr(xi, 3)) {
+          matched++;
+          break;
+        }
+      }
+    }
+    result->matchedCJKChars = matched;
+  }
+
   int findTargetRank(Formosa::Gramambular2::ReadingGrid& grid,
                      const TestCase& tc) {
     std::string firstExpectedChar;
@@ -355,6 +650,7 @@ class Evaluator {
   }
 
   std::shared_ptr<McBopomofo::McBopomofoLM> lm_;
+  bool enableReranker_ = false;
 };
 
 static std::string escapeJSON(const std::string& s) {
@@ -388,7 +684,9 @@ static void printResultJSON(const PerCaseResult& r) {
          escapeJSON(r.engineOutput).c_str());
 }
 
-static void printSummaryJSON(const std::vector<PerCaseResult>& results, uint64_t totalElapsed) {
+static void printSummaryJSON(const std::vector<PerCaseResult>& results,
+                             uint64_t totalElapsed,
+                             const char* engineName) {
   size_t total = results.size();
   size_t exactMatch = 0;
   size_t missingReading = 0;
@@ -433,7 +731,7 @@ static void printSummaryJSON(const std::vector<PerCaseResult>& results, uint64_t
     }
   }
 
-  printf("{\"engine\":\"baseline-mcbopomofo\","
+  printf("{\"engine\":\"%s\","
          "\"data_version\":\"2026-06-18\","
          "\"total_cases\":%zu,"
          "\"exact_sentence_accuracy\":%.4f,"
@@ -447,6 +745,7 @@ static void printSummaryJSON(const std::vector<PerCaseResult>& results, uint64_t
          "\"total_elapsed_seconds\":%.3f,"
          "\"context_ambiguity_errors\":%zu,"
          "\"unknown_errors\":%zu}\n",
+         engineName,
          total,
          sentenceAcc,
          tokenAcc,
@@ -461,7 +760,7 @@ static void printSummaryJSON(const std::vector<PerCaseResult>& results, uint64_t
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    fprintf(stderr, "Usage: %s <data.txt> [test_cases.jsonl]\n", argv[0]);
+    fprintf(stderr, "Usage: %s <data.txt> [--reranker] [test_cases.jsonl]\n", argv[0]);
     fprintf(stderr, "  If test_cases.jsonl is omitted, reads from stdin.\n");
     return 1;
   }
@@ -472,14 +771,24 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  Evaluator evaluator(dataPath);
+  bool enableReranker = false;
+  const char* testCasesPath = nullptr;
+  for (int i = 2; i < argc; ++i) {
+    if (std::strcmp(argv[i], "--reranker") == 0) {
+      enableReranker = true;
+      continue;
+    }
+    testCasesPath = argv[i];
+  }
+
+  Evaluator evaluator(dataPath, enableReranker);
 
   FILE* input = stdin;
   bool closeInput = false;
-  if (argc >= 3) {
-    input = fopen(argv[2], "r");
+  if (testCasesPath != nullptr) {
+    input = fopen(testCasesPath, "r");
     if (!input) {
-      fprintf(stderr, "FATAL: cannot open %s\n", argv[2]);
+      fprintf(stderr, "FATAL: cannot open %s\n", testCasesPath);
       return 1;
     }
     closeInput = true;
@@ -522,7 +831,9 @@ int main(int argc, char* argv[]) {
   clock_gettime(CLOCK_MONOTONIC, &ts);
   uint64_t totalEnd = ts.tv_sec * 1000000ULL + ts.tv_nsec / 1000;
 
-  printSummaryJSON(results, totalEnd - totalStart);
+  printSummaryJSON(results, totalEnd - totalStart,
+                   enableReranker ? "deterministic-reranker"
+                                  : "baseline-mcbopomofo");
 
   if (closeInput) {
     fclose(input);

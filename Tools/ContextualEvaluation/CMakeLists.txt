@@ -18,7 +18,10 @@ if(NOT EXISTS "${MCBOPOMOFOLM_LIB}")
     message(FATAL_ERROR "Pre-built engine library not found: ${MCBOPOMOFOLM_LIB}. Build the engine first: cd Source/Engine && mkdir -p build && cd build && cmake -DENABLE_TEST=ON .. && make")
 endif()
 
-add_executable(evaluator evaluator.cpp)
+add_executable(evaluator
+    evaluator.cpp
+    "${ENGINE_SRC_DIR}/DeterministicContextualScorer.cpp"
+)
 
 # evaluator.cpp uses "Engine/..." and "Engine/gramambular2/..." includes,
 # so we add the directory above Engine/ (i.e. Source/) as an include root.
