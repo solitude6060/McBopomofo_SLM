@@ -15,5 +15,6 @@ xcuserdata
 .swiftpm
 .vscode
 __pycache__
+Testing/
 codecov_comment.md
 DerivedData
