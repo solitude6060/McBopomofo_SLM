@@ -24,12 +24,10 @@
 #include "Engine/BigramContextualScorer.h"
 
 #include <cmath>
+#include <cstdio>
 #include <functional>
 
 namespace McBopomofo {
-
-// RED phase stub: compiles but scoreDeltas returns all zeros
-// and model loading always fails.
 
 BigramContextualScorer::BigramContextualScorer() = default;
 
@@ -40,15 +38,128 @@ BigramContextualScorer::BigramContextualScorer(const std::string& modelPath)
 
 std::vector<double> BigramContextualScorer::scoreDeltas(
     const ContextualScoreRequest& request) const {
-  // RED stub: return all zeros
-  return std::vector<double>(request.candidates.size(), 0.0);
+  if (request.candidates.empty()) {
+    return {};
+  }
+  if (!modelLoaded_) {
+    return std::vector<double>(request.candidates.size(), 0.0);
+  }
+
+  std::vector<double> deltas;
+  deltas.reserve(request.candidates.size());
+
+  for (const auto& candidate : request.candidates) {
+    uint32_t contextChar = 0;
+    bool hasContext = false;
+
+    if (candidate.start > 0) {
+      for (const auto& entry : request.baselinePath) {
+        size_t entryEnd = entry.start + entry.length;
+        if (entryEnd == candidate.start ||
+            (entry.start < candidate.start && entryEnd > candidate.start)) {
+          forEachCodepoint(entry.value, [&](uint32_t cp, size_t) {
+            contextChar = cp;
+          });
+          hasContext = true;
+          break;
+        }
+      }
+    } else if (candidate.start == 0 &&
+               !request.previousCommittedText.empty()) {
+      forEachCodepoint(request.previousCommittedText, [&](uint32_t cp, size_t) {
+        contextChar = cp;
+      });
+      hasContext = true;
+    }
+
+    if (!hasContext) {
+      deltas.push_back(0.0);
+      continue;
+    }
+
+    double candidateSum = bigramLogProbSum(candidate.value, contextChar);
+
+    double baselineSum = 0.0;
+    for (const auto& entry : request.baselinePath) {
+      if (entry.start == candidate.start) {
+        baselineSum = bigramLogProbSum(entry.value, contextChar);
+        break;
+      }
+    }
+
+    double delta = baselineSum - candidateSum;
+    deltas.push_back(delta);
+  }
+
+  return deltas;
 }
 
 bool BigramContextualScorer::loadModel(const std::string& path) {
-  // RED stub: always fail to load
-  (void)path;
-  modelLoaded_ = false;
-  return false;
+  FILE* f = fopen(path.c_str(), "rb");
+  if (!f) {
+    modelLoaded_ = false;
+    return false;
+  }
+
+  uint32_t magic;
+  if (fread(&magic, 4, 1, f) != 1 || magic != 0x42494752) {
+    fclose(f);
+    modelLoaded_ = false;
+    return false;
+  }
+
+  uint32_t version;
+  if (fread(&version, 4, 1, f) != 1 || version != 1) {
+    fclose(f);
+    modelLoaded_ = false;
+    return false;
+  }
+
+  uint32_t numUnigrams;
+  uint32_t numBigrams;
+  if (fread(&numUnigrams, 4, 1, f) != 1 ||
+      fread(&numBigrams, 4, 1, f) != 1) {
+    fclose(f);
+    modelLoaded_ = false;
+    return false;
+  }
+
+  unigramCounts_.clear();
+  bigramProbabilities_.clear();
+
+  for (uint32_t i = 0; i < numUnigrams; ++i) {
+    uint32_t cp;
+    uint32_t count;
+    if (fread(&cp, 4, 1, f) != 1 || fread(&count, 4, 1, f) != 1) {
+      fclose(f);
+      modelLoaded_ = false;
+      return false;
+    }
+    unigramCounts_[cp] = count;
+  }
+
+  for (uint32_t i = 0; i < numBigrams; ++i) {
+    uint32_t cp_a;
+    uint32_t cp_b;
+    uint32_t count;
+    float logProb;
+    if (fread(&cp_a, 4, 1, f) != 1 || fread(&cp_b, 4, 1, f) != 1 ||
+        fread(&count, 4, 1, f) != 1 || fread(&logProb, 4, 1, f) != 1) {
+      fclose(f);
+      modelLoaded_ = false;
+      return false;
+    }
+    uint64_t key = ((uint64_t)cp_a << 32) | cp_b;
+    bigramProbabilities_[key] = logProb;
+  }
+
+  fclose(f);
+
+  unigramCount_ = static_cast<size_t>(numUnigrams);
+  bigramCount_ = static_cast<size_t>(numBigrams);
+  modelPath_ = path;
+  modelLoaded_ = true;
+  return true;
 }
 
 template <typename Fn>
@@ -91,17 +202,22 @@ size_t BigramContextualScorer::forEachCodepoint(const std::string& s,
 
 double BigramContextualScorer::bigramLogProbSum(
     const std::string& text, uint32_t prevChar) const {
-  // RED stub
-  (void)text;
-  (void)prevChar;
-  return 0.0;
+  double sum = 0.0;
+  uint32_t prev = prevChar;
+  forEachCodepoint(text, [&](uint32_t cp, size_t) {
+    sum += lookupBigram(prev, cp);
+    prev = cp;
+  });
+  return sum;
 }
 
 double BigramContextualScorer::lookupBigram(uint32_t cp_a,
-                                             uint32_t cp_b) const {
-  // RED stub
-  (void)cp_a;
-  (void)cp_b;
+                                            uint32_t cp_b) const {
+  uint64_t key = ((uint64_t)cp_a << 32) | cp_b;
+  auto it = bigramProbabilities_.find(key);
+  if (it != bigramProbabilities_.end()) {
+    return static_cast<double>(it->second);
+  }
   return 0.0;
 }
 
