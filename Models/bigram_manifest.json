@@ -1,0 +1,30 @@
+{
+  "format_version": 1,
+  "created_at": "2026-06-21T03:49:30.354350",
+  "source_files": [
+    "BPMFMappings.txt",
+    "data.txt"
+  ],
+  "source_paths": [
+    "/home/ma/Research/side_project/llm_typing/McBopomofo_SLM/Source/Data/BPMFMappings.txt",
+    "/home/ma/Research/side_project/llm_typing/McBopomofo_SLM/Source/Data/data.txt"
+  ],
+  "total_unigrams": 7073,
+  "total_bigrams": 145395,
+  "total_phrases_source": 308154,
+  "total_phrases_after_exclusion": 308152,
+  "excluded_fixture_ids": [
+    "taiwan_ambiguous.jsonl",
+    "english_mixed.jsonl",
+    "taiwan_specific.jsonl"
+  ],
+  "excluded_fixture_count": 233,
+  "model_path": "/home/ma/Research/side_project/llm_typing/McBopomofo_SLM/Models/bigram_model.bin",
+  "model_size_bytes": 2382920,
+  "model_sha256": "9dda580ef2e309e545cedb10b378a24e3aa7f7ee3500dcd9563bbf3f1a39c599",
+  "min_count_threshold": 2,
+  "unique_characters": 7073,
+  "language": "Traditional Chinese",
+  "taiwan_relevance": "high",
+  "license": "MIT"
+}

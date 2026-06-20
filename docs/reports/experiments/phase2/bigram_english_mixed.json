@@ -1,0 +1,51 @@
+{"id":"en-mix-001","exact_match":true,"total_cjk_chars":3,"matched_cjk_chars":3,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":43,"missing_reading":false,"engine_output":"用 Docker 部署"}
+{"id":"en-mix-002","exact_match":false,"total_cjk_chars":6,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":112,"missing_reading":false,"engine_output":"下載 GitHub 上的城市"}
+{"id":"en-mix-003","exact_match":true,"total_cjk_chars":5,"matched_cjk_chars":5,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":26,"missing_reading":false,"engine_output":"請參考 README 說明"}
+{"id":"en-mix-004","exact_match":true,"total_cjk_chars":3,"matched_cjk_chars":3,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":36,"missing_reading":false,"engine_output":"更新到 Python 3.12"}
+{"id":"en-mix-005","exact_match":false,"total_cjk_chars":4,"matched_cjk_chars":3,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":30,"missing_reading":false,"engine_output":"設定 API 街口"}
+{"id":"en-mix-006","exact_match":false,"total_cjk_chars":5,"matched_cjk_chars":2,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":50,"missing_reading":false,"engine_output":"安裝 Dockerfile 作境相"}
+{"id":"en-mix-007","exact_match":true,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":69,"missing_reading":false,"engine_output":"配置 nginx 代理"}
+{"id":"en-mix-008","exact_match":true,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":15,"missing_reading":false,"engine_output":"使用 git push 推送"}
+{"id":"en-mix-009","exact_match":true,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":61,"missing_reading":false,"engine_output":"元件 React 專案"}
+{"id":"en-mix-010","exact_match":false,"total_cjk_chars":5,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":49,"missing_reading":false,"engine_output":"開發 macOS 合 Linux 版本"}
+{"id":"en-mix-011","exact_match":true,"total_cjk_chars":6,"matched_cjk_chars":6,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":31,"missing_reading":false,"engine_output":"參考 StackOverflow 上的解答"}
+{"id":"en-mix-012","exact_match":false,"total_cjk_chars":4,"matched_cjk_chars":3,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":96,"missing_reading":false,"engine_output":"啟動 EC2 實力"}
+{"id":"en-mix-013","exact_match":true,"total_cjk_chars":5,"matched_cjk_chars":5,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":64,"missing_reading":false,"engine_output":"JSON 格式的檔案"}
+{"id":"en-mix-014","exact_match":true,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":24,"missing_reading":false,"engine_output":"修改 /etc/hosts 檔案"}
+{"id":"en-mix-015","exact_match":true,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":27,"missing_reading":false,"engine_output":"執行 npm install 命令"}
+{"id":"en-mix-016","exact_match":true,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":16,"missing_reading":false,"engine_output":"就用 JavaScript 改寫"}
+{"id":"en-mix-017","exact_match":true,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":42,"missing_reading":false,"engine_output":"設定 GitHub Actions 流程"}
+{"id":"en-mix-018","exact_match":true,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":19,"missing_reading":false,"engine_output":"下載 https://example.com/file 這個 URL"}
+{"id":"en-mix-019","exact_match":true,"total_cjk_chars":6,"matched_cjk_chars":6,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":18,"missing_reading":false,"engine_output":"使用 TypeScript 改寫這個 class"}
+{"id":"en-mix-020","exact_match":true,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":44,"missing_reading":false,"engine_output":"在 macOS Sequoia 15.4 上測試"}
+{"id":"en-mix-021","exact_match":false,"total_cjk_chars":6,"matched_cjk_chars":5,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":94,"missing_reading":false,"engine_output":"用 SSH 登陸伺服器"}
+{"id":"en-mix-022","exact_match":true,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":27,"missing_reading":false,"engine_output":"MongoDB 在 Docker 中運行"}
+{"id":"en-mix-023","exact_match":true,"total_cjk_chars":6,"matched_cjk_chars":6,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":88,"missing_reading":false,"engine_output":"AI 時代的新技術"}
+{"id":"en-mix-024","exact_match":true,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":55,"missing_reading":false,"engine_output":"投資 CNSX 市場"}
+{"id":"en-mix-025","exact_match":true,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":50,"missing_reading":false,"engine_output":"報告 PDF 格式"}
+{"id":"en-mix-026","exact_match":false,"total_cjk_chars":6,"matched_cjk_chars":6,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":30,"missing_reading":false,"engine_output":"請用 scp 上傳檔案"}
+{"id":"en-mix-027","exact_match":false,"total_cjk_chars":6,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":68,"missing_reading":false,"engine_output":"SSH 連線要社今要"}
+{"id":"en-mix-028","exact_match":false,"total_cjk_chars":5,"matched_cjk_chars":5,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":53,"missing_reading":false,"engine_output":"網站的 CDN 加速"}
+{"id":"en-mix-029","exact_match":false,"total_cjk_chars":5,"matched_cjk_chars":5,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":74,"missing_reading":false,"engine_output":"用 Docker-compose 部署服務"}
+{"id":"en-mix-030","exact_match":false,"total_cjk_chars":7,"matched_cjk_chars":7,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":81,"missing_reading":false,"engine_output":"AWS 雲端服務很方便"}
+{"id":"en-mix-031","exact_match":false,"total_cjk_chars":6,"matched_cjk_chars":6,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":85,"missing_reading":false,"engine_output":"手機 APP 更新完成"}
+{"id":"en-mix-032","exact_match":false,"total_cjk_chars":6,"matched_cjk_chars":6,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":54,"missing_reading":false,"engine_output":"下載 iOS 最新版本"}
+{"id":"en-mix-033","exact_match":false,"total_cjk_chars":3,"matched_cjk_chars":3,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":9,"missing_reading":false,"engine_output":"Android 開發用 Kotlin"}
+{"id":"en-mix-034","exact_match":false,"total_cjk_chars":2,"matched_cjk_chars":2,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":9,"missing_reading":false,"engine_output":"用 Python 寫 API"}
+{"id":"en-mix-035","exact_match":false,"total_cjk_chars":3,"matched_cjk_chars":3,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":44,"missing_reading":false,"engine_output":"RESTful API 用 JSON 格式"}
+{"id":"en-mix-036","exact_match":false,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":42,"missing_reading":false,"engine_output":"node_modules 體積很大"}
+{"id":"en-mix-037","exact_match":false,"total_cjk_chars":6,"matched_cjk_chars":5,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":35,"missing_reading":false,"engine_output":"這個 font-end 框架很心"}
+{"id":"en-mix-038","exact_match":false,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":28,"missing_reading":false,"engine_output":"用 PostgreSQL 存資料"}
+{"id":"en-mix-039","exact_match":false,"total_cjk_chars":6,"matched_cjk_chars":6,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":50,"missing_reading":false,"engine_output":"MySQL 資料庫要備份"}
+{"id":"en-mix-040","exact_match":false,"total_cjk_chars":5,"matched_cjk_chars":5,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":65,"missing_reading":false,"engine_output":"nginx 設定要檢查"}
+{"id":"en-mix-041","exact_match":false,"total_cjk_chars":1,"matched_cjk_chars":1,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":4,"missing_reading":false,"engine_output":"GitHub Actions 跑 CI"}
+{"id":"en-mix-042","exact_match":false,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":36,"missing_reading":false,"engine_output":"用 Markdown 寫文件"}
+{"id":"en-mix-043","exact_match":false,"total_cjk_chars":8,"matched_cjk_chars":7,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":96,"missing_reading":false,"engine_output":"YAML 設定檔格式要對其"}
+{"id":"en-mix-044","exact_match":false,"total_cjk_chars":3,"matched_cjk_chars":3,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":59,"missing_reading":false,"engine_output":"JWT token 過期了"}
+{"id":"en-mix-045","exact_match":false,"total_cjk_chars":6,"matched_cjk_chars":6,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":42,"missing_reading":false,"engine_output":"SQL query 最佳化很重要"}
+{"id":"en-mix-046","exact_match":false,"total_cjk_chars":3,"matched_cjk_chars":3,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":10,"missing_reading":false,"engine_output":"React component 很好用"}
+{"id":"en-mix-047","exact_match":false,"total_cjk_chars":6,"matched_cjk_chars":6,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":68,"missing_reading":false,"engine_output":"用 TypeScript 寫比較安全"}
+{"id":"en-mix-048","exact_match":false,"total_cjk_chars":6,"matched_cjk_chars":6,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":143,"missing_reading":false,"engine_output":"C++ 編譯時間很長"}
+{"id":"en-mix-049","exact_match":false,"total_cjk_chars":3,"matched_cjk_chars":3,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":24,"missing_reading":false,"engine_output":"Linux kernel 更新了"}
+{"id":"en-mix-050","exact_match":false,"total_cjk_chars":4,"matched_cjk_chars":4,"target_rank":-1,"best_candidate_rank":-1,"elapsed_us":15,"missing_reading":false,"engine_output":"macOS 的 Homebrew 很好用"}
+{"engine":"bigram-reranker","data_version":"2026-06-18","total_cases":50,"exact_sentence_accuracy":38.0000,"token_accuracy":94.3478,"exact_match_count":19,"candidate_rank_mean":0.00,"missing_reading_cases":0,"latency_microseconds_p50":44,"latency_microseconds_p95":96,"latency_microseconds_p99":143,"total_elapsed_seconds":0.016,"context_ambiguity_errors":31,"unknown_errors":0}

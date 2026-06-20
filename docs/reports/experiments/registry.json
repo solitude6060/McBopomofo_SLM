@@ -1,0 +1,32 @@
+{
+  "registry_version": 1,
+  "experiments": [
+    {
+      "id": "phase2-bigram",
+      "name": "Phase 2 - Bigram Contextual Scorer",
+      "status": "completed",
+      "date": "2026-06-21T03:41:00+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit_green": "f9c48cf",
+      "commit_evaluator": "62996f5",
+      "model": "Models/bigram_model.bin",
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/comparison_table.json",
+      "result_files": [
+        "baseline_taiwan_ambiguous.json",
+        "deterministic_taiwan_ambiguous.json",
+        "bigram_taiwan_ambiguous.json",
+        "baseline_english_mixed.json",
+        "deterministic_english_mixed.json",
+        "bigram_english_mixed.json",
+        "baseline_taiwan_specific.json",
+        "deterministic_taiwan_specific.json",
+        "bigram_taiwan_specific.json"
+      ],
+      "exit_gate_result": "FAIL",
+      "exit_gate_criterion": "≥5% relative error reduction on held-out test fixtures",
+      "exit_gate_actual": "0% relative error reduction (identical to baseline)",
+      "conclusion": "Bigram language model from dictionary data lacks discriminatory power for homophone disambiguation. Recommend proceeding to SLM-based reranker (Phase 3) or training on larger corpora."
+    }
+  ]
+}
