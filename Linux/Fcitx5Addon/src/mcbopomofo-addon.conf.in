@@ -1,0 +1,7 @@
+[Addon]
+Name=McBopomofo
+Category=InputMethod
+Library=mcbopomofo
+Type=SharedLibrary
+OnDemand=True
+Version=@PROJECT_VERSION@

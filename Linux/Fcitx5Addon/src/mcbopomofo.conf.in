@@ -1,0 +1,7 @@
+[InputMethod]
+Name=McBopomofo Bopomofo
+NativeName=小麥注音
+Label=注
+LangCode=zh_TW
+Addon=mcbopomofo
+Configurable=True
