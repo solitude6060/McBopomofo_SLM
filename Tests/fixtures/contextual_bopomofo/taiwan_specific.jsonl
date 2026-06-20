@@ -1,0 +1,84 @@
+{"id": "tw-taiwan_specific-001", "readings": ["ㄨㄛˇ", "ㄇㄞˇ", "ㄌㄜ˙", "ㄧˋ", "ㄍㄜ˙", "ㄅㄧㄢˋ", "ㄉㄤ"], "expected": "我買了一個便當", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-002", "readings": ["ㄊㄚ", "ㄑㄧˊ", "ㄐㄧ", "ㄔㄜ", "ㄕㄤˋ", "ㄅㄢ"], "expected": "他騎機車上班", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-003", "readings": ["ㄓㄜˋ", "ㄐㄧㄚ", "ㄔㄠ", "ㄕㄤ", "ㄧㄡˇ", "ㄇㄞˋ", "ㄎㄚ", "ㄈㄟ"], "expected": "這家超商有賣咖啡", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-004", "readings": ["ㄉㄚ", "ㄐㄧㄝˊ", "ㄩㄣˋ", "ㄅㄧˇ", "ㄐㄧㄠˋ", "ㄈㄤ", "ㄅㄧㄢˋ"], "expected": "搭捷運比較方便", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-005", "readings": ["ㄋㄧˇ", "ㄓㄣ", "ㄉㄜ˙", "ㄏㄣˇ", "ㄅㄞˊ", "ㄇㄨˋ", "ㄞˇ"], "expected": "你真的很白目欸", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-006", "readings": ["ㄎㄜ", "ㄨㄣˊ", "ㄓㄜˊ", "ㄕˋ", "ㄚ", "ㄅㄟˇ"], "expected": "柯文哲是阿北", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-007", "readings": ["ㄓㄜˋ", "ㄐㄧㄢˋ", "ㄧ", "ㄈㄨˊ", "CP", "ㄓˊ", "ㄏㄣˇ", "ㄍㄠ"], "expected": "這件衣服CP值很高", "domain": "taiwan_specific", "source": "manual", "protected_english_spans": ["CP"]}
+{"id": "tw-taiwan_specific-008", "readings": ["ㄊㄚ", "ㄕˋ", "ㄍㄜˋ", "ㄌㄨˇ", "ㄕㄜˊ"], "expected": "他是個魯蛇", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-009", "readings": ["ㄓㄜˋ", "ㄐㄧㄚ", "ㄉㄧㄢˋ", "ㄩˋ", "ㄉㄠˋ", "ㄠˋ", "ㄎㄜˋ"], "expected": "這家店遇到奧客", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-010", "readings": ["ㄨㄛˇ", "ㄗㄨㄛˊ", "ㄊㄧㄢ", "ㄌㄨㄛˋ", "ㄓㄣˇ", "ㄌㄜ˙"], "expected": "我昨天落枕了", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-011", "readings": ["ㄋㄚˋ", "ㄍㄜ˙", "ㄧㄥˇ", "ㄆㄧㄢˋ", "ㄏㄣˇ", "ㄎㄧㄤ"], "expected": "那個影片很ㄎㄧㄤ", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-012", "readings": ["ㄊㄚ", "ㄕˋ", "ㄍㄜˋ", "ㄌㄟˊ", "ㄅㄠ"], "expected": "他是個雷包", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-013", "readings": ["ㄐㄧㄣ", "ㄊㄧㄢ", "ㄏㄣˇ", "ㄌㄟˊ"], "expected": "今天很雷", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-014", "readings": ["ㄋㄧˇ", "ㄕˋ", "ㄗㄞˋ", "ㄏㄚ", "ㄌㄨㄛˊ", "？"], "expected": "你是在哈囉？", "domain": "taiwan_specific", "source": "manual", "protected_english_spans": ["？"]}
+{"id": "tw-taiwan_specific-015", "readings": ["ㄓㄜˋ", "ㄧㄤˋ", "ㄏㄣˇ", "ㄇㄨˇ", "ㄊㄤ", "ㄛ"], "expected": "這樣很母湯喔", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-016", "readings": ["ㄨㄛˇ", "ㄎㄨㄞˋ", "ㄅㄟˋ", "ㄍㄠˇ", "ㄉㄠˋ", "ㄧㄚˊ", "ㄑㄧˇ", "ㄌㄞˊ"], "expected": "我快被搞到牙起來", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-017", "readings": ["ㄓㄜˋ", "ㄐㄧㄢ", "ㄉㄧㄢˋ", "ㄏㄣˇ", "chill"], "expected": "這間店很chill", "domain": "taiwan_specific", "source": "manual", "protected_english_spans": ["chill"]}
+{"id": "tw-taiwan_specific-018", "readings": ["ㄐㄧㄣ", "ㄊㄧㄢ", "ㄧㄠˋ", "ㄌㄞˊ", "ㄎㄞ", "ㄒㄧㄤ", "ㄒㄧㄣ", "ㄔㄢˇ", "ㄆㄧㄣˇ"], "expected": "今天要來開箱新產品", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-019", "readings": ["ㄨㄛˇ", "ㄩㄥˋ", "ㄏㄨㄚˊ", "ㄕㄨˇ", "ㄘㄠ", "ㄗㄨㄛˋ", "ㄉㄧㄢˋ", "ㄋㄠˇ"], "expected": "我用滑鼠操作電腦", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-020", "readings": ["ㄑㄧㄥˇ", "ㄅㄤ", "ㄨㄛˇ", "ㄌㄧㄝˋ", "ㄧㄣˋ", "ㄓㄜˋ", "ㄈㄣˋ", "ㄨㄣˊ", "ㄐㄧㄢˋ"], "expected": "請幫我列印這份文件", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-021", "readings": ["ㄨㄛˇ", "ㄉㄚ", "ㄐㄧˋ", "ㄔㄥˊ", "ㄔㄜ", "ㄑㄩˋ", "ㄐㄧ", "ㄔㄤˇ"], "expected": "我搭計程車去機場", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-022", "readings": ["ㄓㄜˋ", "ㄓ", "ㄕㄡˇ", "ㄐㄧ", "ㄒㄧㄠˋ", "ㄋㄥˊ", "ㄏㄣˇ", "ㄏㄠˇ"], "expected": "這支手機效能很好", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-023", "readings": ["ㄕㄤ", "ㄉㄧㄢˋ", "ㄐㄧㄝ", "ㄧㄡˇ", "ㄒㄩˇ", "ㄉㄨㄛ", "ㄨㄣˊ", "ㄐㄩˋ"], "expected": "商店街有許多文具", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-024", "readings": ["ㄑㄧㄥˇ", "ㄕˇ", "ㄩㄥˋ", "ㄌㄟˊ", "ㄕㄜˋ", "ㄧㄣˋ", "ㄅㄧㄠˇ", "ㄐㄧ"], "expected": "請使用雷射印表機", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-025", "readings": ["ㄓㄜˋ", "ㄊㄧㄠˊ", "ㄍㄠ", "ㄙㄨˋ", "ㄍㄨㄥ", "ㄌㄨˋ", "ㄉㄜ˙", "ㄐㄧㄠ", "ㄌㄧㄡˊ", "ㄉㄠˋ"], "expected": "這條高速公路的交流道", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-026", "readings": ["ㄅㄧㄢˋ", "ㄌㄧˋ", "ㄕㄤ", "ㄉㄧㄢˋ", "ㄗㄞˋ", "ㄓㄨㄢˇ", "ㄐㄧㄠˇ"], "expected": "便利商店在轉角", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-027", "readings": ["ㄨㄛˇ", "ㄐㄧㄣ", "ㄊㄧㄢ", "ㄔ", "ㄇㄚˇ", "ㄌㄧㄥˊ", "ㄕㄨˇ"], "expected": "我今天吃馬鈴薯", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-028", "readings": ["ㄨㄛˇ", "ㄧㄠˋ", "ㄧˊ", "ㄈㄣˋ", "ㄉㄢˋ", "ㄅㄧㄥˇ", "ㄏㄢˋ", "ㄉㄡˋ", "ㄐㄧㄤ"], "expected": "我要一份蛋餅和豆漿", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-029", "readings": ["ㄓㄜˋ", "ㄐㄧㄚ", "ㄌㄨˇ", "ㄖㄡˋ", "ㄈㄢˋ", "ㄏㄣˇ", "ㄏㄠˇ", "ㄔ"], "expected": "這家滷肉飯很好吃", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-030", "readings": ["ㄧㄝˋ", "ㄕˋ", "ㄧㄡˇ", "ㄇㄞˋ", "ㄓㄣ", "ㄓㄨ", "ㄋㄞˇ", "ㄔㄚˊ"], "expected": "夜市有賣珍珠奶茶", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-031", "readings": ["ㄔㄡˋ", "ㄉㄡˋ", "ㄈㄨˇ", "ㄆㄟˋ", "ㄆㄠˋ", "ㄘㄞˋ", "ㄗㄨㄟˋ", "ㄉㄨㄟˋ", "ㄨㄟˋ"], "expected": "臭豆腐配泡菜最對味", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-032", "readings": ["ㄨㄛˇ", "ㄧㄠˋ", "ㄧˋ", "ㄨㄢˇ", "ㄋㄧㄡˊ", "ㄖㄡˋ", "ㄇㄧㄢˋ"], "expected": "我要一碗牛肉麵", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-033", "readings": ["ㄒㄧㄚˋ", "ㄨˇ", "ㄔㄚˊ", "ㄔ", "ㄉㄢˋ", "ㄍㄠ", "ㄆㄟˋ", "ㄎㄚ", "ㄈㄟ"], "expected": "下午茶吃蛋糕配咖啡", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-034", "readings": ["ㄧˋ", "ㄅㄠ", "ㄉㄚ", "ㄆㄟˋ", "ㄙㄨㄢ", "ㄘㄞˋ"], "expected": "刈包搭配酸菜", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-035", "readings": ["ㄜˊ", "ㄗㄞˇ", "ㄐㄧㄢ", "ㄧㄠˋ", "ㄐㄧㄚ", "ㄊㄧㄢˊ", "ㄌㄚˋ", "ㄐㄧㄤˋ"], "expected": "蚵仔煎要加甜辣醬", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-036", "readings": ["ㄌㄞˊ", "ㄨㄢˇ", "ㄓㄨ", "ㄒㄧㄝˇ", "ㄍㄠ"], "expected": "來碗豬血糕", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-037", "readings": ["ㄔㄜ", "ㄌㄨㄣˊ", "ㄅㄧㄥˇ", "ㄧㄠˋ", "ㄋㄞˇ", "ㄧㄡˊ", "ㄎㄡˇ", "ㄨㄟˋ"], "expected": "車輪餅要奶油口味", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-038", "readings": ["ㄓㄜˋ", "ㄅㄨˋ", "ㄉㄧㄢˋ", "ㄧㄥˇ", "ㄏㄣˇ", "ㄍㄢˇ", "ㄖㄣˊ"], "expected": "這部電影很感人", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-039", "readings": ["ㄋㄧˇ", "ㄉㄥ", "ㄌㄨˋ", "ㄓㄤˋ", "ㄏㄠˋ", "ㄌㄜ˙", "ㄇㄚ"], "expected": "你登錄帳號了嗎", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-040", "readings": ["ㄑㄩˋ", "ㄅㄧㄢˋ", "ㄌㄧˋ", "ㄕㄤ", "ㄉㄧㄢˋ", "ㄐㄧㄠˇ", "ㄈㄟˋ"], "expected": "去便利商店繳費", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-041", "readings": ["ㄨㄛˇ", "ㄗㄞˋ", "ㄔㄠ", "ㄕㄤ", "ㄑㄩˇ", "ㄏㄨㄛˋ"], "expected": "我在超商取貨", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-042", "readings": ["ㄊㄚ", "ㄩㄥˋ", "ㄧㄡ", "ㄧㄡˊ", "ㄎㄚˇ", "ㄈㄨˋ", "ㄑㄧㄢˊ"], "expected": "他用悠遊卡付錢", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-043", "readings": ["icash", "ㄎㄜˇ", "ㄧˇ", "ㄉㄚ", "ㄐㄧㄝˊ", "ㄩㄣˋ"], "expected": "icash可以搭捷運", "domain": "taiwan_specific", "source": "manual", "protected_english_spans": ["icash"]}
+{"id": "tw-taiwan_specific-044", "readings": ["YouBike", "ㄓㄢˋ", "ㄉㄧㄢˇ", "ㄏㄣˇ", "ㄉㄨㄛ"], "expected": "YouBike站點很多", "domain": "taiwan_specific", "source": "manual", "protected_english_spans": ["YouBike"]}
+{"id": "tw-taiwan_specific-045", "readings": ["ㄍㄠ", "ㄊㄧㄝˇ", "ㄉㄠˋ", "ㄗㄨㄛˇ", "ㄧㄥˊ", "ㄓㄢˋ"], "expected": "高鐵到左營站", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-046", "readings": ["ㄊㄞˊ", "ㄊㄧㄝˇ", "ㄅㄧㄢˋ", "ㄉㄤ", "ㄏㄣˇ", "ㄧㄡˇ", "ㄇㄧㄥˊ"], "expected": "台鐵便當很有名", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-047", "readings": ["ㄋㄧㄢˊ", "ㄓㄨㄥ", "ㄐㄧㄤˇ", "ㄐㄧㄣ", "ㄅㄧㄢˋ", "ㄕㄠˇ", "ㄌㄜ˙"], "expected": "年終獎金變少了", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-048", "readings": ["ㄓㄜˋ", "ㄐㄧㄢˋ", "ㄕˋ", "ㄑㄧㄥˊ", "ㄏㄣˇ", "ㄌㄧㄤˇ", "ㄋㄢˊ"], "expected": "這件事情很兩難", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-049", "readings": ["ㄋㄧˇ", "ㄗㄣˇ", "ㄇㄜ˙", "ㄧㄡˋ", "ㄗㄞˋ", "ㄕㄨㄚˇ", "ㄅㄞˊ", "ㄔ"], "expected": "你怎麼又在耍白痴", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-050", "readings": ["ㄒㄧˋ", "ㄓㄨˇ", "ㄖㄣˋ", "ㄐㄧㄣ", "ㄊㄧㄢ", "ㄉㄜ˙", "ㄌㄧㄢˇ", "ㄙㄜˋ", "ㄅㄨˊ", "ㄊㄞˋ", "ㄏㄠˇ"], "expected": "系主任今天的臉色不太好", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-051", "readings": ["ㄑㄧˊ", "ㄓㄨㄥ", "ㄎㄠˇ", "ㄧㄠˋ", "ㄖㄣˋ", "ㄓㄣ", "ㄓㄨㄣˇ", "ㄅㄟˋ"], "expected": "期中考要認真準備", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-052", "readings": ["ㄨㄛˇ", "ㄔㄡ", "ㄉㄠˋ", "ㄊㄧˋ", "ㄉㄞˋ", "ㄧˋ"], "expected": "我抽到替代役", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-053", "readings": ["ㄐㄧㄠˋ", "ㄓㄠ", "ㄊㄨㄥ", "ㄓ", "ㄌㄞˊ", "ㄌㄜ˙"], "expected": "教召通知來了", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-054", "readings": ["ㄒㄩㄝˊ", "ㄘㄜˋ", "ㄔㄥˊ", "ㄐㄧ", "ㄔㄨ", "ㄌㄞˊ", "ㄌㄜ˙"], "expected": "學測成績出來了", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-055", "readings": ["ㄈㄣ", "ㄎㄜ", "ㄘㄜˋ", "ㄧㄢˋ", "ㄧㄠˋ", "ㄐㄧㄚ", "ㄧㄡˊ"], "expected": "分科測驗要加油", "domain": "taiwan_specific", "source": "manual"}
+{"id": "tw-taiwan_specific-056", "readings": ["ㄑㄩˋ", "7-11", "ㄌㄧㄥˇ", "ㄅㄠ", "ㄍㄨㄛˇ", "ㄏㄣˇ", "ㄈㄤ", "ㄅㄧㄢˋ"], "expected": "去7-11領包裹很方便", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true, "protected_english_spans": ["7-11"]}
+{"id": "tw-taiwan_specific-057", "readings": ["ㄑㄩㄢˊ", "ㄐㄧㄚ", "ㄎㄚ", "ㄈㄟ", "ㄇㄞˇ", "ㄧ", "ㄙㄨㄥˋ", "ㄧ"], "expected": "全家咖啡買一送一", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-058", "readings": ["ㄩㄥˋ", "ㄧㄡ", "ㄧㄡˊ", "ㄎㄚˇ", "ㄉㄚ", "ㄐㄧㄝˊ", "ㄩㄣˋ"], "expected": "用悠遊卡搭捷運", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-059", "readings": ["ㄈㄚ", "ㄆㄧㄠˋ", "ㄓㄨㄥˋ", "ㄐㄧㄤˇ", "ㄌㄜ˙"], "expected": "發票中獎了", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-060", "readings": ["ㄐㄧˊ", "ㄉㄧㄢˇ", "ㄏㄨㄛˊ", "ㄉㄨㄥˋ", "ㄎㄞ", "ㄕˇ", "ㄌㄜ˙"], "expected": "集點活動開始了", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-061", "readings": ["ㄓㄜˋ", "ㄍㄜ˙", "ㄅㄧㄢˋ", "ㄉㄤ", "ㄏㄣˇ", "ㄆㄧㄢˊ", "ㄧˊ"], "expected": "這個便當很便宜", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-062", "readings": ["ㄐㄧ", "ㄔㄜ", "ㄧㄠˋ", "ㄊㄧㄥˊ", "ㄗㄞˋ", "ㄍㄜˊ", "ㄗ˙", "ㄌㄧˇ"], "expected": "機車要停在格子裡", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-063", "readings": ["ㄌㄜˋ", "ㄙㄜˋ", "ㄔㄜ", "ㄌㄞˊ", "ㄌㄜ˙", "ㄎㄨㄞˋ", "ㄉㄧㄢˇ", "ㄉㄠˇ"], "expected": "垃圾車來了快點倒", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-064", "readings": ["ㄊㄞˊ", "ㄈㄥ", "ㄊㄧㄢ", "ㄧㄠˋ", "ㄓㄨㄣˇ", "ㄅㄟˋ", "ㄆㄠˋ", "ㄇㄧㄢˋ"], "expected": "颱風天要準備泡麵", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-065", "readings": ["ㄐㄧㄝˊ", "ㄩㄣˋ", "ㄓㄢˋ", "ㄔㄨ", "ㄎㄡˇ", "ㄧㄡˋ", "ㄓㄨㄢˇ"], "expected": "捷運站出口右轉", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-066", "readings": ["ㄍㄠ", "ㄊㄧㄝˇ", "ㄅㄧㄢˋ", "ㄉㄤ", "ㄏㄣˇ", "ㄏㄠˇ", "ㄔ"], "expected": "高鐵便當很好吃", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-067", "readings": ["YouBike", "ㄓㄢˋ", "ㄉㄧㄢˇ", "ㄏㄣˇ", "ㄇㄧˋ", "ㄐㄧˊ"], "expected": "YouBike站點很密集", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true, "protected_english_spans": ["YouBike"]}
+{"id": "tw-taiwan_specific-068", "readings": ["UBike", "ㄦˋ", "ㄕˊ", "ㄈㄣ", "ㄓㄨㄥ", "ㄋㄟˋ", "ㄇㄧㄢˇ", "ㄈㄟˋ"], "expected": "UBike二十分鐘內免費", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true, "protected_english_spans": ["UBike"]}
+{"id": "tw-taiwan_specific-069", "readings": ["ㄓㄜˋ", "ㄐㄧㄚ", "ㄐㄧ", "ㄆㄞˊ", "ㄏㄣˇ", "ㄏㄠˇ", "ㄔ"], "expected": "這家雞排很好吃", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-070", "readings": ["ㄓㄣ", "ㄋㄞˇ", "ㄕㄠˇ", "ㄊㄤˊ", "ㄑㄩˋ", "ㄅㄧㄥ"], "expected": "珍奶少糖去冰", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-071", "readings": ["ㄔㄡˋ", "ㄉㄡˋ", "ㄈㄨˇ", "ㄧㄠˋ", "ㄐㄧㄚ", "ㄆㄠˋ", "ㄘㄞˋ"], "expected": "臭豆腐要加泡菜", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-072", "readings": ["ㄌㄨˇ", "ㄖㄡˋ", "ㄈㄢˋ", "ㄉㄚˋ", "ㄨㄢˇ", "ㄓˇ", "ㄧㄠˋ", "ㄨˇ", "ㄕˊ", "ㄩㄢˊ"], "expected": "滷肉飯大碗只要五十元", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-073", "readings": ["ㄋㄧㄡˊ", "ㄖㄡˋ", "ㄇㄧㄢˋ", "ㄉㄜ˙", "ㄊㄤ", "ㄊㄡ˙", "ㄏㄣˇ", "ㄋㄨㄥˊ"], "expected": "牛肉麵的湯頭很濃", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-074", "readings": ["ㄜˊ", "ㄗㄞˇ", "ㄐㄧㄢ", "ㄧㄠˋ", "ㄐㄧㄚ", "ㄊㄧㄢˊ", "ㄌㄚˋ", "ㄐㄧㄤˋ"], "expected": "蚵仔煎要加甜辣醬", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-075", "readings": ["ㄐㄧㄢˋ", "ㄅㄠˇ", "ㄎㄚˇ", "ㄧㄠˋ", "ㄙㄨㄟˊ", "ㄕㄣ", "ㄒㄧ", "ㄉㄞˋ"], "expected": "健保卡要隨身攜帶", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-076", "readings": ["ㄨㄟˇ", "ㄧㄚˊ", "ㄔㄡ", "ㄉㄠˋ", "ㄐㄧㄤˇ", "ㄐㄧㄣ"], "expected": "尾牙抽到獎金", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-077", "readings": ["ㄔㄨㄣ", "ㄐㄧㄝˊ", "ㄈㄢˇ", "ㄒㄧㄤ", "ㄖㄣˊ", "ㄔㄠˊ", "ㄉㄨㄛ"], "expected": "春節返鄉人潮多", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-078", "readings": ["ㄒㄩㄢˇ", "ㄐㄩˇ", "ㄖˋ", "ㄧㄠˋ", "ㄑㄩˋ", "ㄊㄡˊ", "ㄆㄧㄠˋ"], "expected": "選舉日要去投票", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-079", "readings": ["ㄒㄩㄝˊ", "ㄉㄧˋ", "ㄒㄩㄝˊ", "ㄇㄟˋ", "ㄧㄠˋ", "ㄅㄧˋ", "ㄧㄝˋ", "ㄌㄜ˙"], "expected": "學弟學妹要畢業了", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-080", "readings": ["ㄒㄧˋ", "ㄒㄩㄝˊ", "ㄏㄨㄟˋ", "ㄧㄠˋ", "ㄅㄢˋ", "ㄏㄨㄛˊ", "ㄉㄨㄥˋ"], "expected": "系學會要辦活動", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-081", "readings": ["ㄓㄜˋ", "ㄊㄞˋ", "ㄔㄜˇ", "ㄌㄜ˙", "ㄅㄚ"], "expected": "這太扯了吧", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-082", "readings": ["ㄋㄧˇ", "ㄕˋ", "ㄗㄞˋ", "ㄏㄚ", "ㄌㄨㄛˊ"], "expected": "你是在哈囉", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-083", "readings": ["ㄕㄚˇ", "ㄧㄢˇ", "ㄇㄠ", "ㄇㄧ"], "expected": "傻眼貓咪", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
+{"id": "tw-taiwan_specific-084", "readings": ["ㄨˊ", "ㄧㄢˊ", "ㄧˇ", "ㄉㄨㄟˋ"], "expected": "無言以對", "domain": "taiwan_specific", "source": "generated", "license": "MIT", "redistributable": true}
