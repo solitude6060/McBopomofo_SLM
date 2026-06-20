@@ -10,6 +10,8 @@ add_subdirectory(Mandarin)
 add_library(McBopomofoLMLib
         AssociatedPhrasesV2.h
         AssociatedPhrasesV2.cpp
+        BigramContextualScorer.h
+        BigramContextualScorer.cpp
         ByteBlockBackedDictionary.h
         ByteBlockBackedDictionary.cpp
         ContextualScorer.h
@@ -90,6 +92,7 @@ if (ENABLE_TEST)
         # Test target declarations.
         add_executable(McBopomofoLMLibTest
                 AssociatedPhrasesV2Test.cpp
+                BigramContextualScorerTest.cpp
                 ByteBlockBackedDictionaryTest.cpp
                 DeterministicContextualScorerTest.cpp
                 McBopomofoLMTest.cpp
