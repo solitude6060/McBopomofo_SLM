@@ -316,4 +316,29 @@ TEST(DeterministicScorerTest, Phase2VariantRulesFire) {
   EXPECT_TRUE(foundSmoke);
 }
 
+TEST(DeterministicScorerTest, Phase2ProgramPhraseRulesFireInsideBaselineSpan) {
+  DeterministicContextualScorer scorer;
+  ContextualScoreRequest req;
+  req.readings = {"ㄅㄧㄢ", "ㄒㄧㄝˇ", "ㄔㄥˊ", "ㄕˋ", "ㄏㄣˇ"};
+  req.baselinePath.push_back(
+      CandidateInput{"ㄅㄧㄢ-ㄒㄧㄝˇ-ㄔㄥˊ", "編寫成", "", -3.0, 0, 3});
+  req.baselinePath.push_back(CandidateInput{"ㄕˋ", "是", "", -3.0, 3, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄏㄣˇ", "很", "", -3.0, 4, 1});
+  req.candidates.push_back(CandidateInput{"ㄔㄥˊ-ㄕˋ", "成事", "", -3.0, 2, 2});
+  req.candidates.push_back(CandidateInput{"ㄔㄥˊ-ㄕˋ", "程式", "", -4.0, 2, 2});
+
+  ScorerOutput out = scorer.suggestCorrections(req);
+  bool foundProgram = false;
+  for (const auto& c : out.corrections) {
+    if (c.value == "程式") {
+      foundProgram = true;
+      EXPECT_EQ(c.start, 2u);
+      EXPECT_EQ(c.length, 2u);
+      EXPECT_GT(c.scoreDelta, 0.0);
+      break;
+    }
+  }
+  EXPECT_TRUE(foundProgram);
+}
+
 }  // namespace McBopomofo

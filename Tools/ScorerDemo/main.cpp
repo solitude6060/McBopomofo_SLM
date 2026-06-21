@@ -54,7 +54,8 @@ static void applyReranker(
     Formosa::Gramambular2::ReadingGrid& grid,
     Formosa::Gramambular2::ReadingGrid::WalkResult* walkResult,
     McBopomofo::DeterministicContextualScorer& scorer,
-    std::vector<McBopomofo::ScorerCorrection>* outCorrections) {
+    std::vector<McBopomofo::ScorerCorrection>* outCorrections,
+    bool dumpCandidates) {
 
   McBopomofo::ContextualScoreRequest request;
   request.readings = readings;
@@ -83,6 +84,21 @@ static void applyReranker(
             node->reading(), unigram.value(), unigram.rawValue(),
             unigram.score(), loc, node->spanningLength()});
       }
+    }
+  }
+
+  if (dumpCandidates) {
+    std::printf("Baseline path:\n");
+    for (const auto& item : request.baselinePath) {
+      std::printf("  [%zu:%zu] %s -> %s (%.3f)\n", item.start,
+                  item.length, item.reading.c_str(), item.value.c_str(),
+                  item.baseScore);
+    }
+    std::printf("Scorer candidates:\n");
+    for (const auto& candidate : request.candidates) {
+      std::printf("  [%zu:%zu] %s -> %s (%.3f)\n", candidate.start,
+                  candidate.length, candidate.reading.c_str(),
+                  candidate.value.c_str(), candidate.baseScore);
     }
   }
 
@@ -149,7 +165,8 @@ struct Result {
 };
 
 static Result evaluate(const std::vector<std::string>& readings,
-                       std::shared_ptr<McBopomofo::McBopomofoLM> lm) {
+                       std::shared_ptr<McBopomofo::McBopomofoLM> lm,
+                       bool dumpCandidates) {
   Result result;
 
   Formosa::Gramambular2::ReadingGrid grid(
@@ -167,7 +184,8 @@ static Result evaluate(const std::vector<std::string>& readings,
 
   {
     McBopomofo::DeterministicContextualScorer scorer;
-    applyReranker(readings, grid, &walkResult, scorer, &result.corrections);
+    applyReranker(readings, grid, &walkResult, scorer, &result.corrections,
+                  dumpCandidates);
   }
   {
     auto parts = walkResult.valuesAsStrings();
@@ -197,6 +215,7 @@ static std::vector<std::string> split(const std::string& s, char delim) {
 static void printUsage(const char* prog) {
   std::fprintf(stderr,
       "Usage: %s <data.txt> [reading_sequence]\n"
+      "       %s <data.txt> --dump-candidates <reading_sequence>\n"
       "\n"
       "  data.txt        Path to language model dictionary\n"
       "  reading_sequence Dash-separated Bopomofo syllables\n"
@@ -204,7 +223,7 @@ static void printUsage(const char* prog) {
       "\n"
       "  If reading_sequence is omitted, enters interactive mode\n"
       "  where each line is a reading sequence.\n",
-      prog);
+      prog, prog);
 }
 
 int main(int argc, char* argv[]) {
@@ -227,11 +246,18 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  if (argc >= 3) {
+  bool dumpCandidates = false;
+  int readingArgIndex = 2;
+  if (argc >= 4 && std::strcmp(argv[2], "--dump-candidates") == 0) {
+    dumpCandidates = true;
+    readingArgIndex = 3;
+  }
+
+  if (argc > readingArgIndex) {
     // Single-shot mode
-    std::string readingSeq = argv[2];
+    std::string readingSeq = argv[readingArgIndex];
     auto readings = split(readingSeq, '-');
-    auto result = evaluate(readings, lm);
+    auto result = evaluate(readings, lm, dumpCandidates);
 
     std::printf("Input:   %s\n", readingSeq.c_str());
     std::printf("Base:    %s\n", result.baselineText.c_str());
@@ -263,7 +289,7 @@ int main(int argc, char* argv[]) {
       }
 
       auto readings = split(line, '-');
-      auto result = evaluate(readings, lm);
+      auto result = evaluate(readings, lm, false);
 
       std::printf("Input:   %s\n", line.c_str());
       std::printf("Base:    %s\n", result.baselineText.c_str());

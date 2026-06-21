@@ -43,6 +43,29 @@ bool isAnyOf(const std::string& value, std::initializer_list<const char*> list) 
   return false;
 }
 
+std::vector<std::string> splitUTF8Codepoints(const std::string& s) {
+  std::vector<std::string> result;
+  for (size_t i = 0; i < s.size();) {
+    unsigned char c = static_cast<unsigned char>(s[i]);
+    size_t len = 1;
+    if ((c & 0x80) == 0x00) {
+      len = 1;
+    } else if ((c & 0xE0) == 0xC0) {
+      len = 2;
+    } else if ((c & 0xF0) == 0xE0) {
+      len = 3;
+    } else if ((c & 0xF8) == 0xF0) {
+      len = 4;
+    }
+    if (i + len > s.size()) {
+      len = 1;
+    }
+    result.push_back(s.substr(i, len));
+    i += len;
+  }
+  return result;
+}
+
 }  // namespace
 
 DeterministicContextualScorer::DeterministicContextualScorer() {
@@ -134,7 +157,18 @@ std::string DeterministicContextualScorer::baselineValueForSpan(
       ++pos;
       continue;
     }
-    result += covering->value;
+    const size_t overlapStart = std::max(pos, covering->start);
+    const size_t overlapEnd = std::min(end, covering->start + covering->length);
+    std::vector<std::string> chars = splitUTF8Codepoints(covering->value);
+    if (chars.size() == covering->length) {
+      for (size_t i = overlapStart - covering->start;
+           i < overlapEnd - covering->start; ++i) {
+        result += chars[i];
+      }
+    } else if (overlapStart == covering->start &&
+               overlapEnd == covering->start + covering->length) {
+      result += covering->value;
+    }
     size_t next = covering->start + covering->length;
     pos = next > pos ? next : pos + 1;
   }
@@ -389,6 +423,15 @@ double DeterministicContextualScorer::ruleDelta(
     if (candidate.value == "繼承" &&
         (current == "計程" || current.empty()) &&
         (after.empty() || contains(after, "了"))) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-bigram";
+      }
+      return 14.0;
+    }
+
+    if (candidate.value == "程式" &&
+        (currentSpan == "成是" || currentSpan.empty()) &&
+        (after.empty() || contains(after, "很"))) {
       if (ruleName != nullptr) {
         *ruleName = "phase2-bigram";
       }
