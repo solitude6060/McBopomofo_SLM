@@ -156,39 +156,41 @@
     {
       "id": "slm-benchmark-suite",
       "name": "SLM Reranker Benchmark Suite Runner",
-      "status": "benchmarked",
-      "date": "2026-06-21T13:52:05+08:00",
+      "status": "scaffold-verified",
+      "date": "2026-06-21T14:00:30+08:00",
       "branch": "slm-phase2-learnable",
-      "commit_suite": "78d0d17dfa552fede497ef3f484d049c9dbcc0aa",
+      "commit_suite": "745bc4e023397fc3968d4422ffaf8888dec582f6",
       "protocol_version": "1.2",
       "model": {
-        "model_name": "qwen2.5-0.5b",
-        "provider": "ollama-http",
-        "ollama_backend": "ollama",
-        "parameter_count": 500000000,
-        "quantization": "q4_k_m",
-        "local_only": true
+        "model_name": "candidate-ranker-heldout-clean",
+        "provider": "local-count-ranker",
+        "model_type": "candidate-ranker-v1",
+        "model_path": "Models/candidate_ranker_heldout_clean.json",
+        "training_input_cases": 234,
+        "training_excluded_cases": 234,
+        "training_usable_cases": 0,
+        "contamination_guard": "all benchmark fixture id prefixes excluded"
       },
       "results_dir": "docs/reports/experiments/phase2/",
-      "summary_file": "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_ollama_http_benchmark.json",
+      "summary_file": "docs/reports/experiments/phase2/candidate_ranker_heldout_clean_benchmark.json",
       "result_files": [
         "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_benchmark.json",
-        "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_ollama_http_benchmark.json"
+        "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_ollama_http_benchmark.json",
+        "docs/reports/experiments/phase2/candidate_ranker_heldout_clean_benchmark.json"
       ],
-      "description": "Orchestrated benchmark suite runner evaluating baseline, deterministic reranker, and qwen2.5:0.5b SLM reranker across three canonical fixture sets. The ollama-http transport avoids per-request CLI spawn but still fails the gate: aggregate accuracy regresses to 30.3419%, fallbacks rise to 129, and p95 latency is 1047338us.",
+      "description": "Candidate-only non-generative ranker benchmark. With all 234 benchmark fixture cases excluded from training, the ranker intentionally falls back to baseline-compatible choices: aggregate accuracy 65.3846%, fallbacks 0, candidate violations 0, p95 latency 60us. It proves the low-latency/safety path but not quality improvement over deterministic reranking.",
       "fixtures_count": 234,
-      "real_model_benchmarked": true,
+      "real_model_benchmarked": false,
       "gate_result": "FAIL",
       "verification": [
         "py_compile",
-        "self-test passed",
-        "qwen2.5:0.5b single-request ollama-http smoke",
-        "full 234-case qwen2.5:0.5b ollama-http benchmark"
+        "candidate ranker trainer self-test",
+        "candidate ranker scorer self-test",
+        "full 234-case heldout-clean candidate ranker benchmark"
       ],
       "next_steps": [
-        "Investigate output_not_candidate and output_not_string fallbacks before any further prompt tuning",
-        "Do not pursue Ollama transport as an IME latency path unless a model can approach the 20ms p95 gate",
-        "Consider a smaller supervised candidate classifier or native llama.cpp/Core ML path instead of general text generation",
+        "Add an independent labeled training split so candidate-ranker-v1 can learn without fixture contamination",
+        "Compare a trained candidate ranker against deterministic reranking after usable_cases > 0",
         "Gate: SLM must beat deterministic reranker before Phase 3"
       ]
     }

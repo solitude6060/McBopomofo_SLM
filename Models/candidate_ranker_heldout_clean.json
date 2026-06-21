@@ -1,0 +1,40 @@
+{
+  "counts": {
+    "candidate": {},
+    "reading_candidate": {},
+    "transition": {}
+  },
+  "created_at": "2026-06-21T14:00:24+08:00",
+  "defaults": {
+    "total_candidate_observations": 0,
+    "unknown_score": 0.0,
+    "vocabulary_size": 0
+  },
+  "description": "Non-generative candidate ranker. Scores only existing candidate tokens and emits one candidate-constrained output string.",
+  "model_type": "candidate-ranker-v1",
+  "training": {
+    "contamination_guard": "excluded cases are not counted",
+    "excluded_cases": 234,
+    "excluded_id_prefixes": [
+      "en-mix-",
+      "tw-amb-",
+      "tw-taiwan_specific-"
+    ],
+    "input_cases": 234,
+    "skipped_expected_not_candidate": 0,
+    "skipped_without_candidates": 0,
+    "skipped_without_expected": 0,
+    "source_files": [
+      "slm_taiwan_ambiguous.jsonl",
+      "slm_english_mixed.jsonl",
+      "slm_taiwan_specific.jsonl"
+    ],
+    "usable_cases": 0
+  },
+  "weights": {
+    "baseline_bonus": 0.25,
+    "candidate_weight": 0.15,
+    "reading_candidate_weight": 2.0,
+    "transition_weight": 0.75
+  }
+}
