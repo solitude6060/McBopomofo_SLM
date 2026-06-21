@@ -159,7 +159,7 @@
       "status": "scaffold-verified",
       "date": "2026-06-21T13:24:23+08:00",
       "branch": "slm-phase2-learnable",
-      "commit_suite": "9bec3f6b45ea72baf02ce01757af629e30ddf9fe",
+      "commit_suite": "8fc8447208198acedd33a7634bb66505caaf6231",
       "protocol_version": "1.2",
       "model": null,
       "results_dir": "docs/reports/experiments/phase2/",

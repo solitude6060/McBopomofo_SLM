@@ -2,7 +2,7 @@
   "suite": "slm-benchmark-suite",
   "date": "2026-06-21T13:24:23+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "9bec3f6b45ea72baf02ce01757af629e30ddf9fe",
+  "commit": "8fc8447208198acedd33a7634bb66505caaf6231",
   "fixtures": {
     "taiwan_ambiguous": 100,
     "english_mixed": 50,
