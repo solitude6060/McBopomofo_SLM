@@ -68,12 +68,24 @@ REGISTRY_PATH = os.path.join(
     PROJECT_ROOT, "docs", "reports", "experiments", "registry.json"
 )
 
+HYGIENE_SCRIPT = os.path.join(
+    PROJECT_ROOT, "Tools", "ContextualEvaluation", "fixture_hygiene_audit.py"
+)
+
 
 FIXTURE_NAME_MAP = {
     "taiwan_ambiguous": "taiwan_ambiguous.jsonl",
     "english_mixed": "english_mixed.jsonl",
     "taiwan_specific": "taiwan_specific.jsonl",
     "heldout_generalization": "heldout_generalization.jsonl",
+}
+
+# Fixtures resolved at runtime via subprocess (no static file).
+# Each entry maps runner-facing fixture name to parameters for the resolver.
+DYNAMIC_FIXTURES = {
+    "heldout_generalization_clean": {
+        "source_fixture": "heldout_generalization",
+    },
 }
 
 
@@ -179,10 +191,97 @@ def compute_percentiles(values):
 # Fixture resolution
 # ---------------------------------------------------------------------------
 
+def _parse_export_clean_stdout(stdout_text, source_fixture):
+    try:
+        data = json.loads(stdout_text)
+    except json.JSONDecodeError as e:
+        raise RuntimeError(
+            f"Failed to parse export-clean output: {e}"
+        )
+    if not isinstance(data, dict):
+        raise RuntimeError(
+            "export-clean output is not a JSON object"
+        )
+    exports = data.get("clean_exports")
+    if not isinstance(exports, list):
+        raise RuntimeError(
+            "export-clean output missing 'clean_exports' list"
+        )
+    for entry in exports:
+        if entry.get("fixture") == source_fixture:
+            path = entry.get("path")
+            if not isinstance(path, str) or not path:
+                raise RuntimeError(
+                    f"clean_exports entry for {source_fixture!r} "
+                    "missing or empty 'path'"
+                )
+            clean = entry.get("clean")
+            if not isinstance(clean, int) or clean <= 0:
+                raise RuntimeError(
+                    f"clean_exports entry for {source_fixture!r} "
+                    "has non-positive 'clean' count"
+                )
+            return entry
+    raise RuntimeError(
+        "clean_exports has no entry for "
+        f"fixture {source_fixture!r}"
+    )
+
+
+def _resolve_dynamic_fixture(name):
+    params = DYNAMIC_FIXTURES.get(name)
+    if params is None:
+        raise RuntimeError(f"Unknown dynamic fixture: {name!r}")
+    if not os.path.isfile(HYGIENE_SCRIPT):
+        raise RuntimeError(
+            f"Hygiene audit script not found: {HYGIENE_SCRIPT}"
+        )
+    source = params["source_fixture"]
+    cmd = [sys.executable, HYGIENE_SCRIPT, "--export-clean", source]
+    try:
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=120,
+        )
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(
+            f"Hygiene audit subprocess timed out for {name!r}"
+        )
+    except OSError as exc:
+        raise RuntimeError(
+            f"Hygiene audit subprocess error: {exc}"
+        )
+    if result.returncode != 0:
+        stderr = result.stderr.strip() or "(no stderr)"
+        raise RuntimeError(
+            f"Hygiene audit exited {result.returncode} for "
+            f"{name!r}: {stderr}"
+        )
+    clean_export = _parse_export_clean_stdout(result.stdout, source)
+    clean_path = clean_export["path"]
+    if not os.path.isfile(clean_path):
+        raise RuntimeError(
+            f"Clean export file not found: {clean_path}"
+        )
+    with open(clean_path, "r", encoding="utf-8") as handle:
+        line_count = sum(1 for line in handle if line.strip())
+    if line_count <= 0:
+        raise RuntimeError(f"Clean export file is empty: {clean_path}")
+    if line_count != clean_export["clean"]:
+        raise RuntimeError(
+            f"Clean export count mismatch for {name!r}: "
+            f"metadata={clean_export['clean']} file_lines={line_count}"
+        )
+    return clean_path
+
+
 def resolve_fixtures(fixture_names):
     """Resolve fixture names to absolute paths. Raises on missing."""
     paths = []
     for name in fixture_names:
+        if name in DYNAMIC_FIXTURES:
+            path = _resolve_dynamic_fixture(name)
+            paths.append(path)
+            continue
         filename = FIXTURE_NAME_MAP.get(name)
         if filename is None:
             raise RuntimeError(f"Unknown fixture name: {name!r}")
@@ -925,6 +1024,113 @@ def run_self_test():
     if fixture_name_from_path("/tmp/slm_taiwan_ambiguous.jsonl") != "taiwan_ambiguous":
         errors.append("fixture name: expected generated SLM request prefix stripped")
 
+    # -- 9. fixture_name_from_path: dynamic fixture path --
+    clean_path = "/tmp/heldout_generalization_clean.jsonl"
+    if fixture_name_from_path(clean_path) != "heldout_generalization_clean":
+        errors.append(
+            "fixture name: expected 'heldout_generalization_clean' "
+            f"got {fixture_name_from_path(clean_path)!r}"
+        )
+
+    # -- 10. _parse_export_clean_stdout: valid parse --
+    valid_stdout = json.dumps({
+        "audit": "fixture_hygiene_audit",
+        "total_cases": 63,
+        "clean_exports": [
+            {
+                "path": "/tmp/heldout_generalization_clean.jsonl",
+                "fixture": "heldout_generalization",
+                "total": 63,
+                "clean": 57,
+                "blocked": 6,
+            },
+        ],
+    })
+    try:
+        parsed = _parse_export_clean_stdout(
+            valid_stdout, "heldout_generalization"
+        )
+        if parsed.get("path") != "/tmp/heldout_generalization_clean.jsonl":
+            errors.append(
+                "parse export-clean valid: expected "
+                "/tmp/heldout_generalization_clean.jsonl, "
+                f"got {parsed!r}"
+            )
+    except RuntimeError as e:
+        errors.append(f"parse export-clean valid: unexpected error: {e}")
+
+    # -- 11. _parse_export_clean_stdout: malformed JSON --
+    try:
+        _parse_export_clean_stdout("not valid json", "heldout_generalization")
+        errors.append("parse export-clean malformed: expected RuntimeError")
+    except RuntimeError:
+        pass
+
+    # -- 12. _parse_export_clean_stdout: missing clean_exports --
+    try:
+        _parse_export_clean_stdout(
+            json.dumps({"audit": "fixture_hygiene_audit"}),
+            "heldout_generalization",
+        )
+        errors.append("parse export-clean no array: expected RuntimeError")
+    except RuntimeError:
+        pass
+
+    # -- 13. _parse_export_clean_stdout: missing entry --
+    wrong_fixture = json.dumps({
+        "clean_exports": [
+            {"fixture": "taiwan_ambiguous",
+             "path": "/tmp/taiwan_ambiguous_clean.jsonl"},
+        ],
+    })
+    try:
+        _parse_export_clean_stdout(
+            wrong_fixture, "heldout_generalization"
+        )
+        errors.append("parse export-clean wrong fixture: expected RuntimeError")
+    except RuntimeError:
+        pass
+
+    # -- 14. _parse_export_clean_stdout: present but empty path --
+    empty_path = json.dumps({
+        "clean_exports": [
+            {"fixture": "heldout_generalization",
+             "path": ""},
+        ],
+    })
+    try:
+        _parse_export_clean_stdout(empty_path, "heldout_generalization")
+        errors.append("parse export-clean empty path: expected RuntimeError")
+    except RuntimeError:
+        pass
+
+    # -- 15. _parse_export_clean_stdout: zero clean count --
+    zero_clean = json.dumps({
+        "clean_exports": [
+            {"fixture": "heldout_generalization",
+             "path": "/tmp/heldout_generalization_clean.jsonl",
+             "clean": 0},
+        ],
+    })
+    try:
+        _parse_export_clean_stdout(zero_clean, "heldout_generalization")
+        errors.append("parse export-clean zero clean: expected RuntimeError")
+    except RuntimeError:
+        pass
+
+    # -- 16. DYNAMIC_FIXTURES entry integrity --
+    if "heldout_generalization_clean" not in DYNAMIC_FIXTURES:
+        errors.append("DYNAMIC_FIXTURES missing heldout_generalization_clean")
+    else:
+        src = DYNAMIC_FIXTURES["heldout_generalization_clean"].get(
+            "source_fixture"
+        )
+        if src != "heldout_generalization":
+            errors.append(
+                f"DYNAMIC_FIXTURES source_fixture: expected "
+                f"'heldout_generalization', got {src!r}"
+            )
+
     # -- Report --
     if errors:
         for e in errors:
@@ -933,7 +1139,7 @@ def run_self_test():
 
     print(
         "SELF-TEST PASSED: evaluator parsing + RER + gate + "
-        "percentile + metrics extraction",
+        "percentile + metrics extraction + dynamic fixture",
         file=sys.stderr,
     )
     return 0

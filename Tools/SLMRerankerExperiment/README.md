@@ -1,6 +1,6 @@
 # SLM Reranker Experiment: External Scorer Protocol
 
-Last updated: 2026-06-21T14:35:00+08:00
+Last updated: 2026-06-22T01:52:05+08:00
 
 ## Purpose
 
@@ -654,7 +654,7 @@ python3 run_benchmark_suite.py [options]
 |------|---------|-------------|
 | `--work-dir <path>` | temp dir | Directory for intermediate files (SLM request JSONL, per-case output) |
 | `--output <path>` | stdout | Report JSON output path |
-| `--fixtures <names...>` | `taiwan_ambiguous english_mixed taiwan_specific` | Fixture names resolved from `Tests/fixtures/contextual_bopomofo/` |
+| `--fixtures <names...>` | `taiwan_ambiguous english_mixed taiwan_specific` | Fixture names resolved from `Tests/fixtures/contextual_bopomofo/` (static) or via subprocess (dynamic, e.g. `heldout_generalization_clean`) |
 | `--candidate-limit <N>` | 16 | Max candidates per slot for export |
 | `--scorer-command <cmd>` | — | External scorer command (per-case subprocess mode) |
 | `--persistent-scorer-command <cmd>` | — | Persistent scorer command |
@@ -702,6 +702,23 @@ python3 run_benchmark_suite.py \
   --scorer-command "python3 your_scorer.py" \
   --work-dir /tmp/slm_benchmark \
   --output /tmp/slm_report.json
+```
+
+**Dry-run smoke on clean promotion gate (`heldout_generalization_clean`):**
+
+The `heldout_generalization_clean` fixture is resolved at runtime by
+calling `fixture_hygiene_audit.py --export-clean heldout_generalization`.
+The runner validates the export metadata and reads the raw fixture JSONL from
+`/tmp/`.
+
+```bash
+python3 run_benchmark_suite.py \
+  --dry-run-local-wrapper \
+  --fixtures heldout_generalization_clean \
+  --slm-candidate-granularity character \
+  --work-dir /tmp/slm_clean_gate_smoke \
+  --output /tmp/slm_clean_gate_smoke.json \
+  --no-gate
 ```
 
 ### Gate Criteria
@@ -783,6 +800,25 @@ python3 run_experiment.py --self-test
 
 # 10. Verify no whitespace errors
 git diff --check
+
+# 11. Dynamic fixture: syntax check
+python3 -m py_compile run_benchmark_suite.py
+
+# 12. Dynamic fixture: self-test (includes parsing + resolution tests)
+python3 run_benchmark_suite.py --self-test
+
+# 13. Dynamic fixture: export clean heldout directly
+python3 ../ContextualEvaluation/fixture_hygiene_audit.py \
+  --export-clean heldout_generalization
+
+# 14. Dynamic fixture: dry-run smoke on clean promotion gate
+python3 run_benchmark_suite.py \
+  --dry-run-local-wrapper \
+  --fixtures heldout_generalization_clean \
+  --slm-candidate-granularity character \
+  --work-dir /tmp/slm_clean_gate_smoke \
+  --output /tmp/slm_clean_gate_smoke.json \
+  --no-gate
 ```
 
 ## File Layout
