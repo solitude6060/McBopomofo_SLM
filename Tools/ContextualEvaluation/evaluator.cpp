@@ -244,6 +244,10 @@ static bool isBopomofoReading(const std::string& token) {
   return sawBopomofo;
 }
 
+static bool isLiteralBopomofoToken(const std::string& token) {
+  return token == "ㄎㄧㄤ";
+}
+
 struct TestCase {
   std::string id;
   std::vector<std::string> readings;
@@ -411,6 +415,16 @@ class Evaluator {
      };
 
      for (size_t i = 0; i < tc.readings.size(); ++i) {
+       if (isLiteralBopomofoToken(tc.readings[i])) {
+         pureBopomofo = false;
+         if (!flushChunk()) {
+           result.missingReadingIndex = i;
+           return result;
+         }
+         segments.push_back(OutputSegment{tc.readings[i], false});
+         continue;
+       }
+
        if (isBopomofoReading(tc.readings[i])) {
          bopomofoChunk.push_back(tc.readings[i]);
          continue;
@@ -869,6 +883,22 @@ class Evaluator {
         };
 
     for (size_t i = 0; i < tc.readings.size(); ++i) {
+      if (isLiteralBopomofoToken(tc.readings[i])) {
+        if (!bopomofoChunk.empty()) {
+          auto chunkResult = processBopomofoChunkForSlm(bopomofoChunk);
+          bopomofoChunk.clear();
+          if (chunkResult.ok) {
+            addSlotsWithSpacing(chunkResult.slots, chunkResult.text, false);
+          } else {
+            allOk = false;
+          }
+        }
+
+        std::vector<std::vector<std::string>> tokenSlots = {{tc.readings[i]}};
+        addSlotsWithSpacing(tokenSlots, tc.readings[i], false);
+        continue;
+      }
+
       if (isBopomofoReading(tc.readings[i])) {
         bopomofoChunk.push_back(tc.readings[i]);
         continue;

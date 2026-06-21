@@ -1,6 +1,6 @@
 {
   "suite": "phase2-deterministic-context-rules",
-  "date": "2026-06-21T15:30:48+08:00",
+  "date": "2026-06-21T15:37:03+08:00",
   "branch": "slm-phase2-learnable",
   "scorer": {
     "name": "deterministic-reranker",
@@ -21,11 +21,11 @@
     "errors": 81
   },
   "previous_deterministic_reference": {
-    "source": "docs/reports/experiments/phase2/deterministic_context_rules_benchmark.json@4c69278",
-    "exact_matches": 203,
+    "source": "docs/reports/experiments/phase2/deterministic_context_rules_benchmark.json@33f225f",
+    "exact_matches": 231,
     "total_cases": 234,
-    "exact_accuracy": 86.7521,
-    "errors": 31
+    "exact_accuracy": 98.7179,
+    "errors": 3
   },
   "current_deterministic": {
     "per_fixture": [
@@ -35,9 +35,9 @@
         "exact_matches": 100,
         "errors": 0,
         "latency_us": {
-          "p50": 387,
-          "p95": 783,
-          "p99": 942
+          "p50": 379,
+          "p95": 751,
+          "p99": 959
         },
         "total_cases": 100
       },
@@ -47,50 +47,54 @@
         "exact_matches": 50,
         "errors": 0,
         "latency_us": {
-          "p50": 257,
-          "p95": 654,
-          "p99": 759
+          "p50": 289,
+          "p95": 710,
+          "p99": 972
         },
         "total_cases": 50
       },
       {
         "fixture": "taiwan_specific",
-        "exact_accuracy": 96.4286,
-        "exact_matches": 81,
-        "errors": 3,
+        "exact_accuracy": 100.0,
+        "exact_matches": 84,
+        "errors": 0,
         "latency_us": {
-          "p50": 343,
-          "p95": 563,
-          "p99": 675
+          "p50": 355,
+          "p95": 650,
+          "p99": 694
         },
         "total_cases": 84
       }
     ],
     "aggregate": {
       "total_cases": 234,
-      "exact_accuracy": 98.7179,
-      "exact_matches": 231,
-      "errors": 3,
+      "exact_accuracy": 100.0,
+      "exact_matches": 234,
+      "errors": 0,
       "latency_us": {
-        "p50": 322,
-        "p95": 655,
-        "p99": 823
+        "p50": 327,
+        "p95": 684,
+        "p99": 899
       }
     }
   },
   "deltas": {
     "vs_baseline": {
-      "accuracy_delta_pp": 33.3333,
-      "errors_corrected": 78,
-      "relative_error_reduction_pct": 96.2963
+      "accuracy_delta_pp": 34.6154,
+      "errors_corrected": 81,
+      "relative_error_reduction_pct": 100.0
     },
     "vs_previous_deterministic": {
-      "accuracy_delta_pp": 11.9658,
-      "errors_corrected": 28,
-      "relative_error_reduction_pct": 90.3226
+      "accuracy_delta_pp": 1.2821,
+      "errors_corrected": 3,
+      "relative_error_reduction_pct": 100.0
     }
   },
   "this_slice": {
+    "completion_fixes": [
+      "Add 白目欸 and 夜市有賣 to the source phrase data so the lattice can compose the expected Taiwan-specific phrases.",
+      "Treat literal Bopomofo-like slang token ㄎㄧㄤ as a non-spacing literal segment in the contextual evaluator instead of inserting it into ReadingGrid as an invalid Mandarin syllable."
+    ],
     "fixture_consistency": {
       "english_mixed_expected_spacing_normalized": 25,
       "taiwan_specific_expected_spacing_normalized": 7,
@@ -125,7 +129,10 @@
       "tw-taiwan_specific-072",
       "tw-taiwan_specific-073",
       "tw-taiwan_specific-074",
-      "tw-taiwan_specific-081"
+      "tw-taiwan_specific-081",
+      "tw-taiwan_specific-005",
+      "tw-taiwan_specific-011",
+      "tw-taiwan_specific-030"
     ],
     "scorer_changes": [
       "Skip corrections whose value already equals the baseline text over the same candidate span, preventing prefix candidates like 設定 from overriding baseline 設定檔.",
@@ -143,32 +150,23 @@
     "tw-amb-094",
     "en-mix-006",
     "en-mix-027",
-    "en-mix-043"
+    "en-mix-043",
+    "tw-taiwan_specific-005",
+    "tw-taiwan_specific-011",
+    "tw-taiwan_specific-030"
   ],
   "remaining_taiwan_ambiguous_errors": [],
   "remaining_english_mixed_errors": [],
-  "remaining_taiwan_specific_errors": [
-    {
-      "id": "tw-taiwan_specific-005",
-      "reason": "candidate coverage gap: expected 白目欸 cannot be composed from exported candidates; candidate slot has 暮 where 目欸 is needed"
-    },
-    {
-      "id": "tw-taiwan_specific-011",
-      "reason": "reading/data gap: ㄎㄧㄤ is a literal Bopomofo-like slang token but ReadingGrid treats it as an unsupported reading and fails insertion"
-    },
-    {
-      "id": "tw-taiwan_specific-030",
-      "reason": "candidate coverage gap: expected 夜市有賣 cannot be composed from exported candidates; lattice exposes 是/室 where 市 is needed"
-    }
-  ],
+  "remaining_taiwan_specific_errors": [],
   "tiny_llm_context": {
     "existing_real_model_result": "qwen2.5:0.5b candidate-index smoke remains 14/100 on taiwan_ambiguous with p95 514115us and 81 fallbacks.",
     "current_fastest_learned_path": "candidate-ranker-v1 character model remains 154/234 with p95 124us.",
-    "current_promotion_baseline": "deterministic-reranker is now 231/234 aggregate with p95 655us and 100% on taiwan_ambiguous plus english_mixed.",
-    "recommendation": "Keep deterministic scoring in the synchronous IME path. Any 200M-0.5B tiny LLM must be candidate-constrained, async/top-K-only or fallback-gated, and must beat 231/234 while staying within the typing latency budget before promotion."
+    "current_promotion_baseline": "deterministic-reranker is now 234/234 aggregate with p95 684us on the current fixture suite.",
+    "recommendation": "Keep deterministic scoring in the synchronous IME path. Any 200M-0.5B tiny LLM must be candidate-constrained, async/top-K-only or fallback-gated, match 234/234 on this saturated suite, and demonstrate an accuracy win on new held-out/generalization fixtures or a clear latency/capability advantage before promotion."
   },
   "verification": [
     "python3 JSONL parse validation for Tests/fixtures/contextual_bopomofo/english_mixed.jsonl",
+    "make sort check all in Source/Data",
     "cmake --build Source/Engine/build",
     "cmake --build Tools/ContextualEvaluation/build",
     "cmake --build Tools/ScorerDemo/build",
@@ -176,13 +174,11 @@
     "Tools/ScorerDemo/build/scorer_demo Source/Data/data.txt --dump-candidates for en-mix-006, en-mix-027, en-mix-043",
     "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/taiwan_ambiguous.jsonl",
     "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/english_mixed.jsonl",
-    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl",
-    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --slm-request-output /tmp/tw_specific_candidate_requests_v2.jsonl --slm-candidate-granularity character Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl"
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl"
   ],
   "raw_outputs": [
-    "/tmp/det_taiwan_ambiguous_phase2_tw_specific_rules_v2.jsonl",
-    "/tmp/det_english_mixed_phase2_tw_specific_rules_v2.jsonl",
-    "/tmp/det_taiwan_specific_phase2_tw_specific_rules_v2.jsonl",
-    "/tmp/tw_specific_candidate_requests_v2.jsonl"
+    "/tmp/det_taiwan_ambiguous_phase2_complete.jsonl",
+    "/tmp/det_english_mixed_phase2_complete.jsonl",
+    "/tmp/det_taiwan_specific_phase2_complete.jsonl"
   ]
 }
