@@ -48,11 +48,18 @@ def baseline_tokens(request):
     return validate_candidates(baseline, candidates)
 
 
+def token_at(tokens, idx, default):
+    if tokens is None or idx < 0 or idx >= len(tokens):
+        return default
+    return tokens[idx]
+
+
 def count_score(table, key):
     return math.log1p(table.get(key, 0))
 
 
-def token_score(model, reading, token, previous, baseline_token):
+def token_score(model, reading, token, previous, baseline_token,
+                prev_base, next_base):
     weights = model.get("weights", {})
     counts = model.get("counts", {})
 
@@ -68,6 +75,18 @@ def token_score(model, reading, token, previous, baseline_token):
     )
     score += float(weights.get("transition_weight", 0.0)) * count_score(
         counts.get("transition", {}), previous + "\t" + token
+    )
+    score += float(weights.get("baseline_prev_candidate_weight", 0.0)) * count_score(
+        counts.get("baseline_prev_candidate", {}),
+        prev_base + "\t" + reading + "\t" + token,
+    )
+    score += float(weights.get("baseline_next_candidate_weight", 0.0)) * count_score(
+        counts.get("baseline_next_candidate", {}),
+        reading + "\t" + token + "\t" + next_base,
+    )
+    score += float(weights.get("baseline_window_candidate_weight", 0.0)) * count_score(
+        counts.get("baseline_window_candidate", {}),
+        prev_base + "\t" + reading + "\t" + token + "\t" + next_base,
     )
     return score
 
@@ -87,11 +106,16 @@ def rank_request(model, request):
             continue
         reading = readings[idx] if idx < len(readings) else ""
         baseline_token = baseline[idx] if baseline and idx < len(baseline) else None
+        prev_base = token_at(baseline, idx - 1, "<BOS>")
+        next_base = token_at(baseline, idx + 1, "<EOS>")
 
         best = None
         best_score = None
         for token in slot:
-            score = token_score(model, reading, token, previous, baseline_token)
+            score = token_score(
+                model, reading, token, previous, baseline_token,
+                prev_base, next_base,
+            )
             if best is None or score > best_score:
                 best = token
                 best_score = score
@@ -128,15 +152,24 @@ def run_self_test():
     model = {
         "model_type": "candidate-ranker-v1",
         "weights": {
-            "baseline_bonus": 0.25,
-            "reading_candidate_weight": 2.0,
-            "candidate_weight": 0.15,
-            "transition_weight": 0.75,
+            "baseline_bonus": 0.5,
+            "reading_candidate_weight": 0.1,
+            "candidate_weight": 0.05,
+            "transition_weight": 0.15,
+            "baseline_prev_candidate_weight": 1.5,
+            "baseline_next_candidate_weight": 1.5,
+            "baseline_window_candidate_weight": 2.5,
         },
         "counts": {
             "reading_candidate": {"r1\tB": 2, "r2\tC": 2},
             "candidate": {"B": 2, "C": 2},
             "transition": {"<BOS>\tB": 2, "B\tC": 2},
+            "baseline_prev_candidate": {"<BOS>\tr1\tB": 2, "A\tr2\tC": 2},
+            "baseline_next_candidate": {"r1\tB\tC": 2, "r2\tC\t<EOS>": 2},
+            "baseline_window_candidate": {
+                "<BOS>\tr1\tB\tC": 2,
+                "A\tr2\tC\t<EOS>": 2,
+            },
         },
     }
     request = {

@@ -77,6 +77,17 @@ def is_excluded(case_id, prefixes):
     return any(case_id.startswith(prefix) for prefix in prefixes)
 
 
+def baseline_tokens(case, candidates):
+    baseline = case.get("baseline_output", "")
+    return validate_candidates(baseline, candidates)
+
+
+def token_at(tokens, idx, default):
+    if tokens is None or idx < 0 or idx >= len(tokens):
+        return default
+    return tokens[idx]
+
+
 def train(paths, excluded_prefixes):
     stats = {
         "input_cases": 0,
@@ -90,6 +101,9 @@ def train(paths, excluded_prefixes):
         "reading_candidate": {},
         "candidate": {},
         "transition": {},
+        "baseline_prev_candidate": {},
+        "baseline_next_candidate": {},
+        "baseline_window_candidate": {},
     }
 
     for _, _, case in read_jsonl(paths):
@@ -115,12 +129,27 @@ def train(paths, excluded_prefixes):
             continue
 
         readings = case.get("readings", [])
+        baseline = baseline_tokens(case, candidates)
         previous = "<BOS>"
         for idx, token in enumerate(tokens):
             reading = readings[idx] if idx < len(readings) else ""
+            prev_base = token_at(baseline, idx - 1, "<BOS>")
+            next_base = token_at(baseline, idx + 1, "<EOS>")
             inc(counts["reading_candidate"], reading + "\t" + token)
             inc(counts["candidate"], token)
             inc(counts["transition"], previous + "\t" + token)
+            inc(
+                counts["baseline_prev_candidate"],
+                prev_base + "\t" + reading + "\t" + token,
+            )
+            inc(
+                counts["baseline_next_candidate"],
+                reading + "\t" + token + "\t" + next_base,
+            )
+            inc(
+                counts["baseline_window_candidate"],
+                prev_base + "\t" + reading + "\t" + token + "\t" + next_base,
+            )
             previous = token
         inc(counts["transition"], previous + "\t<EOS>")
         stats["usable_cases"] += 1
@@ -145,10 +174,13 @@ def make_model(counts, stats, excluded_prefixes, source_paths):
             "contamination_guard": "excluded cases are not counted",
         },
         "weights": {
-            "baseline_bonus": 0.25,
-            "reading_candidate_weight": 2.0,
-            "candidate_weight": 0.15,
-            "transition_weight": 0.75,
+            "baseline_bonus": 0.5,
+            "reading_candidate_weight": 0.1,
+            "candidate_weight": 0.05,
+            "transition_weight": 0.15,
+            "baseline_prev_candidate_weight": 1.5,
+            "baseline_next_candidate_weight": 1.5,
+            "baseline_window_candidate_weight": 2.5,
         },
         "defaults": {
             "unknown_score": 0.0,
@@ -163,6 +195,7 @@ def run_self_test():
     sample = {
         "id": "sample-001",
         "readings": ["r1", "r2"],
+        "baseline_output": "\u5728\u898b",
         "expected": "\u518d\u898b",
         "candidates": [["\u5728", "\u518d"], ["\u898b"]],
     }
@@ -189,6 +222,13 @@ def run_self_test():
         errors.append("missing reading_candidate count")
     if counts["transition"].get("\u518d\t\u898b") != 1:
         errors.append("missing transition count")
+    if counts["baseline_next_candidate"].get("r1\t\u518d\t\u898b") != 1:
+        errors.append("missing baseline_next_candidate count")
+    if (
+        counts["baseline_window_candidate"]
+        .get("<BOS>\tr1\t\u518d\t\u898b") != 1
+    ):
+        errors.append("missing baseline_window_candidate count")
 
     if validate_candidates("\u5728\u898b", sample["candidates"]) != [
         "\u5728", "\u898b"
