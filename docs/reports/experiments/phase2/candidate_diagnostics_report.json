@@ -2,7 +2,7 @@
   "suite": "candidate-diagnostics",
   "date": "2026-06-22T00:57:32+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "77047930d57daae216ea825248fdf74a9a49a2f3",
+  "commit": "13882bc245b8eede42a1cd34a034428c9657c31f",
   "scorer": {
     "type": "deterministic-reranker",
     "rule_group": "phase2-generalization",
