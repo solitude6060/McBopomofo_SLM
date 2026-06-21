@@ -547,6 +547,54 @@
         "Inspect residual heldout errors at the dictionary/candidate-generation layer before adding more scorer rules",
         "Add candidate-availability diagnostics to the evaluator so future reports can separate scorer failures from missing-candidate failures"
       ]
+    },
+    {
+      "id": "candidate-diagnostics",
+      "name": "Evaluator Candidate-Availability Diagnostics",
+      "status": "verified",
+      "date": "2026-06-22T00:57:32+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit": "77047930d57daae216ea825248fdf74a9a49a2f3",
+      "protocol_version": "1.0",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/candidate_diagnostics_report.json",
+      "result_files": [
+        "docs/reports/experiments/phase2/candidate_diagnostics_report.json"
+      ],
+      "description": "Adds --candidate-diagnostics CLI flag to the C++ contextual evaluator. The flag augments the final summary JSON with aggregate candidate-availability counts (failing_cases, failures_with_candidate_slot_reconstructible_expected_output, failures_with_missing_expected_cjk_chars, missing_reading_failures, failures_without_candidate_diagnostics). No raw strings (expected/output/candidate) are printed. Preserves existing output when the flag is not passed.",
+      "cli_flag": "--candidate-diagnostics",
+      "diagnostics_counts": {
+        "deterministic_heldout": {
+          "failing_cases": 7,
+          "candidate_slot_reconstructible_expected_output": 0,
+          "missing_expected_cjk_chars": 6,
+          "missing_readings": 0,
+          "without_candidate_diagnostics": 0
+        },
+        "baseline_heldout": {
+          "failing_cases": 24,
+          "candidate_slot_reconstructible_expected_output": 17,
+          "missing_expected_cjk_chars": 6,
+          "missing_readings": 0,
+          "without_candidate_diagnostics": 0
+        }
+      },
+      "fixtures_count": 297,
+      "real_model_benchmarked": false,
+      "gate_result": "N/A",
+      "verification": [
+        "cmake --build Tools/ContextualEvaluation/build --target evaluator -j2",
+        "deterministic heldout without flag: 56/63 (unchanged output)",
+        "deterministic heldout with --candidate-diagnostics: 56/63 + diagnostics block",
+        "deterministic canonical: 100/100, 50/50, 84/84",
+        "baseline heldout with --candidate-diagnostics: 39/63 + diagnostics block"
+      ],
+      "next_steps": [
+        "Use diagnostics to prioritize data/dictionary improvements for the 6 missing-CJK heldout failures",
+        "Inspect the remaining deterministic failure with expected CJK characters present but no complete candidate-slot reconstruction path",
+        "Future scorer improvements can now be evaluated against separate candidate-slot availability and missing-candidate counts"
+      ]
     }
   ]
 }

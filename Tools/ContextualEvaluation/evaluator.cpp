@@ -285,6 +285,10 @@ struct PerCaseResult {
   bool missingReading = false;
   size_t missingReadingIndex = 0;
   std::string engineOutput;
+
+  bool candidateDiagnosticsAvailable = false;
+  bool expectedOutputReconstructibleFromCandidateSlots = false;
+  bool expectedCJKCharMissingFromCandidates = false;
 };
 
 static size_t countCJK(const std::string& s) {
@@ -371,6 +375,9 @@ class Evaluator {
    void setSlmCandidateGranularity(SlmCandidateGranularity granularity) {
      slmCandidateGranularity_ = granularity;
    }
+   void setCandidateDiagnosticsEnabled(bool enabled) {
+     candidateDiagnosticsEnabled_ = enabled;
+   }
 
  private:
    struct OutputSegment {
@@ -394,6 +401,25 @@ class Evaluator {
      std::vector<OutputSegment> segments;
      std::vector<std::string> bopomofoChunk;
      bool pureBopomofo = true;
+     std::unordered_set<std::string> allCandidateChars;
+     std::vector<std::vector<std::string>> candidateSlots;
+     bool previousDiagnosticSlotWasProtected = false;
+
+     auto addDiagnosticSlots =
+         [&](std::vector<std::vector<std::string>>&& newSlots,
+             bool protectedText) {
+           if (!candidateDiagnosticsEnabled_) {
+             return;
+           }
+           if (!candidateSlots.empty() &&
+               (protectedText || previousDiagnosticSlotWasProtected)) {
+             candidateSlots.push_back({" "});
+           }
+           for (auto& slot : newSlots) {
+             candidateSlots.push_back(std::move(slot));
+           }
+           previousDiagnosticSlotWasProtected = protectedText;
+         };
 
      auto flushChunk = [&]() -> bool {
        if (bopomofoChunk.empty()) {
@@ -401,15 +427,19 @@ class Evaluator {
        }
        std::string chunkOutput;
        uint64_t chunkElapsed = 0;
-       bool ok = evaluateBopomofoChunk(bopomofoChunk, tc, &chunkOutput,
-                                       &chunkElapsed,
-                                       pureBopomofo ? &result : nullptr);
+       std::vector<std::vector<std::string>> chunkSlots;
+       bool ok = evaluateBopomofoChunk(
+           bopomofoChunk, tc, &chunkOutput, &chunkElapsed,
+           pureBopomofo ? &result : nullptr,
+           candidateDiagnosticsEnabled_ ? &allCandidateChars : nullptr,
+           candidateDiagnosticsEnabled_ ? &chunkSlots : nullptr);
        bopomofoChunk.clear();
        if (!ok) {
          result.missingReading = true;
          return false;
        }
        result.elapsedMicroseconds += chunkElapsed;
+       addDiagnosticSlots(std::move(chunkSlots), false);
        segments.push_back(OutputSegment{chunkOutput, false});
        return true;
      };
@@ -421,6 +451,7 @@ class Evaluator {
            result.missingReadingIndex = i;
            return result;
          }
+         addDiagnosticSlots({{tc.readings[i]}}, false);
          segments.push_back(OutputSegment{tc.readings[i], false});
          continue;
        }
@@ -435,9 +466,10 @@ class Evaluator {
          result.missingReadingIndex = i;
          return result;
        }
+       bool protectedText = isSpacingProtectedToken(tc.readings[i]);
+       addDiagnosticSlots({{tc.readings[i]}}, protectedText);
        segments.push_back(
-           OutputSegment{tc.readings[i],
-                         isSpacingProtectedToken(tc.readings[i])});
+           OutputSegment{tc.readings[i], protectedText});
      }
 
      if (!flushChunk()) {
@@ -447,13 +479,21 @@ class Evaluator {
 
      result.engineOutput = joinSegments(segments);
      finishAccuracy(tc, &result);
+     if (candidateDiagnosticsEnabled_) {
+       computeCandidateDiagnostics(allCandidateChars, candidateSlots,
+                                   tc.expected, &result);
+     }
      return result;
    }
 
-   bool evaluateBopomofoChunk(const std::vector<std::string>& readings,
-                              const TestCase& tc, std::string* output,
-                              uint64_t* elapsedMicroseconds,
-                              PerCaseResult* rankResult) {
+   bool evaluateBopomofoChunk(
+       const std::vector<std::string>& readings,
+       const TestCase& tc, std::string* output,
+       uint64_t* elapsedMicroseconds,
+       PerCaseResult* rankResult,
+       std::unordered_set<std::string>* candidateCharsCollector = nullptr,
+       std::vector<std::vector<std::string>>* candidateSlotsCollector =
+           nullptr) {
      Formosa::Gramambular2::ReadingGrid grid(
          std::make_shared<Formosa::Gramambular2::ReadingGrid::ScoreRankedLanguageModel>(lm_));
 
@@ -468,6 +508,12 @@ class Evaluator {
      const uint64_t start = ts.tv_sec * 1000000ULL + ts.tv_nsec / 1000;
 
      Formosa::Gramambular2::ReadingGrid::WalkResult walkResult = grid.walk();
+     if (candidateCharsCollector != nullptr) {
+       collectCandidateChars(grid, *candidateCharsCollector);
+     }
+     if (candidateSlotsCollector != nullptr) {
+       collectCandidateSlotsForWalk(grid, walkResult, candidateSlotsCollector);
+     }
      if (scorer_ != nullptr) {
        applyReranker(readings, tc.protectedEnglishSpans, grid, &walkResult);
      }
@@ -653,6 +699,112 @@ class Evaluator {
       pos = next > pos ? next : pos + 1;
     }
     return result;
+  }
+
+  static void collectCandidateChars(
+      Formosa::Gramambular2::ReadingGrid& grid,
+      std::unordered_set<std::string>& chars) {
+    for (size_t loc = 0; loc < grid.length(); ++loc) {
+      auto candidates = grid.candidatesAt(loc);
+      for (const auto& c : candidates) {
+        auto cvChars = splitUTF8Codepoints(c.value);
+        for (const auto& ch : cvChars) {
+          chars.insert(ch);
+        }
+      }
+    }
+  }
+
+  void collectCandidateSlotsForWalk(
+      Formosa::Gramambular2::ReadingGrid& grid,
+      const Formosa::Gramambular2::ReadingGrid::WalkResult& walkResult,
+      std::vector<std::vector<std::string>>* slots) const {
+    if (slots == nullptr) {
+      return;
+    }
+
+    size_t readingOffset = 0;
+    for (const auto& node : walkResult.nodes) {
+      size_t length = node->spanningLength();
+      const auto& spanNode = grid.spans()[readingOffset].nodeOf(length);
+      std::vector<std::string> candidates;
+      if (spanNode != nullptr) {
+        std::unordered_set<std::string> seen;
+        for (const auto& u : spanNode->unigrams()) {
+          if (seen.insert(u.value()).second) {
+            candidates.push_back(u.value());
+          }
+        }
+      }
+      if (candidates.size() > slmCandidateLimit_) {
+        std::string baselineVal = node->value();
+        auto it = std::find(candidates.begin(),
+                            candidates.begin() + slmCandidateLimit_,
+                            baselineVal);
+        if (it == candidates.begin() + slmCandidateLimit_) {
+          candidates.resize(slmCandidateLimit_);
+          candidates.back() = baselineVal;
+        } else {
+          candidates.resize(slmCandidateLimit_);
+        }
+      }
+      if (slmCandidateGranularity_ == SlmCandidateGranularity::Character) {
+        addCharacterSlotsForSlm(node->value(), candidates, slots);
+      } else {
+        slots->push_back(std::move(candidates));
+      }
+      readingOffset += length;
+    }
+  }
+
+  static bool outputReconstructibleFromCandidateSlots(
+      const std::string& expected,
+      const std::vector<std::vector<std::string>>& slots) {
+    std::unordered_set<size_t> positions;
+    positions.insert(0);
+    for (const auto& slot : slots) {
+      std::unordered_set<size_t> nextPositions;
+      for (size_t pos : positions) {
+        for (const auto& candidate : slot) {
+          if (expected.compare(pos, candidate.size(), candidate) == 0) {
+            nextPositions.insert(pos + candidate.size());
+          }
+        }
+      }
+      positions = std::move(nextPositions);
+      if (positions.empty()) {
+        return false;
+      }
+    }
+    return positions.find(expected.size()) != positions.end();
+  }
+
+  static bool hasMissingExpectedCJKChar(
+      const std::unordered_set<std::string>& allCandidateChars,
+      const std::string& expected) {
+    auto expectedChars = splitUTF8Codepoints(expected);
+    for (const auto& ch : expectedChars) {
+      unsigned char firstByte = static_cast<unsigned char>(ch[0]);
+      bool isCJK = (firstByte & 0xF0) == 0xE0;
+      if (isCJK && allCandidateChars.find(ch) == allCandidateChars.end()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static void computeCandidateDiagnostics(
+      const std::unordered_set<std::string>& allCandidateChars,
+      const std::vector<std::vector<std::string>>& candidateSlots,
+      const std::string& expected,
+      PerCaseResult* result) {
+    if (result == nullptr || expected.empty()) return;
+    result->candidateDiagnosticsAvailable = !candidateSlots.empty();
+    result->expectedOutputReconstructibleFromCandidateSlots =
+        result->candidateDiagnosticsAvailable &&
+        outputReconstructibleFromCandidateSlots(expected, candidateSlots);
+    result->expectedCJKCharMissingFromCandidates =
+        hasMissingExpectedCJKChar(allCandidateChars, expected);
   }
 
   static std::string joinSegments(const std::vector<OutputSegment>& segments) {
@@ -977,6 +1129,7 @@ class Evaluator {
   Evaluator::ScorerType scorerType_;
   std::string modelPath_;
   std::unique_ptr<McBopomofo::ContextualScorer> scorer_;
+  bool candidateDiagnosticsEnabled_ = false;
   FILE* slmOutput_ = nullptr;
   size_t slmCandidateLimit_ = 16;
   SlmCandidateGranularity slmCandidateGranularity_ =
@@ -1016,7 +1169,8 @@ static void printResultJSON(const PerCaseResult& r) {
 
 static void printSummaryJSON(const std::vector<PerCaseResult>& results,
                              uint64_t totalElapsed,
-                             const char* engineName) {
+                             const char* engineName,
+                             bool candidateDiagnostics = false) {
   size_t total = results.size();
   size_t exactMatch = 0;
   size_t missingReading = 0;
@@ -1074,27 +1228,62 @@ static void printSummaryJSON(const std::vector<PerCaseResult>& results,
          "\"latency_microseconds_p99\":%.0f,"
          "\"total_elapsed_seconds\":%.3f,"
          "\"context_ambiguity_errors\":%zu,"
-         "\"unknown_errors\":%zu}\n",
-         engineName,
-         total,
-         sentenceAcc,
-         tokenAcc,
-         exactMatch,
-         meanRank,
-         missingReading,
-         p50, p95, p99,
-         totalElapsed / 1000000.0,
-         contextAmbiguity,
-         unknown);
+          "\"unknown_errors\":%zu",
+          engineName,
+          total,
+          sentenceAcc,
+          tokenAcc,
+          exactMatch,
+          meanRank,
+          missingReading,
+          p50, p95, p99,
+          totalElapsed / 1000000.0,
+          contextAmbiguity,
+          unknown);
+
+  if (candidateDiagnostics) {
+    size_t failingCases = total - exactMatch;
+    size_t missingReadingFailures = missingReading;
+    size_t slotReconstructible = 0;
+    size_t missingExpectedCJKChars = 0;
+    size_t unavailableDiagnostics = 0;
+    for (const auto& r : results) {
+      if (r.exactMatch) continue;
+      if (r.missingReading) {
+        continue;
+      }
+      if (!r.candidateDiagnosticsAvailable) {
+        unavailableDiagnostics++;
+        continue;
+      }
+      if (r.expectedOutputReconstructibleFromCandidateSlots) {
+        slotReconstructible++;
+      }
+      if (r.expectedCJKCharMissingFromCandidates) {
+        missingExpectedCJKChars++;
+      }
+    }
+    printf(",\"candidate_diagnostics\":{"
+           "\"failing_cases\":%zu,"
+           "\"failures_with_candidate_slot_reconstructible_expected_output\":%zu,"
+           "\"failures_with_missing_expected_cjk_chars\":%zu,"
+           "\"missing_reading_failures\":%zu,"
+           "\"failures_without_candidate_diagnostics\":%zu}",
+           failingCases, slotReconstructible, missingExpectedCJKChars,
+           missingReadingFailures, unavailableDiagnostics);
+  }
+
+  printf("}\n");
 }
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    fprintf(stderr, "Usage: %s <data.txt> [--scorer baseline|deterministic|bigram] [--model <path>] [--reranker] [--slm-request-output <path>] [--slm-candidate-limit <N>] [--slm-candidate-granularity node|character] [test_cases.jsonl]\n", argv[0]);
+    fprintf(stderr, "Usage: %s <data.txt> [--scorer baseline|deterministic|bigram] [--model <path>] [--reranker] [--slm-request-output <path>] [--slm-candidate-limit <N>] [--slm-candidate-granularity node|character] [--candidate-diagnostics] [test_cases.jsonl]\n", argv[0]);
     fprintf(stderr, "  If test_cases.jsonl is omitted, reads from stdin.\n");
     fprintf(stderr, "  --slm-request-output <path>   Write candidate-constrained SLM request JSONL to <path>\n");
     fprintf(stderr, "  --slm-candidate-limit <N>     Max candidates per slot (default 16, always includes baseline)\n");
     fprintf(stderr, "  --slm-candidate-granularity   Candidate slot export granularity (default node)\n");
+    fprintf(stderr, "  --candidate-diagnostics       Augment summary JSON with aggregate candidate-availability counts\n");
     return 1;
   }
 
@@ -1111,6 +1300,7 @@ int main(int argc, char* argv[]) {
   size_t slmCandidateLimit = 16;
   Evaluator::SlmCandidateGranularity slmCandidateGranularity =
       Evaluator::SlmCandidateGranularity::Node;
+  bool candidateDiagnostics = false;
 
   for (int i = 2; i < argc; ++i) {
     if (std::strcmp(argv[i], "--scorer") == 0) {
@@ -1182,12 +1372,17 @@ int main(int argc, char* argv[]) {
       }
       continue;
     }
+    if (std::strcmp(argv[i], "--candidate-diagnostics") == 0) {
+      candidateDiagnostics = true;
+      continue;
+    }
     testCasesPath = argv[i];
   }
 
   Evaluator evaluator(dataPath, scorerType, modelPath);
   evaluator.setSlmCandidateLimit(slmCandidateLimit);
   evaluator.setSlmCandidateGranularity(slmCandidateGranularity);
+  evaluator.setCandidateDiagnosticsEnabled(candidateDiagnostics);
 
   FILE* slmOutput = nullptr;
   if (slmRequestOutputPath != nullptr) {
@@ -1263,7 +1458,8 @@ int main(int argc, char* argv[]) {
       break;
   }
 
-  printSummaryJSON(results, totalEnd - totalStart, engineName);
+  printSummaryJSON(results, totalEnd - totalStart, engineName,
+                   candidateDiagnostics);
 
   if (closeInput) {
     fclose(input);
