@@ -375,14 +375,15 @@ python3 local_llm_scorer.py [options]
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--persistent` | false | Persistent JSONL mode (read until EOF) |
-| `--provider` | `command` | Model provider: `command` or `ollama` |
+| `--provider` | `command` | Model provider: `command`, `ollama`, or `ollama-http` |
 | `--command-template` | (none) | Command template with `{prompt}` or `{prompt_file}` placeholders |
-| `--model` | (none) | Model name (required for `--provider ollama`) |
+| `--model` | (none) | Model name (required for `--provider ollama` or `ollama-http`) |
 | `--model-manifest` | (none) | Path to model manifest JSON |
 | `--allow-out-of-range-model` | false | Bypass [200M, 500M] parameter check |
 | `--dry-run-baseline` | false | Return `baseline_output` without model invocation |
-| `--ollama-format-json` | true | Pass `--format json` to `ollama run` for structured JSON output. Use `--no-ollama-format-json` to disable. |
-| `--ollama-keepalive` | `5m` | Keepalive duration for `ollama run` (e.g., `5m`, `10m`, `0`) |
+| `--ollama-format-json` | true | Request structured JSON output from Ollama providers. Use `--no-ollama-format-json` to disable. |
+| `--ollama-keepalive` | `5m` | Keepalive duration for Ollama providers (e.g., `5m`, `10m`, `0`) |
+| `--ollama-url` | `http://127.0.0.1:11434` | Ollama HTTP base URL for `--provider ollama-http` |
 
 ### Providers
 
@@ -417,14 +418,34 @@ but this provider still invokes `ollama run` for each request; treat its
 latency as a scaffold measurement unless the backend itself is already
 server-backed and warm. For the Phase 2 latency gate, prefer
 `--provider command` pointed at a persistent/server-backed local tiny model
-runtime, or add a dedicated provider that keeps the model loaded.
+runtime, or use `--provider ollama-http` to avoid per-request CLI process
+startup.
+
+**`--provider ollama-http`** with `--model <name>`:
+
+Uses Ollama's local HTTP API instead of spawning `ollama run` for every
+request. The wrapper checks `/api/tags` first and fails closed if the model is
+not installed. Generation uses `/api/generate` with `stream: false`,
+`keep_alive` from `--ollama-keepalive`, and `format: json` when
+`--ollama-format-json` is enabled. This is the preferred Ollama path for
+latency measurements because persistent runner mode keeps `local_llm_scorer.py`
+alive and each case becomes one local HTTP request.
+
+```bash
+python3 local_llm_scorer.py \
+  --provider ollama-http \
+  --model qwen2.5:0.5b \
+  --ollama-url http://127.0.0.1:11434
+```
 
 By default the wrapper passes `--format json` to `ollama run` (controlled by
 `--ollama-format-json` / `--no-ollama-format-json`) and sets a 5-minute
 keepalive (`--ollama-keepalive 5m`).  When `--format json` is active, Ollama
-encourages the model to return a JSON object directly. Some Ollama modes wrap
-model text in a `response` field; the wrapper extracts that field when present
-and otherwise parses the returned JSON directly. This mode improves
+encourages the model to return a JSON object directly. The CLI provider may
+return direct model JSON or wrap model text in a `response` field; the wrapper
+extracts that field when present and otherwise parses the returned JSON
+directly. The HTTP provider always receives the Ollama response envelope and
+parses its `response` field. This mode improves
 compatibility with the strict JSON parser but does **not** guarantee output
 accuracy - models may still produce incorrect output.
 

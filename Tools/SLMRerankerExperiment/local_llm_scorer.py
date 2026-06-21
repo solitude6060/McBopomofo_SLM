@@ -9,6 +9,9 @@ Supports:
   - Provider ``ollama`` (--provider ollama --model <name>) using the local
     ``ollama run`` CLI if present.  Does **not** pull models - fails closed
     if the model is not installed.
+  - Provider ``ollama-http`` (--provider ollama-http --model <name>) using
+    Ollama's local HTTP API.  Does **not** pull models - fails closed if the
+    model is not installed.
   - ``--dry-run-baseline``: returns baseline_output without invoking any
     model.  For wrapper protocol verification only.
   - ``--model-manifest <path>``: JSON file describing the model.  Enforces
@@ -32,11 +35,13 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.error
+import urllib.request
 
 PARAM_MIN = 200_000_000
 PARAM_MAX = 500_000_000
 
-_PROVIDER_CHOICES = ("command", "ollama")
+_PROVIDER_CHOICES = ("command", "ollama", "ollama-http")
 
 def validate_request(request):
     """Return (is_valid, error_reason)."""
@@ -200,6 +205,63 @@ def check_ollama_model(model_name):
 
     return False, f"model {model_name!r} not found in ollama list"
 
+
+def _ollama_http_url(base_url, path):
+    """Join an Ollama base URL and API path."""
+    return base_url.rstrip("/") + path
+
+
+def _ollama_http_json(base_url, path, payload=None, timeout=30):
+    """Call an Ollama HTTP endpoint and return (json_obj, error_message)."""
+    data = None
+    method = "GET"
+    headers = {}
+    if payload is not None:
+        data = json.dumps(payload).encode("utf-8")
+        method = "POST"
+        headers["Content-Type"] = "application/json"
+
+    request = urllib.request.Request(
+        _ollama_http_url(base_url, path),
+        data=data,
+        headers=headers,
+        method=method,
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            body = response.read().decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as exc:
+        return None, f"http_{exc.code}"
+    except urllib.error.URLError as exc:
+        reason = getattr(exc, "reason", exc)
+        return None, f"url_error:{reason}"
+    except TimeoutError:
+        return None, "http_timeout"
+    except OSError as exc:
+        return None, f"http_error:{exc}"
+
+    try:
+        return json.loads(body), None
+    except json.JSONDecodeError:
+        return None, "invalid_http_json"
+
+
+def check_ollama_http_model(model_name, base_url):
+    """Check whether *model_name* is available through Ollama HTTP API."""
+    payload, error = _ollama_http_json(base_url, "/api/tags", timeout=30)
+    if error:
+        return False, f"ollama http tags failed: {error}"
+    if not isinstance(payload, dict):
+        return False, "ollama http tags returned non-object JSON"
+
+    for model in payload.get("models", []):
+        if not isinstance(model, dict):
+            continue
+        if model.get("name") == model_name or model.get("model") == model_name:
+            return True, None
+
+    return False, f"model {model_name!r} not found in ollama /api/tags"
+
 def _run_subprocess(cmd_list, stdin_input=None, timeout=60):
     """Thin wrapper around subprocess.run with consistent error handling."""
     try:
@@ -290,6 +352,32 @@ def run_ollama_provider(prompt, model_name, format_json=True, keepalive="5m"):
 
     return raw_output, error
 
+
+def run_ollama_http_provider(prompt, model_name, base_url,
+                             format_json=True, keepalive="5m"):
+    """Run an Ollama model through the local HTTP API."""
+    payload = {
+        "model": model_name,
+        "prompt": prompt,
+        "stream": False,
+        "keep_alive": keepalive,
+    }
+    if format_json:
+        payload["format"] = "json"
+
+    response, error = _ollama_http_json(
+        base_url, "/api/generate", payload=payload, timeout=120
+    )
+    if error:
+        return None, error
+    if not isinstance(response, dict):
+        return None, "ollama_http_non_object_response"
+    if "response" not in response:
+        return None, "ollama_http_missing_response"
+    if not isinstance(response["response"], str):
+        return None, "ollama_http_response_not_string"
+    return response["response"], None
+
 def validate_candidates_simple(output, candidates):
     """Best-effort prevalidation that *output* can be formed from *candidates*.
 
@@ -332,7 +420,7 @@ def parse_model_output(raw_output, request):
     """
     text = raw_output.strip()
     if not text:
-        return None, "empty output"
+        return None, "empty_output"
 
     candidates = request.get("candidates")
 
@@ -341,25 +429,33 @@ def parse_model_output(raw_output, request):
         try:
             parsed = json.loads(text)
         except json.JSONDecodeError:
-            parsed = None
+            return None, "invalid_json_object"
 
         if isinstance(parsed, dict) and "output" in parsed:
             val = parsed["output"]
             if isinstance(val, str) and val:
                 if validate_candidates_simple(val, candidates):
                     return val, None
-                return None, "output not in candidate set"
-            return None, "output field is not a non-empty string"
+                return None, "output_not_candidate"
+            if isinstance(val, str):
+                return None, "empty_output"
+            return None, "output_not_string"
+
+        if isinstance(parsed, dict):
+            return None, "missing_output_field"
+
+        return None, "invalid_json_object"
 
     # 2. Raw line: must be a valid candidate-constrained output.
     if validate_candidates_simple(text, candidates):
         return text, None
 
-    return None, "output does not match any valid candidate-constrained form"
+    return None, "output_not_candidate_form"
 
 def process_request(request, provider, command_template, model_name,
                     manifest, allow_out_of_range, dry_run_baseline,
-                    ollama_format_json=True, ollama_keepalive="5m"):
+                    ollama_format_json=True, ollama_keepalive="5m",
+                    ollama_url="http://127.0.0.1:11434"):
     """Process a single request and return a response dict.
 
     When the model cannot produce valid output the response **omits** the
@@ -389,19 +485,33 @@ def process_request(request, provider, command_template, model_name,
             format_json=ollama_format_json,
             keepalive=ollama_keepalive,
         )
+    elif provider == "ollama-http":
+        raw_output, error = run_ollama_http_provider(
+            prompt, model_name, ollama_url,
+            format_json=ollama_format_json,
+            keepalive=ollama_keepalive,
+        )
 
     elapsed = int((time.perf_counter() - start) * 1_000_000)
 
     if error:
         rid = request.get("id", "?")
         print(f"WARN: [{rid}] provider error: {error}", file=sys.stderr)
-        return {"scorer_name": f"local-llm-{provider}-error", "latency_us": elapsed}
+        return {
+            "scorer_name": f"local-llm-{provider}-error",
+            "latency_us": elapsed,
+            "error_reason": "provider_error",
+        }
 
     output, parse_error = parse_model_output(raw_output, request)
     if parse_error:
         rid = request.get("id", "?")
         print(f"WARN: [{rid}] parse error: {parse_error}", file=sys.stderr)
-        return {"scorer_name": f"local-llm-{provider}-parse-error", "latency_us": elapsed}
+        return {
+            "scorer_name": f"local-llm-{provider}-parse-error",
+            "latency_us": elapsed,
+            "error_reason": parse_error,
+        }
 
     if manifest:
         label = manifest.get("model_name", model_name or "unknown")
@@ -449,7 +559,7 @@ def build_arg_parser():
         type=str,
         default=None,
         metavar="NAME",
-        help="Model name (required for --provider ollama)",
+        help="Model name (required for --provider ollama or ollama-http)",
     )
     parser.add_argument(
         "--model-manifest",
@@ -489,6 +599,13 @@ def build_arg_parser():
         metavar="DURATION",
         help="Keepalive duration for ollama run (default: 5m)",
     )
+    parser.add_argument(
+        "--ollama-url",
+        type=str,
+        default="http://127.0.0.1:11434",
+        metavar="URL",
+        help="Ollama HTTP base URL for --provider ollama-http",
+    )
     return parser
 
 
@@ -496,8 +613,15 @@ def main():
     parser = build_arg_parser()
     args = parser.parse_args()
 
-    if args.provider == "ollama" and not args.model and not args.dry_run_baseline:
-        print("FATAL: --model is required for --provider ollama", file=sys.stderr)
+    if (
+        args.provider in ("ollama", "ollama-http")
+        and not args.model
+        and not args.dry_run_baseline
+    ):
+        print(
+            f"FATAL: --model is required for --provider {args.provider}",
+            file=sys.stderr,
+        )
         sys.exit(2)
 
     if args.provider == "command" and not args.command_template and not args.dry_run_baseline:
@@ -542,6 +666,12 @@ def main():
             print(f"FATAL: {err_msg}", file=sys.stderr)
             sys.exit(1)
 
+    if args.provider == "ollama-http" and not args.dry_run_baseline:
+        available, err_msg = check_ollama_http_model(args.model, args.ollama_url)
+        if not available:
+            print(f"FATAL: {err_msg}", file=sys.stderr)
+            sys.exit(1)
+
     def handle_request(request):
         valid, verr = validate_request(request)
         if not valid:
@@ -556,6 +686,7 @@ def main():
             dry_run_baseline=args.dry_run_baseline,
             ollama_format_json=args.ollama_format_json,
             ollama_keepalive=args.ollama_keepalive,
+            ollama_url=args.ollama_url,
         )
 
     if args.persistent:

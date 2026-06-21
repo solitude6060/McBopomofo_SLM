@@ -148,7 +148,7 @@ def call_scorer(scorer_cmd, request, timeout_ms):
     if not isinstance(response, dict):
         return None, elapsed_us, "invalid_response_type"
     if "output" not in response:
-        return None, elapsed_us, "missing_output_field"
+        return None, elapsed_us, response.get("error_reason", "missing_output_field")
     if not isinstance(response["output"], str):
         return None, elapsed_us, "output_not_string"
 
@@ -240,7 +240,11 @@ class PersistentScorer:
         if not isinstance(response, dict):
             return None, elapsed_us, "invalid_response_type"
         if "output" not in response:
-            return None, elapsed_us, "missing_output_field"
+            return (
+                None,
+                elapsed_us,
+                response.get("error_reason", "missing_output_field"),
+            )
         if not isinstance(response["output"], str):
             return None, elapsed_us, "output_not_string"
 
@@ -596,6 +600,45 @@ def run_self_test():
             )
         if pr3["candidate_validated"]:
             errors.append("Persistent: no-cand-001 should not be validated")
+
+        # Scorers may return a sanitized error_reason without output. The
+        # runner should preserve that reason in fallback_breakdown.
+        error_scorer_code = (
+            "#!/usr/bin/env python3\n"
+            "import json\n"
+            "print(json.dumps({'scorer_name': 'error-self-test', "
+            "'error_reason': 'output_not_candidate'}))\n"
+        )
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".py", delete=False, encoding="utf-8"
+        ) as f:
+            f.write(error_scorer_code)
+            error_scorer_path = f.name
+
+        try:
+            error_result = evaluate_case(
+                fixture_cases[0], ["python3", error_scorer_path], 30000,
+                dry_run=False
+            )
+        finally:
+            try:
+                os.unlink(error_scorer_path)
+            except OSError:
+                pass
+
+        if not error_result["fallback"]:
+            errors.append("Error reason: scorer response should fallback")
+        if error_result["fallback_reason"] != "output_not_candidate":
+            errors.append(
+                "Error reason: expected output_not_candidate, got "
+                f"{error_result['fallback_reason']}"
+            )
+
+        error_summary = compute_summary([error_result], ["error-self-test"])
+        if error_summary["fallback_breakdown"].get("output_not_candidate") != 1:
+            errors.append(
+                "Error reason: summary should count output_not_candidate"
+            )
 
     finally:
         try:
