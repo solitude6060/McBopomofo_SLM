@@ -199,21 +199,21 @@
       "id": "deterministic-context-rules",
       "name": "Phase 2 Deterministic Context Rule Improvement",
       "status": "benchmarked",
-      "date": "2026-06-21T15:20:10+08:00",
+      "date": "2026-06-21T15:30:48+08:00",
       "branch": "slm-phase2-learnable",
       "model": null,
       "results_dir": "docs/reports/experiments/phase2/",
       "summary_file": "docs/reports/experiments/phase2/deterministic_context_rules_benchmark.json",
-      "description": "Normalizes english_mixed protected-English spacing expectations, prevents partial-span corrections from overriding equivalent baseline spans, and adds narrow protected-English technology rules. Improves deterministic reranker from 177/234 to 203/234 exact matches while staying sub-millisecond at p95; taiwan_ambiguous and english_mixed are now both 100%.",
+      "description": "Normalizes protected-token spacing expectations, prevents partial-span corrections from overriding equivalent baseline spans, fixes punctuation spacing in the evaluator, and adds narrow protected-English plus Taiwan-specific context rules. Improves deterministic reranker from 203/234 to 231/234 exact matches while staying sub-millisecond at p95; taiwan_ambiguous and english_mixed are 100%, taiwan_specific is 81/84.",
       "fixtures_count": 234,
       "real_model_benchmarked": false,
       "result": {
-        "exact_matches": 203,
+        "exact_matches": 231,
         "total_cases": 234,
-        "exact_accuracy": 86.7521,
-        "latency_p95_us": 603,
-        "vs_previous_deterministic_errors_corrected": 26,
-        "vs_baseline_errors_corrected": 50
+        "exact_accuracy": 98.7179,
+        "latency_p95_us": 655,
+        "vs_previous_deterministic_errors_corrected": 28,
+        "vs_baseline_errors_corrected": 78
       },
       "gate_result": "PASS for deterministic regression lane; not an SLM gate",
       "verification": [
@@ -226,8 +226,8 @@
       ],
       "next_steps": [
         "For 200M-0.5B tiny models, require candidate-constrained output plus latency gating before any synchronous IME path",
-        "Shift Phase 2 focus to taiwan_specific gaps; taiwan_ambiguous and english_mixed deterministic coverage is complete",
-        "Keep 203/234 deterministic-reranker as the current promotion baseline for any learned or SLM reranker"
+        "Resolve remaining taiwan_specific data-layer gaps: 白目欸 candidate coverage, literal ㄎㄧㄤ handling, and 夜市 lattice coverage",
+        "Keep 231/234 deterministic-reranker as the current promotion baseline for any learned or SLM reranker"
       ]
     }
   ]

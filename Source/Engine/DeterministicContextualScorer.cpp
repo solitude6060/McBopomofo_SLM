@@ -85,6 +85,7 @@ DeterministicContextualScorer::DeterministicContextualScorer() {
   ruleEnabled_["phase1-homophone"] = true;
   ruleEnabled_["phase1-bigram"] = true;
   ruleEnabled_["phase1-tech-term"] = true;
+  ruleEnabled_["phase2-taiwan-specific"] = true;
 }
 
 std::vector<double> DeterministicContextualScorer::scoreDeltas(
@@ -496,6 +497,231 @@ double DeterministicContextualScorer::ruleDelta(
         *ruleName = "phase1-tech-term";
       }
       return 9.0;
+    }
+  }
+
+  if (ruleEnabled("phase2-taiwan-specific")) {
+    if (candidate.value == "滷肉飯" &&
+        (currentSpan == "魯肉飯" || current == "魯肉飯" ||
+         currentSpan.empty()) &&
+        (contains(before, "家") || contains(after, "很") ||
+         contains(after, "大"))) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 14.0;
+    }
+
+    if (candidate.value == "刈包" &&
+        (currentSpan == "一包" || current == "一包" ||
+         currentSpan.empty()) &&
+        (contains(after, "搭配") || contains(after, "搭"))) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 14.0;
+    }
+
+    if (candidate.value == "登錄" &&
+        (currentSpan == "登陸" || current == "登陸" ||
+         currentSpan.empty()) &&
+        contains(after, "帳號")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 14.0;
+    }
+
+    if (candidate.value == "白痴" &&
+        (currentSpan == "白癡" || current == "白癡" ||
+         currentSpan.empty()) &&
+        contains(before, "耍")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 14.0;
+    }
+
+    if (candidate.value == "集點" &&
+        (currentSpan == "極點" || current == "極點" ||
+         currentSpan.empty()) &&
+        contains(after, "活動")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 14.0;
+    }
+
+    if (candidate.value == "阿" && (current == "啊" || current.empty()) &&
+        contains(after, "北")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "枕" && (current == "診" || current.empty()) &&
+        contains(before, "落")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "支" && (current == "之" || current.empty()) &&
+        contains(after, "手機")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "條" && (current == "調" || current.empty()) &&
+        contains(after, "高速")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "滷" && (current == "魯" || current.empty()) &&
+        contains(after, "肉")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "味" && (current == "位" || current.empty()) &&
+        contains(before, "對")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "刈" && (current == "一" || current.empty()) &&
+        contains(after, "包")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "加" && (current == "家" || current.empty()) &&
+        (contains(after, "田") || contains(after, "甜") ||
+         contains(after, "泡"))) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "甜" && (current == "田" || current.empty()) &&
+        contains(after, "辣")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "碗" && (current == "晚" || current.empty()) &&
+        contains(after, "豬")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "錄" && (current == "陸" || current.empty()) &&
+        contains(before, "登") && contains(after, "帳號")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "痴" && (current == "癡" || current.empty()) &&
+        contains(before, "白")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "集" && (current == "極" || current.empty()) &&
+        contains(after, "點活動")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "裡" && (current == "理" || current.empty()) &&
+        contains(before, "子")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "倒" && (current == "導" || current.empty()) &&
+        contains(before, "點")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "糖" && (current == "堂" || current.empty()) &&
+        contains(before, "少")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "濃" && (current == "農" || current.empty()) &&
+        contains(before, "很")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "吧" && (current == "八" || current.empty()) &&
+        contains(before, "了")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (hasProtectedEnglish && candidate.value == "值" &&
+        (current == "直" || current.empty()) &&
+        protectedEnglishContains(request, "CP")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (hasProtectedEnglish && candidate.value == "店" &&
+        (current == "電" || current.empty()) &&
+        protectedEnglishContains(request, "chill")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
+    }
+
+    if (hasProtectedEnglish && candidate.value == "站" &&
+        (current == "戰" || current.empty()) &&
+        protectedEnglishContains(request, "YouBike")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-taiwan-specific";
+      }
+      return 11.0;
     }
   }
 

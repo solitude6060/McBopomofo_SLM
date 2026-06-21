@@ -82,6 +82,12 @@ static std::vector<std::string> splitUTF8Codepoints(const std::string& s) {
   return result;
 }
 
+static bool isSpacingProtectedToken(const std::string& s) {
+  return s != "？" && s != "?" && s != "，" && s != "," && s != "。" &&
+         s != "." && s != "！" && s != "!" && s != "：" && s != ":" &&
+         s != "；" && s != ";" && s != "、";
+}
+
 static std::string unescapeJSON(const std::string& s) {
   std::string out;
   out.reserve(s.size());
@@ -415,7 +421,9 @@ class Evaluator {
          result.missingReadingIndex = i;
          return result;
        }
-       segments.push_back(OutputSegment{tc.readings[i], true});
+       segments.push_back(
+           OutputSegment{tc.readings[i],
+                         isSpacingProtectedToken(tc.readings[i])});
      }
 
      if (!flushChunk()) {

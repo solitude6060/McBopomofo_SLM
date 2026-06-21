@@ -1,10 +1,10 @@
 {
   "suite": "phase2-deterministic-context-rules",
-  "date": "2026-06-21T15:20:10+08:00",
+  "date": "2026-06-21T15:30:48+08:00",
   "branch": "slm-phase2-learnable",
   "scorer": {
     "name": "deterministic-reranker",
-    "change": "Score-ranked non-overlap correction selection, overlap-aware span baseline lookup, English fixture spacing normalization, and narrow protected-English technology context rules",
+    "change": "Score-ranked non-overlap correction selection, overlap-aware span baseline lookup, protected-token fixture normalization, punctuation spacing hygiene, narrow protected-English technology rules, and narrow Taiwan-specific deterministic context rules",
     "real_model_benchmarked": false
   },
   "fixtures": {
@@ -21,11 +21,11 @@
     "errors": 81
   },
   "previous_deterministic_reference": {
-    "source": "docs/reports/experiments/phase2/deterministic_context_rules_benchmark.json@d345de0",
-    "exact_matches": 177,
+    "source": "docs/reports/experiments/phase2/deterministic_context_rules_benchmark.json@4c69278",
+    "exact_matches": 203,
     "total_cases": 234,
-    "exact_accuracy": 75.641,
-    "errors": 57
+    "exact_accuracy": 86.7521,
+    "errors": 31
   },
   "current_deterministic": {
     "per_fixture": [
@@ -35,9 +35,9 @@
         "exact_matches": 100,
         "errors": 0,
         "latency_us": {
-          "p50": 323,
-          "p95": 661,
-          "p99": 823
+          "p50": 387,
+          "p95": 783,
+          "p99": 942
         },
         "total_cases": 100
       },
@@ -47,63 +47,90 @@
         "exact_matches": 50,
         "errors": 0,
         "latency_us": {
-          "p50": 262,
-          "p95": 574,
-          "p99": 1002
+          "p50": 257,
+          "p95": 654,
+          "p99": 759
         },
         "total_cases": 50
       },
       {
         "fixture": "taiwan_specific",
-        "exact_accuracy": 63.0952,
-        "exact_matches": 53,
-        "errors": 31,
+        "exact_accuracy": 96.4286,
+        "exact_matches": 81,
+        "errors": 3,
         "latency_us": {
-          "p50": 339,
-          "p95": 603,
-          "p99": 859
+          "p50": 343,
+          "p95": 563,
+          "p99": 675
         },
         "total_cases": 84
       }
     ],
     "aggregate": {
       "total_cases": 234,
-      "exact_accuracy": 86.7521,
-      "exact_matches": 203,
-      "errors": 31,
+      "exact_accuracy": 98.7179,
+      "exact_matches": 231,
+      "errors": 3,
       "latency_us": {
-        "p50": 301,
-        "p95": 603,
-        "p99": 848
+        "p50": 322,
+        "p95": 655,
+        "p99": 823
       }
     }
   },
   "deltas": {
     "vs_baseline": {
-      "accuracy_delta_pp": 21.3675,
-      "errors_corrected": 50,
-      "relative_error_reduction_pct": 61.7284
+      "accuracy_delta_pp": 33.3333,
+      "errors_corrected": 78,
+      "relative_error_reduction_pct": 96.2963
     },
     "vs_previous_deterministic": {
-      "accuracy_delta_pp": 11.1111,
-      "errors_corrected": 26,
-      "relative_error_reduction_pct": 45.614
+      "accuracy_delta_pp": 11.9658,
+      "errors_corrected": 28,
+      "relative_error_reduction_pct": 90.3226
     }
   },
   "this_slice": {
     "fixture_consistency": {
       "english_mixed_expected_spacing_normalized": 25,
-      "spacing_false_negatives_removed": 23,
-      "reason": "ContextualEvaluation joinSegments inserts one space when a protected English segment touches another segment; cases 1-25 already used this convention."
+      "taiwan_specific_expected_spacing_normalized": 7,
+      "punctuation_spacing_exempted": true,
+      "spacing_false_negatives_removed": 27,
+      "reason": "ContextualEvaluation joinSegments inserts one space when a protected non-punctuation segment touches another segment; punctuation should not trigger protected-token spacing."
     },
     "real_errors_fixed": [
       "en-mix-006",
       "en-mix-027",
-      "en-mix-043"
+      "en-mix-043",
+      "tw-taiwan_specific-006",
+      "tw-taiwan_specific-007",
+      "tw-taiwan_specific-010",
+      "tw-taiwan_specific-017",
+      "tw-taiwan_specific-022",
+      "tw-taiwan_specific-025",
+      "tw-taiwan_specific-029",
+      "tw-taiwan_specific-031",
+      "tw-taiwan_specific-034",
+      "tw-taiwan_specific-035",
+      "tw-taiwan_specific-036",
+      "tw-taiwan_specific-039",
+      "tw-taiwan_specific-044",
+      "tw-taiwan_specific-049",
+      "tw-taiwan_specific-060",
+      "tw-taiwan_specific-062",
+      "tw-taiwan_specific-063",
+      "tw-taiwan_specific-067",
+      "tw-taiwan_specific-070",
+      "tw-taiwan_specific-071",
+      "tw-taiwan_specific-072",
+      "tw-taiwan_specific-073",
+      "tw-taiwan_specific-074",
+      "tw-taiwan_specific-081"
     ],
     "scorer_changes": [
       "Skip corrections whose value already equals the baseline text over the same candidate span, preventing prefix candidates like 設定 from overriding baseline 設定檔.",
-      "Add protected-English technology context boosts for Dockerfile 做鏡像, SSH 設金鑰, and YAML 對齊."
+      "Add protected-English technology context boosts for Dockerfile 做鏡像, SSH 設金鑰, and YAML 對齊.",
+      "Add narrow Taiwan-specific boosts for food, transport, store/payment, YouBike, and colloquial contexts."
     ]
   },
   "fixed_cases": [
@@ -120,12 +147,25 @@
   ],
   "remaining_taiwan_ambiguous_errors": [],
   "remaining_english_mixed_errors": [],
-  "remaining_taiwan_specific_errors": 31,
+  "remaining_taiwan_specific_errors": [
+    {
+      "id": "tw-taiwan_specific-005",
+      "reason": "candidate coverage gap: expected 白目欸 cannot be composed from exported candidates; candidate slot has 暮 where 目欸 is needed"
+    },
+    {
+      "id": "tw-taiwan_specific-011",
+      "reason": "reading/data gap: ㄎㄧㄤ is a literal Bopomofo-like slang token but ReadingGrid treats it as an unsupported reading and fails insertion"
+    },
+    {
+      "id": "tw-taiwan_specific-030",
+      "reason": "candidate coverage gap: expected 夜市有賣 cannot be composed from exported candidates; lattice exposes 是/室 where 市 is needed"
+    }
+  ],
   "tiny_llm_context": {
     "existing_real_model_result": "qwen2.5:0.5b candidate-index smoke remains 14/100 on taiwan_ambiguous with p95 514115us and 81 fallbacks.",
     "current_fastest_learned_path": "candidate-ranker-v1 character model remains 154/234 with p95 124us.",
-    "current_promotion_baseline": "deterministic-reranker is now 203/234 aggregate with p95 603us and 100% on taiwan_ambiguous plus english_mixed.",
-    "recommendation": "Keep deterministic scoring in the synchronous IME path. Any 200M-0.5B tiny LLM must be candidate-constrained, async/top-K-only or fallback-gated, and must beat 203/234 while staying within the typing latency budget before promotion."
+    "current_promotion_baseline": "deterministic-reranker is now 231/234 aggregate with p95 655us and 100% on taiwan_ambiguous plus english_mixed.",
+    "recommendation": "Keep deterministic scoring in the synchronous IME path. Any 200M-0.5B tiny LLM must be candidate-constrained, async/top-K-only or fallback-gated, and must beat 231/234 while staying within the typing latency budget before promotion."
   },
   "verification": [
     "python3 JSONL parse validation for Tests/fixtures/contextual_bopomofo/english_mixed.jsonl",
@@ -136,11 +176,13 @@
     "Tools/ScorerDemo/build/scorer_demo Source/Data/data.txt --dump-candidates for en-mix-006, en-mix-027, en-mix-043",
     "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/taiwan_ambiguous.jsonl",
     "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/english_mixed.jsonl",
-    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl"
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --slm-request-output /tmp/tw_specific_candidate_requests_v2.jsonl --slm-candidate-granularity character Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl"
   ],
   "raw_outputs": [
-    "/tmp/det_taiwan_ambiguous_phase2_tech_context.jsonl",
-    "/tmp/det_english_mixed_phase2_tech_context.jsonl",
-    "/tmp/det_taiwan_specific_phase2_tech_context.jsonl"
+    "/tmp/det_taiwan_ambiguous_phase2_tw_specific_rules_v2.jsonl",
+    "/tmp/det_english_mixed_phase2_tw_specific_rules_v2.jsonl",
+    "/tmp/det_taiwan_specific_phase2_tw_specific_rules_v2.jsonl",
+    "/tmp/tw_specific_candidate_requests_v2.jsonl"
   ]
 }

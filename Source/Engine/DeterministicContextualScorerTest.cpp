@@ -238,6 +238,131 @@ TEST(DeterministicScorerTest, ProtectedYamlContextSelectsAlignment) {
   EXPECT_TRUE(foundAlignment);
 }
 
+TEST(DeterministicScorerTest, TaiwanSpecificFoodRulesFire) {
+  DeterministicContextualScorer scorer;
+  ContextualScoreRequest req;
+  req.readings = {"ㄓㄜˋ", "ㄐㄧㄚ", "ㄌㄨˇ", "ㄖㄡˋ", "ㄈㄢˋ",
+                  "ㄧㄠˋ", "ㄐㄧㄚ", "ㄊㄧㄢˊ", "ㄌㄚˋ"};
+  req.baselinePath.push_back(CandidateInput{"ㄓㄜˋ", "這", "", -3.0, 0, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄐㄧㄚ", "家", "", -3.0, 1, 1});
+  req.baselinePath.push_back(
+      CandidateInput{"ㄌㄨˇ-ㄖㄡˋ-ㄈㄢˋ", "魯肉飯", "", -5.9, 2, 3});
+  req.baselinePath.push_back(CandidateInput{"ㄧㄠˋ", "要", "", -3.0, 5, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄐㄧㄚ", "家", "", -3.0, 6, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄊㄧㄢˊ", "田", "", -3.0, 7, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄌㄚˋ", "辣", "", -3.0, 8, 1});
+  req.candidates.push_back(
+      CandidateInput{"ㄌㄨˇ-ㄖㄡˋ-ㄈㄢˋ", "滷肉飯", "", -6.2, 2, 3});
+  req.candidates.push_back(CandidateInput{"ㄐㄧㄚ", "加", "", -4.0, 6, 1});
+  req.candidates.push_back(CandidateInput{"ㄊㄧㄢˊ", "甜", "", -4.0, 7, 1});
+
+  ScorerOutput out = scorer.suggestCorrections(req);
+  bool foundBraised = false;
+  bool foundAdd = false;
+  bool foundSweet = false;
+  for (const auto& c : out.corrections) {
+    foundBraised = foundBraised || c.value == "滷肉飯";
+    foundAdd = foundAdd || c.value == "加";
+    foundSweet = foundSweet || c.value == "甜";
+  }
+  EXPECT_TRUE(foundBraised);
+  EXPECT_TRUE(foundAdd);
+  EXPECT_TRUE(foundSweet);
+}
+
+TEST(DeterministicScorerTest, TaiwanSpecificDailyLifeRulesFire) {
+  DeterministicContextualScorer scorer;
+  ContextualScoreRequest req;
+  req.readings = {"ㄐㄧ", "ㄔㄜ", "ㄧㄠˋ", "ㄊㄧㄥˊ", "ㄗㄞˋ",
+                  "ㄍㄜˊ", "ㄗ˙", "ㄌㄧˇ", "ㄎㄨㄞˋ", "ㄉㄧㄢˇ",
+                  "ㄉㄠˇ"};
+  req.baselinePath.push_back(CandidateInput{"ㄐㄧ-ㄔㄜ", "機車", "", -3.0, 0, 2});
+  req.baselinePath.push_back(CandidateInput{"ㄧㄠˋ", "要", "", -3.0, 2, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄊㄧㄥˊ", "停", "", -3.0, 3, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄗㄞˋ", "在", "", -3.0, 4, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄍㄜˊ", "格", "", -3.0, 5, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄗ˙", "子", "", -3.0, 6, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄌㄧˇ", "理", "", -3.0, 7, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄎㄨㄞˋ", "快", "", -3.0, 8, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄉㄧㄢˇ", "點", "", -3.0, 9, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄉㄠˇ", "導", "", -3.0, 10, 1});
+  req.candidates.push_back(CandidateInput{"ㄌㄧˇ", "裡", "", -4.0, 7, 1});
+  req.candidates.push_back(CandidateInput{"ㄉㄠˇ", "倒", "", -4.0, 10, 1});
+
+  ScorerOutput out = scorer.suggestCorrections(req);
+  bool foundInside = false;
+  bool foundPour = false;
+  for (const auto& c : out.corrections) {
+    foundInside = foundInside || c.value == "裡";
+    foundPour = foundPour || c.value == "倒";
+  }
+  EXPECT_TRUE(foundInside);
+  EXPECT_TRUE(foundPour);
+}
+
+TEST(DeterministicScorerTest, TaiwanSpecificProtectedBrandRulesFire) {
+  DeterministicContextualScorer scorer;
+  ContextualScoreRequest req;
+  req.readings = {"ㄓㄢˋ", "ㄉㄧㄢˇ", "ㄏㄣˇ", "ㄉㄨㄛ",
+                  "ㄓˊ", "ㄏㄣˇ", "ㄍㄠ", "ㄉㄧㄢˋ", "ㄏㄣˇ"};
+  req.protectedEnglishSpans = {"YouBike", "CP", "chill"};
+  req.baselinePath.push_back(CandidateInput{"ㄓㄢˋ", "戰", "", -3.0, 0, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄉㄧㄢˇ", "點", "", -3.0, 1, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄏㄣˇ", "很", "", -3.0, 2, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄉㄨㄛ", "多", "", -3.0, 3, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄓˊ", "直", "", -3.0, 4, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄏㄣˇ", "很", "", -3.0, 5, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄍㄠ", "高", "", -3.0, 6, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄉㄧㄢˋ", "電", "", -3.0, 7, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄏㄣˇ", "很", "", -3.0, 8, 1});
+  req.candidates.push_back(CandidateInput{"ㄓㄢˋ", "站", "", -4.0, 0, 1});
+  req.candidates.push_back(CandidateInput{"ㄓˊ", "值", "", -4.0, 4, 1});
+  req.candidates.push_back(CandidateInput{"ㄉㄧㄢˋ", "店", "", -4.0, 7, 1});
+
+  ScorerOutput out = scorer.suggestCorrections(req);
+  bool foundStation = false;
+  bool foundValue = false;
+  bool foundShop = false;
+  for (const auto& c : out.corrections) {
+    foundStation = foundStation || c.value == "站";
+    foundValue = foundValue || c.value == "值";
+    foundShop = foundShop || c.value == "店";
+  }
+  EXPECT_TRUE(foundStation);
+  EXPECT_TRUE(foundValue);
+  EXPECT_TRUE(foundShop);
+}
+
+TEST(DeterministicScorerTest, TaiwanSpecificColloquialRulesFire) {
+  DeterministicContextualScorer scorer;
+  ContextualScoreRequest req;
+  req.readings = {"ㄕˋ", "ㄚ", "ㄅㄟˇ", "ㄌㄨㄛˋ", "ㄓㄣˇ",
+                  "ㄌㄜ˙", "ㄅㄚ"};
+  req.baselinePath.push_back(CandidateInput{"ㄕˋ", "是", "", -3.0, 0, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄚ", "啊", "", -3.0, 1, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄅㄟˇ", "北", "", -3.0, 2, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄌㄨㄛˋ", "落", "", -3.0, 3, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄓㄣˇ", "診", "", -3.0, 4, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄌㄜ˙", "了", "", -3.0, 5, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄅㄚ", "八", "", -3.0, 6, 1});
+  req.candidates.push_back(CandidateInput{"ㄚ", "阿", "", -4.0, 1, 1});
+  req.candidates.push_back(CandidateInput{"ㄓㄣˇ", "枕", "", -4.0, 4, 1});
+  req.candidates.push_back(CandidateInput{"ㄅㄚ", "吧", "", -4.0, 6, 1});
+
+  ScorerOutput out = scorer.suggestCorrections(req);
+  bool foundPrefix = false;
+  bool foundPillow = false;
+  bool foundParticle = false;
+  for (const auto& c : out.corrections) {
+    foundPrefix = foundPrefix || c.value == "阿";
+    foundPillow = foundPillow || c.value == "枕";
+    foundParticle = foundParticle || c.value == "吧";
+  }
+  EXPECT_TRUE(foundPrefix);
+  EXPECT_TRUE(foundPillow);
+  EXPECT_TRUE(foundParticle);
+}
+
 TEST(DeterministicScorerTest, ZaiZaiRuleFires) {
   DeterministicContextualScorer scorer;
   ContextualScoreRequest req;
