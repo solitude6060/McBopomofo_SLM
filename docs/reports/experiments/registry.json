@@ -157,28 +157,29 @@
       "id": "slm-benchmark-suite",
       "name": "SLM Reranker Benchmark Suite Runner",
       "status": "scaffold-verified",
-      "date": "2026-06-21T14:00:30+08:00",
+      "date": "2026-06-21T14:08:21+08:00",
       "branch": "slm-phase2-learnable",
-      "commit_suite": "745bc4e023397fc3968d4422ffaf8888dec582f6",
+      "commit_suite": "312c13fc93c236cb9812d29a04419961e4ffa965",
       "protocol_version": "1.2",
       "model": {
-        "model_name": "candidate-ranker-heldout-clean",
+        "model_name": "candidate-ranker-seed",
         "provider": "local-count-ranker",
         "model_type": "candidate-ranker-v1",
-        "model_path": "Models/candidate_ranker_heldout_clean.json",
-        "training_input_cases": 234,
-        "training_excluded_cases": 234,
-        "training_usable_cases": 0,
-        "contamination_guard": "all benchmark fixture id prefixes excluded"
+        "model_path": "Models/candidate_ranker_seed.json",
+        "training_input_cases": 24,
+        "training_usable_cases": 21,
+        "training_source": "Tests/fixtures/contextual_bopomofo/ranker_training_seed.jsonl",
+        "contamination_guard": "ranker-train ids are outside canonical benchmark fixture prefixes"
       },
       "results_dir": "docs/reports/experiments/phase2/",
-      "summary_file": "docs/reports/experiments/phase2/candidate_ranker_heldout_clean_benchmark.json",
+      "summary_file": "docs/reports/experiments/phase2/candidate_ranker_seed_benchmark.json",
       "result_files": [
         "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_benchmark.json",
         "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_ollama_http_benchmark.json",
-        "docs/reports/experiments/phase2/candidate_ranker_heldout_clean_benchmark.json"
+        "docs/reports/experiments/phase2/candidate_ranker_heldout_clean_benchmark.json",
+        "docs/reports/experiments/phase2/candidate_ranker_seed_benchmark.json"
       ],
-      "description": "Candidate-only non-generative ranker benchmark. With all 234 benchmark fixture cases excluded from training, the ranker intentionally falls back to baseline-compatible choices: aggregate accuracy 65.3846%, fallbacks 0, candidate violations 0, p95 latency 60us. It proves the low-latency/safety path but not quality improvement over deterministic reranking.",
+      "description": "Seed-trained non-generative candidate ranker benchmark. The seed model uses 21 usable independent training examples and reaches aggregate accuracy 65.812%, fallbacks 0, candidate violations 0, p95 latency 98us, and +1.2346% relative error reduction versus baseline. It still fails the promotion gate because it remains below deterministic reranking.",
       "fixtures_count": 234,
       "real_model_benchmarked": false,
       "gate_result": "FAIL",
@@ -186,11 +187,12 @@
         "py_compile",
         "candidate ranker trainer self-test",
         "candidate ranker scorer self-test",
-        "full 234-case heldout-clean candidate ranker benchmark"
+        "full 234-case seed-trained candidate ranker benchmark"
       ],
       "next_steps": [
-        "Add an independent labeled training split so candidate-ranker-v1 can learn without fixture contamination",
-        "Compare a trained candidate ranker against deterministic reranking after usable_cases > 0",
+        "Expand independent ranker training data beyond 21 usable cases",
+        "Improve candidate segmentation/features so learned examples map to single-token ambiguities more often",
+        "Compare a larger seed-trained ranker against deterministic reranking",
         "Gate: SLM must beat deterministic reranker before Phase 3"
       ]
     }
