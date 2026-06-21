@@ -679,6 +679,43 @@
         "Use exact_reading_compatible cases for scorer and tiny-LLM promotion gates",
         "Fix or isolate reading-mismatch cases before treating them as model failures"
       ]
+    },
+    {
+      "id": "clean-promotion-gate",
+      "name": "Clean Promotion Gate for Heldout Generalization",
+      "status": "verified",
+      "date": "2026-06-22T01:39:40+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit": "04f23857caca1ea34cefa317f05f48bce91cb9cd",
+      "protocol_version": "1.0",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/clean_promotion_gate.json",
+      "result_files": [
+        "docs/reports/experiments/phase2/clean_promotion_gate.json"
+      ],
+      "description": "Content-free clean promotion gate slice for heldout_generalization. Excludes 6 hygiene-blocked fixture cases (5 reading_mismatch, 1 insufficient_readings). Clean subset (57 cases) achieves 57/57 deterministic-reranker. Canonical suite (234 cases) maintains 234/234 no-regression.",
+      "fixture": "heldout_generalization",
+      "total_cases": 63,
+      "exact_reading_compatible": 57,
+      "hygiene_blocked": 6,
+      "deterministic_reranker_clean_heldout": "57/57",
+      "deterministic_reranker_canonical": "234/234",
+      "gate_result": "PASS",
+      "verification": [
+        "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --self-test",
+        "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --export-clean heldout_generalization",
+        "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics /tmp/heldout_generalization_clean.jsonl",
+        "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/heldout_generalization.jsonl",
+        "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/taiwan_ambiguous.jsonl",
+        "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/english_mixed.jsonl",
+        "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl"
+      ],
+      "next_steps": [
+        "Use /tmp/heldout_generalization_clean.jsonl (57 cases) as the promotion gate fixture for scorer/tiny-LLM benchmarking",
+        "Full heldout_generalization (63 cases) remains the diagnostic fixture for hygiene-blocked analysis",
+        "Canonical fixtures (234 cases) remain the no-regression baseline"
+      ]
     }
   ]
 }

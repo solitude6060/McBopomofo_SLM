@@ -1,0 +1,162 @@
+{
+  "report": "clean_promotion_gate",
+  "date": "2026-06-22T01:39:40+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "04f23857caca1ea34cefa317f05f48bce91cb9cd",
+  "content_policy": {
+    "raw_case_strings_in_report": false,
+    "raw_clean_jsonl_location": "/tmp/"
+  },
+  "fixture": "heldout_generalization",
+  "total_cases": 63,
+  "exact_reading_compatible": 57,
+  "hygiene_blocked": 6,
+  "hygiene_blocked_ids_by_category": {
+    "reading_mismatch": [
+      "hg-punct-003",
+      "hg-punct-006",
+      "hg-stress-008",
+      "hg-stress-009",
+      "hg-stress-010"
+    ],
+    "insufficient_readings": [
+      "hg-stress-001"
+    ]
+  },
+  "clean_export": {
+    "path": "/tmp/heldout_generalization_clean.jsonl",
+    "clean_ids": [
+      "hg-english-001",
+      "hg-english-002",
+      "hg-english-003",
+      "hg-english-004",
+      "hg-english-005",
+      "hg-english-006",
+      "hg-english-007",
+      "hg-english-008",
+      "hg-english-009",
+      "hg-english-010",
+      "hg-homophone-001",
+      "hg-homophone-002",
+      "hg-homophone-003",
+      "hg-homophone-004",
+      "hg-homophone-005",
+      "hg-homophone-006",
+      "hg-homophone-007",
+      "hg-homophone-008",
+      "hg-homophone-009",
+      "hg-homophone-010",
+      "hg-homophone-011",
+      "hg-homophone-012",
+      "hg-punct-001",
+      "hg-punct-002",
+      "hg-punct-004",
+      "hg-punct-005",
+      "hg-punct-007",
+      "hg-punct-008",
+      "hg-punct-009",
+      "hg-punct-010",
+      "hg-slang-001",
+      "hg-slang-002",
+      "hg-slang-003",
+      "hg-slang-004",
+      "hg-slang-005",
+      "hg-slang-006",
+      "hg-slang-007",
+      "hg-slang-008",
+      "hg-slang-009",
+      "hg-slang-010",
+      "hg-stress-002",
+      "hg-stress-003",
+      "hg-stress-004",
+      "hg-stress-005",
+      "hg-stress-006",
+      "hg-stress-007",
+      "hg-stress-011",
+      "hg-taiwan-001",
+      "hg-taiwan-002",
+      "hg-taiwan-003",
+      "hg-taiwan-004",
+      "hg-taiwan-005",
+      "hg-taiwan-006",
+      "hg-taiwan-007",
+      "hg-taiwan-008",
+      "hg-taiwan-009",
+      "hg-taiwan-010"
+    ]
+  },
+  "deterministic_reranker_benchmark": {
+    "clean_heldout": {
+      "engine": "deterministic-reranker",
+      "total_cases": 57,
+      "exact_match_count": 57,
+      "exact_sentence_accuracy": 100.0,
+      "missing_reading_cases": 0,
+      "token_accuracy": 100.0,
+      "latency_microseconds_p50": 434,
+      "latency_microseconds_p95": 1428,
+      "latency_microseconds_p99": 2040,
+      "candidate_diagnostics": {
+        "failing_cases": 0,
+        "missing_reading_failures": 0
+      }
+    },
+    "full_heldout_diagnostic": {
+      "fixture": "heldout_generalization.jsonl",
+      "total_cases": 63,
+      "exact_match_count": 57,
+      "missing_reading_cases": 0,
+      "context_ambiguity_errors": 6,
+      "latency_microseconds_p50": 596,
+      "latency_microseconds_p95": 1536,
+      "latency_microseconds_p99": 2240,
+      "candidate_diagnostics": {
+        "failing_cases": 6,
+        "failures_with_missing_expected_cjk_chars": 6,
+        "missing_reading_failures": 0
+      }
+    },
+    "canonical_taiwan_ambiguous": {
+      "fixture": "taiwan_ambiguous.jsonl",
+      "total_cases": 100,
+      "exact_match_count": 100,
+      "latency_microseconds_p95": 1251
+    },
+    "canonical_english_mixed": {
+      "fixture": "english_mixed.jsonl",
+      "total_cases": 50,
+      "exact_match_count": 50,
+      "latency_microseconds_p95": 965
+    },
+    "canonical_taiwan_specific": {
+      "fixture": "taiwan_specific.jsonl",
+      "total_cases": 84,
+      "exact_match_count": 84,
+      "latency_microseconds_p95": 1263
+    },
+    "canonical_total": 234,
+    "canonical_total_exact": 234
+  },
+  "gate_result": "PASS",
+  "gate_reasons": [
+    "clean heldout deterministic-reranker 57/57 (100%)",
+    "full heldout remains 57/63 and all 6 failures are hygiene/candidate-coverage diagnostics",
+    "canonical deterministic-reranker 234/234 (100%) — no regression",
+    "0 missing readings on all fixture sets",
+    "0 candidate_diagnostics failures on clean heldout"
+  ],
+  "usage": [
+    "Use /tmp/heldout_generalization_clean.jsonl as the promotion gate fixture for scorer/tiny-LLM benchmarking",
+    "Full heldout_generalization (63 cases) remains the diagnostic fixture for hygiene-blocked analysis",
+    "Canonical fixtures (234 cases) remain the no-regression baseline"
+  ],
+  "verification": [
+    "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --self-test",
+    "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --export-clean heldout_generalization",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics /tmp/heldout_generalization_clean.jsonl",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/heldout_generalization.jsonl",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/taiwan_ambiguous.jsonl",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/english_mixed.jsonl",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl"
+  ]
+}

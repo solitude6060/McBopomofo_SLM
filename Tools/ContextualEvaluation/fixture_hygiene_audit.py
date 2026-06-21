@@ -375,6 +375,37 @@ def update_registry(summary):
         handle.write("\n")
 
 
+def export_clean_cases(fixture_name, results_map):
+    cases = results_map.get(fixture_name, [])
+    fixture_file = FIXTURES[fixture_name]
+    all_cases = load_jsonl(os.path.join(FIXTURES_DIR, fixture_file))
+
+    clean_ids = {
+        case["id"]
+        for case in cases
+        if case["category"] == "exact_reading_compatible"
+    }
+    clean_cases = [c for c in all_cases if c["id"] in clean_ids]
+    blocked_ids = sorted(
+        {case["id"] for case in cases if case["category"] != "exact_reading_compatible"}
+    )
+
+    out_path = os.path.join(tempfile.gettempdir(), f"{fixture_name}_clean.jsonl")
+    with open(out_path, "w", encoding="utf-8") as handle:
+        for case in clean_cases:
+            handle.write(json.dumps(case, ensure_ascii=False) + "\n")
+
+    return {
+        "path": out_path,
+        "fixture": fixture_name,
+        "total": len(all_cases),
+        "clean": len(clean_cases),
+        "blocked": len(cases) - len(clean_cases),
+        "blocked_ids": blocked_ids,
+        "clean_ids": sorted(clean_ids),
+    }
+
+
 def self_test():
     assert is_bopomofo_reading("ㄨㄛˇ")
     assert not is_bopomofo_reading("ㄎㄧㄤ")
@@ -409,7 +440,18 @@ def parse_args():
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--report", action="store_true")
     parser.add_argument("--update-registry", action="store_true")
+    parser.add_argument(
+        "--export-clean",
+        nargs="+",
+        metavar="FIXTURE",
+        choices=list(FIXTURES.keys()) + ["all"],
+        help="Export exact_reading_compatible cases as clean JSONL to /tmp/",
+    )
     return parser.parse_args()
+
+
+def resolve_fixture_names(names):
+    return list(FIXTURES.keys()) if "all" in names else names
 
 
 def main():
@@ -419,15 +461,25 @@ def main():
         print("self-test passed", file=sys.stderr)
         return 0
 
-    fixture_names = list(FIXTURES.keys()) if "all" in args.fixtures else args.fixtures
+    fixture_names = resolve_fixture_names(args.fixtures)
+    export_fixtures = (
+        resolve_fixture_names(args.export_clean) if args.export_clean else []
+    )
+    audit_fixtures = list(dict.fromkeys(fixture_names + export_fixtures))
     start = time.time()
-    results = run_audit(fixture_names, debug=args.debug)
+    results = run_audit(audit_fixtures, debug=args.debug)
+    display_results = {name: results[name] for name in fixture_names}
     summary = build_summary(results, time.time() - start)
 
     if args.verbose:
-        for fixture_name, cases in results.items():
+        for fixture_name, cases in display_results.items():
             for case in cases:
                 print(json.dumps({"fixture": fixture_name, **case}, ensure_ascii=False))
+
+    if export_fixtures:
+        summary["clean_exports"] = [
+            export_clean_cases(name, results) for name in export_fixtures
+        ]
 
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 
