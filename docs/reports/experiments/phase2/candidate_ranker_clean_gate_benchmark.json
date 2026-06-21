@@ -1,0 +1,94 @@
+{
+  "report": "candidate_ranker_clean_gate_benchmark",
+  "date": "2026-06-22T01:54:37+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "30146b03ff1bb7d357c46cc8fd46f6849209559b",
+  "content_policy": {
+    "raw_case_strings_in_report": false,
+    "raw_benchmark_outputs_location": "/tmp/"
+  },
+  "fixture": {
+    "name": "heldout_generalization_clean",
+    "total_cases": 57,
+    "source": "fixture_hygiene_audit.py --export-clean heldout_generalization"
+  },
+  "reference": {
+    "baseline": {
+      "exact_matches": 39,
+      "total_cases": 57,
+      "exact_accuracy": 68.4211
+    },
+    "deterministic": {
+      "exact_matches": 57,
+      "total_cases": 57,
+      "exact_accuracy": 100.0,
+      "latency_microseconds_p95_range": [
+        729,
+        812
+      ]
+    }
+  },
+  "candidate_rankers": [
+    {
+      "name": "candidate_ranker_seed_char",
+      "model_path": "Models/candidate_ranker_seed_char.json",
+      "model_type": "candidate-ranker-v1",
+      "training": {
+        "input_cases": 24,
+        "usable_cases": 21,
+        "excluded_cases": 0
+      },
+      "result": {
+        "exact_matches": 39,
+        "total_cases": 57,
+        "exact_accuracy": 68.4211,
+        "fallbacks": 0,
+        "candidate_validation_cases": 57,
+        "non_candidate_violations": 0,
+        "latency_microseconds_p95": 195,
+        "relative_error_reduction_vs_baseline_pct": 0.0
+      }
+    },
+    {
+      "name": "candidate_ranker_synthetic",
+      "model_path": "Models/candidate_ranker_synthetic.json",
+      "model_type": "candidate-ranker-v1",
+      "training": {
+        "input_cases": 35,
+        "usable_cases": 22,
+        "excluded_cases": 0,
+        "excluded_id_prefixes": [
+          "en-mix-",
+          "hg-",
+          "tw-amb-",
+          "tw-taiwan_specific-"
+        ]
+      },
+      "result": {
+        "exact_matches": 39,
+        "total_cases": 57,
+        "exact_accuracy": 68.4211,
+        "fallbacks": 0,
+        "candidate_validation_cases": 57,
+        "non_candidate_violations": 0,
+        "latency_microseconds_p95": 116,
+        "relative_error_reduction_vs_baseline_pct": 0.0
+      }
+    }
+  ],
+  "gate_result": "FAIL",
+  "gate_reasons": [
+    "both candidate rankers match baseline at 39/57",
+    "deterministic reranker is 57/57 on the clean gate",
+    "count-based candidate rankers provide no clean-gate improvement signal"
+  ],
+  "decision": "Do not promote count-based candidate-ranker-v1 for the clean heldout gate. Future learned scorers need features that generalize beyond sparse count overlap, such as embeddings, a classifier over local context features, or a constrained decoder.",
+  "verification": [
+    "python3 Tools/SLMRerankerExperiment/candidate_ranker_scorer.py --self-test",
+    "python3 Tools/SLMRerankerExperiment/train_candidate_ranker.py --self-test",
+    "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --persistent-scorer-command \"python3 Tools/SLMRerankerExperiment/candidate_ranker_scorer.py --model Models/candidate_ranker_seed_char.json --persistent\" --fixtures heldout_generalization_clean --slm-candidate-granularity character --work-dir /tmp/slm_clean_seed_char --output /tmp/slm_clean_seed_char.json --no-gate",
+    "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --persistent-scorer-command \"python3 Tools/SLMRerankerExperiment/candidate_ranker_scorer.py --model Models/candidate_ranker_synthetic.json --persistent\" --fixtures heldout_generalization_clean --slm-candidate-granularity character --work-dir /tmp/slm_clean_synthetic --output /tmp/slm_clean_synthetic.json --no-gate",
+    "python3 -m json.tool /tmp/slm_clean_seed_char.json",
+    "python3 -m json.tool /tmp/slm_clean_synthetic.json"
+  ]
+}
