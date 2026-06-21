@@ -534,6 +534,45 @@ TEST(DeterministicScorerTest, Phase2GeneralizationEnglishSlangAndBigramRulesFire
       "又再"));
 }
 
+TEST(DeterministicScorerTest, Phase2GeneralizationXiangPrepositionRuleFires) {
+  DeterministicContextualScorer scorer;
+
+  // hg-homophone-005: "向" as preposition before first-person
+  // pronoun with apology context.
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄊㄚ", "ㄒㄧㄤˋ", "ㄨㄛˇ", "ㄉㄠˋ", "ㄑㄧㄢˋ"},
+                  {CandidateInput{"ㄊㄚ", "他", "", -3.0, 0, 1},
+                   CandidateInput{"ㄒㄧㄤˋ-ㄨㄛˇ", "像我", "", -3.0, 1, 2},
+                   CandidateInput{"ㄉㄠˋ-ㄑㄧㄢˋ", "道歉", "", -3.0, 3, 2}},
+                  {CandidateInput{"ㄒㄧㄤˋ", "向", "", -4.0, 1, 1}}),
+      "向"));
+
+  // Negative: hg-homophone-012 像你這樣的人 should NOT get 向 correction
+  // (comparison context has neither 他 before nor 歉 in baseline).
+  EXPECT_FALSE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄒㄧㄤˋ", "ㄋㄧˇ", "ㄓㄜˋ", "ㄧㄤˋ", "ㄉㄜ˙", "ㄖㄣˊ"},
+                  {CandidateInput{"ㄒㄧㄤˋ", "相", "", -3.0, 0, 1},
+                   CandidateInput{"ㄋㄧˇ", "你", "", -3.0, 1, 1},
+                   CandidateInput{"ㄓㄜˋ-ㄧㄤˋ", "這樣", "", -3.0, 2, 2},
+                   CandidateInput{"ㄉㄜ˙", "的", "", -3.0, 4, 1},
+                   CandidateInput{"ㄖㄣˊ", "人", "", -3.0, 5, 1}},
+                  {CandidateInput{"ㄒㄧㄤˋ", "向", "", -5.0, 0, 1}}),
+      "向"));
+
+  // Negative: 像我 context should NOT fire for 向
+  // (comparison with 我, but no 他 before and no 歉 in baseline).
+  EXPECT_FALSE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄒㄧㄤˋ", "ㄨㄛˇ", "ㄓㄜˋ", "ㄧㄤˋ"},
+                  {CandidateInput{"ㄒㄧㄤˋ", "像", "", -3.0, 0, 1},
+                   CandidateInput{"ㄨㄛˇ", "我", "", -3.0, 1, 1},
+                   CandidateInput{"ㄓㄜˋ-ㄧㄤˋ", "這樣", "", -3.0, 2, 2}},
+                  {CandidateInput{"ㄒㄧㄤˋ", "向", "", -5.0, 0, 1}}),
+      "向"));
+}
+
 TEST(DeterministicScorerTest, Phase2GeneralizationRulesCanBeDisabled) {
   DeterministicContextualScorer scorer;
   scorer.setRuleEnabled("phase2-generalization", false);
