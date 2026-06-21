@@ -46,6 +46,18 @@ static ContextualScoreRequest makeRequest(
   return req;
 }
 
+static bool hasCorrectionValue(const DeterministicContextualScorer& scorer,
+                               const ContextualScoreRequest& req,
+                               const std::string& value) {
+  ScorerOutput out = scorer.suggestCorrections(req);
+  for (const auto& c : out.corrections) {
+    if (c.value == value) {
+      return true;
+    }
+  }
+  return false;
+}
+
 TEST(DeterministicScorerTest, ScoreDeltasSizeMatchesCandidates) {
   DeterministicContextualScorer scorer;
   ContextualScoreRequest req;
@@ -361,6 +373,149 @@ TEST(DeterministicScorerTest, TaiwanSpecificColloquialRulesFire) {
   EXPECT_TRUE(foundPrefix);
   EXPECT_TRUE(foundPillow);
   EXPECT_TRUE(foundParticle);
+}
+
+TEST(DeterministicScorerTest, Phase2GeneralizationHomophoneAndTaiwanRulesFire) {
+  DeterministicContextualScorer scorer;
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄨㄛˇ", "ㄏㄜˊ", "ㄊㄚ", "ㄕˋ", "ㄆㄥˊ", "ㄧㄡˇ"},
+                  {CandidateInput{"ㄨㄛˇ", "我", "", -3.0, 0, 1},
+                   CandidateInput{"ㄏㄜˊ", "合", "", -3.0, 1, 1},
+                   CandidateInput{"ㄊㄚ", "他", "", -3.0, 2, 1},
+                   CandidateInput{"ㄕˋ", "是", "", -3.0, 3, 1},
+                   CandidateInput{"ㄆㄥˊ-ㄧㄡˇ", "朋友", "", -3.0, 4, 2}},
+                  {CandidateInput{"ㄏㄜˊ", "和", "", -4.0, 1, 1}}),
+      "和"));
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄒㄧㄤˋ", "ㄋㄧˇ", "ㄓㄜˋ", "ㄧㄤˋ"},
+                  {CandidateInput{"ㄒㄧㄤˋ", "相", "", -3.0, 0, 1},
+                   CandidateInput{"ㄋㄧˇ", "你", "", -3.0, 1, 1},
+                   CandidateInput{"ㄓㄜˋ-ㄧㄤˋ", "這樣", "", -3.0, 2, 2}},
+                  {CandidateInput{"ㄒㄧㄤˋ", "像", "", -4.0, 0, 1}}),
+      "像"));
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄩㄥˋ", "ㄉㄧㄢˋ", "ㄍㄨㄛ", "ㄓㄨˇ"},
+                  {CandidateInput{"ㄩㄥˋ-ㄉㄧㄢˋ", "用電", "", -3.0, 0, 2},
+                   CandidateInput{"ㄍㄨㄛ", "郭", "", -3.0, 2, 1},
+                   CandidateInput{"ㄓㄨˇ", "煮", "", -3.0, 3, 1}},
+                  {CandidateInput{"ㄍㄨㄛ", "鍋", "", -4.0, 2, 1}}),
+      "鍋"));
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄈㄥ", "ㄕㄢˋ", "ㄏㄠˇ", "ㄌㄧㄤˊ"},
+                  {CandidateInput{"ㄈㄥ-ㄕㄢˋ", "風扇", "", -3.0, 0, 2},
+                   CandidateInput{"ㄏㄠˇ", "好", "", -3.0, 2, 1},
+                   CandidateInput{"ㄌㄧㄤˊ", "量", "", -3.0, 3, 1}},
+                  {CandidateInput{"ㄌㄧㄤˊ", "涼", "", -4.0, 3, 1}}),
+      "涼"));
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄅㄠˇ", "ㄒㄧㄢ", "ㄏㄜˊ"},
+                  {CandidateInput{"ㄅㄠˇ", "保", "", -3.0, 0, 1},
+                   CandidateInput{"ㄒㄧㄢ", "先", "", -3.0, 1, 1},
+                   CandidateInput{"ㄏㄜˊ", "盒", "", -3.0, 2, 1}},
+                  {CandidateInput{"ㄒㄧㄢ", "鮮", "", -4.0, 1, 1}}),
+      "鮮"));
+}
+
+TEST(DeterministicScorerTest, Phase2GeneralizationEnglishSlangAndBigramRulesFire) {
+  DeterministicContextualScorer scorer;
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄆㄠˇ", "ML", "pipeline", "ㄗㄞˋ", "ㄒㄧㄚˋ", "ㄅㄢ"},
+                  {CandidateInput{"ㄆㄠˇ", "跑", "", -3.0, 0, 1},
+                   CandidateInput{"ML", "ML", "", -3.0, 1, 1},
+                   CandidateInput{"pipeline", "pipeline", "", -3.0, 2, 1},
+                   CandidateInput{"ㄗㄞˋ", "在", "", -3.0, 3, 1},
+                   CandidateInput{"ㄒㄧㄚˋ-ㄅㄢ", "下班", "", -3.0, 4, 2}},
+                  {CandidateInput{"ㄗㄞˋ", "再", "", -4.0, 3, 1}},
+                  {"ML", "pipeline"}),
+      "再"));
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"SSL", "ㄆㄧㄥˊ", "ㄓㄥˋ", "ㄎㄨㄞˋ", "ㄉㄠˋ", "ㄑㄧˊ"},
+                  {CandidateInput{"SSL", "SSL", "", -3.0, 0, 1},
+                   CandidateInput{"ㄆㄧㄥˊ-ㄓㄥˋ", "憑證", "", -3.0, 1, 2},
+                   CandidateInput{"ㄎㄨㄞˋ-ㄉㄠˋ", "快到", "", -3.0, 3, 2},
+                   CandidateInput{"ㄑㄧˊ", "其", "", -3.0, 5, 1}},
+                  {CandidateInput{"ㄑㄧˊ", "期", "", -4.0, 5, 1}},
+                  {"SSL"}),
+      "期"));
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄓㄜˋ", "ㄕㄡˇ", "ㄍㄜ"},
+                  {CandidateInput{"ㄓㄜˋ", "這", "", -3.0, 0, 1},
+                   CandidateInput{"ㄕㄡˇ", "手", "", -3.0, 1, 1},
+                   CandidateInput{"ㄍㄜ", "歌", "", -3.0, 2, 1}},
+                  {CandidateInput{"ㄕㄡˇ", "首", "", -4.0, 1, 1}}),
+      "首"));
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄒㄧㄠˋ", "ㄙˇ"},
+                  {CandidateInput{"ㄒㄧㄠˋ", "校", "", -3.0, 0, 1},
+                   CandidateInput{"ㄙˇ", "死", "", -3.0, 1, 1}},
+                  {CandidateInput{"ㄒㄧㄠˋ", "笑", "", -4.0, 0, 1}}),
+      "笑"));
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄕㄣˊ", "ㄇㄜ˙", "ㄌㄚ"},
+                  {CandidateInput{"ㄕㄣˊ-ㄇㄜ˙", "什麼", "", -3.0, 0, 2},
+                   CandidateInput{"ㄌㄚ", "拉", "", -3.0, 2, 1}},
+                  {CandidateInput{"ㄌㄚ", "啦", "", -4.0, 2, 1}}),
+      "啦"));
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄐㄧㄚˇ", "ㄉㄜ˙", "ㄌㄚ"},
+                  {CandidateInput{"ㄐㄧㄚˇ-ㄉㄜ˙", "假的", "", -3.0, 0, 2},
+                   CandidateInput{"ㄌㄚ", "拉", "", -3.0, 2, 1}},
+                  {CandidateInput{"ㄌㄚ", "啦", "", -4.0, 2, 1}}),
+      "啦"));
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄏㄨㄟˋ", "ㄔㄨ", "CSV"},
+                  {CandidateInput{"ㄏㄨㄟˋ-ㄔㄨ", "會出", "", -3.0, 0, 2},
+                   CandidateInput{"CSV", "CSV", "", -3.0, 2, 1}},
+                  {CandidateInput{"ㄏㄨㄟˋ-ㄔㄨ", "匯出", "", -4.0, 0, 2}},
+                  {"CSV"}),
+      "匯出"));
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄊㄚ", "ㄧㄡˋ", "ㄗㄞˋ", "ㄑㄧㄤˊ", "ㄉㄧㄠˋ"},
+                  {CandidateInput{"ㄊㄚ", "他", "", -3.0, 0, 1},
+                   CandidateInput{"ㄧㄡˋ-ㄗㄞˋ", "又在", "", -3.0, 1, 2},
+                   CandidateInput{"ㄑㄧㄤˊ-ㄉㄧㄠˋ", "強調", "", -3.0, 3, 2}},
+                  {CandidateInput{"ㄧㄡˋ-ㄗㄞˋ", "又再", "", -4.0, 1, 2}}),
+      "又再"));
+}
+
+TEST(DeterministicScorerTest, Phase2GeneralizationRulesCanBeDisabled) {
+  DeterministicContextualScorer scorer;
+  scorer.setRuleEnabled("phase2-generalization", false);
+
+  ContextualScoreRequest req = makeRequest(
+      {"ㄨㄛˇ", "ㄏㄜˊ", "ㄊㄚ"},
+      {CandidateInput{"ㄨㄛˇ", "我", "", -3.0, 0, 1},
+       CandidateInput{"ㄏㄜˊ", "合", "", -3.0, 1, 1},
+       CandidateInput{"ㄊㄚ", "他", "", -3.0, 2, 1}},
+      {CandidateInput{"ㄏㄜˊ", "和", "", -4.0, 1, 1}});
+
+  EXPECT_FALSE(hasCorrectionValue(scorer, req, "和"));
 }
 
 TEST(DeterministicScorerTest, ZaiZaiRuleFires) {

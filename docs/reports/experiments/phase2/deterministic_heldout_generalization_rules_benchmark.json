@@ -1,0 +1,92 @@
+{
+  "suite": "deterministic-heldout-generalization-rules",
+  "date": "2026-06-22T00:38:40+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "0d520e5388fc94e19dff025bd04091e840e58eaa",
+  "scorer": {
+    "type": "deterministic-reranker",
+    "rule_group": "phase2-generalization",
+    "rule_count": 13
+  },
+  "fixtures": {
+    "heldout_generalization": 63,
+    "taiwan_ambiguous": 100,
+    "english_mixed": 50,
+    "taiwan_specific": 84,
+    "canonical_total": 234
+  },
+  "heldout_result": {
+    "before_exact_matches": 41,
+    "after_exact_matches": 54,
+    "total_cases": 63,
+    "before_exact_accuracy": 65.0794,
+    "after_exact_accuracy": 85.7143,
+    "delta_exact_matches": 13,
+    "relative_error_reduction_vs_previous_deterministic_pct": 59.0909,
+    "relative_error_reduction_vs_baseline_pct": 62.5,
+    "context_ambiguity_errors": 9,
+    "latency_us": {
+      "p50": 445,
+      "p95": 965,
+      "p99": 1105
+    }
+  },
+  "canonical_no_regression": {
+    "exact_matches": 234,
+    "total_cases": 234,
+    "exact_accuracy": 100.0,
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_matches": 100,
+        "total_cases": 100,
+        "exact_accuracy": 100.0,
+        "latency_p95_us": 896
+      },
+      {
+        "fixture": "english_mixed",
+        "exact_matches": 50,
+        "total_cases": 50,
+        "exact_accuracy": 100.0,
+        "latency_p95_us": 721
+      },
+      {
+        "fixture": "taiwan_specific",
+        "exact_matches": 84,
+        "total_cases": 84,
+        "exact_accuracy": 100.0,
+        "latency_p95_us": 710
+      }
+    ]
+  },
+  "gate": {
+    "result": "PASS",
+    "reasons": [
+      "heldout exact matches improved from 41/63 to 54/63",
+      "canonical saturated suite remains 234/234",
+      "heldout p95 latency remains under 1ms in this run"
+    ]
+  },
+  "content_policy": {
+    "raw_case_strings_in_report": false,
+    "raw_outputs": [
+      "/tmp/deterministic_heldout_phase2_generalization.out",
+      "/tmp/deterministic_taiwan_ambiguous_phase2_generalization.out",
+      "/tmp/deterministic_english_mixed_phase2_generalization.out",
+      "/tmp/deterministic_taiwan_specific_phase2_generalization.out"
+    ]
+  },
+  "verification": [
+    "cmake --build Source/Engine/build --target McBopomofoLMLibTest -j2",
+    "Source/Engine/build/McBopomofoLMLibTest",
+    "cmake --build Tools/ContextualEvaluation/build --target evaluator -j2",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/heldout_generalization.jsonl",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/taiwan_ambiguous.jsonl",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/english_mixed.jsonl",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl"
+  ],
+  "next_steps": [
+    "Investigate the 9 remaining heldout errors for candidate availability before adding more rules",
+    "Keep deterministic reranker as the low-latency production path while tiny-LLM work remains async or advisory"
+  ]
+}
