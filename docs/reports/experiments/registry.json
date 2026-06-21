@@ -156,25 +156,33 @@
     {
       "id": "slm-benchmark-suite",
       "name": "SLM Reranker Benchmark Suite Runner",
-      "status": "scaffold-verified",
-      "date": "2026-06-21T13:24:23+08:00",
+      "status": "benchmarked",
+      "date": "2026-06-21T13:41:25+08:00",
       "branch": "slm-phase2-learnable",
-      "commit_suite": "8fc8447208198acedd33a7634bb66505caaf6231",
+      "commit_suite": "e3bb33b87b8cff62932584d230bff470959df7ba",
       "protocol_version": "1.2",
-      "model": null,
+      "model": {
+        "model_name": "qwen2.5-0.5b",
+        "provider": "ollama",
+        "parameter_count": 500000000,
+        "quantization": "q4_k_m",
+        "local_only": true
+      },
       "results_dir": "docs/reports/experiments/phase2/",
-      "summary_file": "docs/reports/experiments/phase2/slm_benchmark_suite_smoke.json",
-      "description": "Orchestrated benchmark suite runner that evaluates baseline, deterministic reranker, and SLM reranker across three canonical fixture sets. Produces aggregate metrics, relative error reduction, and gate evaluation.",
+      "summary_file": "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_benchmark.json",
+      "description": "Orchestrated benchmark suite runner evaluating baseline, deterministic reranker, and qwen2.5:0.5b SLM reranker across three canonical fixture sets. The tiny model is candidate-safe but underperforms baseline and deterministic reranking due to high fallback rate and high latency.",
       "fixtures_count": 234,
-      "real_model_benchmarked": false,
+      "real_model_benchmarked": true,
       "gate_result": "FAIL",
       "verification": [
         "py_compile",
         "self-test passed",
-        "dry-run-local-wrapper smoke"
+        "qwen2.5:0.5b single-request Ollama smoke",
+        "full 234-case qwen2.5:0.5b benchmark"
       ],
       "next_steps": [
-        "Benchmark a real 200M-0.5B model through the suite",
+        "Investigate why qwen2.5:0.5b produces 104 missing_output_field fallbacks across 234 cases",
+        "Replace per-request ollama run with a lower-latency local inference path before considering input-method integration",
         "Gate: SLM must beat deterministic reranker before Phase 3"
       ]
     }
