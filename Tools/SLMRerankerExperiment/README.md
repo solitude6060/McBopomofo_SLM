@@ -516,6 +516,87 @@ algorithm as the runner). This is a courtesy check to avoid returning
 obviously bad output. The runner's authoritative `validate_candidates`
 remains the gatekeeper.
 
+## Benchmark Suite Runner
+
+`run_benchmark_suite.py` orchestrates the C++ contextual evaluator and the Python SLM reranker experiment runner across all three canonical fixtures, producing a comprehensive content-free JSON report with gate evaluation.
+
+### CLI
+
+```
+python3 run_benchmark_suite.py [options]
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--work-dir <path>` | temp dir | Directory for intermediate files (SLM request JSONL, per-case output) |
+| `--output <path>` | stdout | Report JSON output path |
+| `--fixtures <names...>` | `taiwan_ambiguous english_mixed taiwan_specific` | Fixture names resolved from `Tests/fixtures/contextual_bopomofo/` |
+| `--candidate-limit <N>` | 16 | Max candidates per slot for export |
+| `--scorer-command <cmd>` | — | External scorer command (per-case subprocess mode) |
+| `--persistent-scorer-command <cmd>` | — | Persistent scorer command |
+| `--dry-run-local-wrapper` | false | Use `local_llm_scorer.py --dry-run-baseline --persistent` |
+| `--model-manifest <path>` | — | Model manifest path (for report metadata only) |
+| `--fallback-threshold <N>` | 0 | Max allowed fallbacks for gate |
+| `--slm-latency-target-us <us>` | 20000 | SLM p95 latency target for gate (microseconds) |
+| `--timeout-ms <N>` | 30000 | Per-case timeout for SLM scorer (milliseconds) |
+| `--self-test` | false | Run self-test and exit |
+| `--no-gate` | false | Skip gate evaluation |
+
+One of `--scorer-command`, `--persistent-scorer-command`, or `--dry-run-local-wrapper` is required (unless `--self-test`).
+
+### Usage Examples
+
+**Self-test (no external model, no C++ evaluator):**
+
+```bash
+python3 run_benchmark_suite.py --self-test
+```
+
+**Dry-run smoke (full pipeline with mock scorer):**
+
+```bash
+python3 run_benchmark_suite.py \
+  --dry-run-local-wrapper \
+  --work-dir /tmp/slm_suite_smoke \
+  --output /tmp/slm_suite_smoke_report.json
+```
+
+**Persistent real model:**
+
+```bash
+python3 run_benchmark_suite.py \
+  --persistent-scorer-command "python3 your_scorer.py --persistent --model /path/to/model" \
+  --model-manifest /path/to/manifest.json \
+  --work-dir /tmp/slm_benchmark \
+  --output /tmp/slm_report.json
+```
+
+**Per-case subprocess mode:**
+
+```bash
+python3 run_benchmark_suite.py \
+  --scorer-command "python3 your_scorer.py" \
+  --work-dir /tmp/slm_benchmark \
+  --output /tmp/slm_report.json
+```
+
+### Gate Criteria
+
+The automatic gate evaluation in the report summarizes:
+
+| Condition | Default threshold |
+|-----------|-------------------|
+| Candidate validation exercised | `candidate_validation.exercised == true` |
+| Fallbacks ≤ threshold | `slm.total_fallbacks ≤ 0` (configurable via `--fallback-threshold`) |
+| SLM p95 latency ≤ target | `slm.latency_us.p95 ≤ 20000µs` (configurable via `--slm-latency-target-us`) |
+| SLM vs deterministic RER > 0% | Aggregate SLM relative error reduction vs deterministic must be positive |
+
+PASS requires **all** conditions met; otherwise FAIL with specific reasons listed.
+
+### Privacy & Content-Free Reports
+
+The report contains only aggregate metrics — no readings, candidates, expected text, baseline output, scorer output, prompts, or model raw output. Fixture counts are included but per-case data is excluded. The `real_model_benchmarked` flag is `false` for `--dry-run-local-wrapper` and read from `--model-manifest` when provided.
+
 ## Verification
 
 Before committing changes to this directory, run:

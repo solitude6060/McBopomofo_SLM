@@ -24,7 +24,7 @@
         "bigram_taiwan_specific.json"
       ],
       "exit_gate_result": "FAIL",
-      "exit_gate_criterion": "\u22655% relative error reduction on held-out test fixtures",
+      "exit_gate_criterion": "≥5% relative error reduction on held-out test fixtures",
       "exit_gate_actual": "0% relative error reduction (identical to baseline)",
       "conclusion": "Bigram language model from dictionary data lacks discriminatory power for homophone disambiguation. Recommend proceeding to SLM-based reranker (Phase 3) or training on larger corpora."
     },
@@ -40,17 +40,17 @@
       "model": null,
       "results_dir": "docs/reports/experiments/phase2/",
       "summary_file": "docs/reports/experiments/phase2/tiny_llm_scaffold_report.json",
-      "description": "External scorer protocol and benchmark harness for evaluating 200M\u20130.5B local tiny LLMs as candidate-constrained rerankers. The scaffold is verified with mock scorers but no real model has been benchmarked yet. Protocol v1.1 adds candidate-only output validation.",
+      "description": "External scorer protocol and benchmark harness for evaluating 200M–0.5B local tiny LLMs as candidate-constrained rerankers. The scaffold is verified with mock scorers but no real model has been benchmarked yet. Protocol v1.1 adds candidate-only output validation.",
       "protocol": "Tools/SLMRerankerExperiment/README.md",
       "fixtures_count": 234,
       "real_model_benchmarked": false,
       "candidate_validation": {
         "protocol_available": true,
         "exercised": false,
-        "note": "Candidate validation is implemented but not exercised by current fixtures \u2014 none supply a 'candidates' field."
+        "note": "Candidate validation is implemented but not exercised by current fixtures — none supply a 'candidates' field."
       },
       "next_steps": [
-        "Benchmark quantized 200M\u20130.5B models through the protocol",
+        "Benchmark quantized 200M–0.5B models through the protocol",
         "Compare against deterministic reranker on held-out Taiwan fixtures",
         "Gate: must beat deterministic reranker before promotion to Phase 3"
       ]
@@ -69,7 +69,10 @@
       "summary_file": "docs/reports/experiments/phase2/candidate_export_smoke.json",
       "description": "Adds --slm-request-output CLI flag to the C++ contextual evaluator, generating JSONL request files with per-position candidate slots from the ReadingGrid baseline segmentation. The output schema is compatible with the Python SLM reranker experiment runner, enabling candidate-only output validation (candidate_validation.exercised=true). Includes a fix for build_scorer_request to pass baseline_output from fixture instead of empty string.",
       "candidate_export": {
-        "cli_flags": ["--slm-request-output", "--slm-candidate-limit"],
+        "cli_flags": [
+          "--slm-request-output",
+          "--slm-candidate-limit"
+        ],
         "default_candidate_limit": 16,
         "cases_with_candidates": 233,
         "total_fixture_cases": 234,
@@ -86,7 +89,7 @@
       "verification": "Build + dry-run + mock-scorer + self-test + git-diff-check",
       "next_steps": [
         "Implement llama.cpp wrapper scorer for real model evaluation",
-        "Benchmark quantized 200M\u20130.5B models on the three fixture suites with candidate validation",
+        "Benchmark quantized 200M–0.5B models on the three fixture suites with candidate validation",
         "Gate: any candidate SLM must beat deterministic reranker on held-out Taiwan fixtures before Phase 3"
       ]
     },
@@ -111,7 +114,7 @@
       "verification": "Syntax check + self-test (includes persistent path) + dry-run + per-case mock + persistent mock + privacy check + git-diff-check",
       "next_steps": [
         "Implement llama.cpp wrapper scorer with persistent protocol support",
-        "Benchmark quantized 200M\u20130.5B models on the three fixture suites using persistent protocol",
+        "Benchmark quantized 200M–0.5B models on the three fixture suites using persistent protocol",
         "Gate: any candidate SLM must beat deterministic reranker on held-out Taiwan fixtures before Phase 3"
       ]
     },
@@ -125,7 +128,7 @@
       "model": null,
       "results_dir": "docs/reports/experiments/phase2/",
       "summary_file": "docs/reports/experiments/phase2/local_llm_wrapper_smoke.json",
-      "description": "Local tiny-LLM scorer wrapper scaffold with --provider command/ollama, --dry-run-baseline, and --model-manifest parameter enforcement. Adds local_llm_scorer.py and model_manifest.example.json to Tools/SLMRerankerExperiment/. Verified via dry-run-baseline persistent protocol on 234 candidate-exported fixture cases: 0 fallbacks, candidate_validation.exercised=true, 0 violations. No real 200M\u20130.5B model was benchmarked; the 5 installed Ollama models are all 9B+.",
+      "description": "Local tiny-LLM scorer wrapper scaffold with --provider command/ollama, --dry-run-baseline, and --model-manifest parameter enforcement. Adds local_llm_scorer.py and model_manifest.example.json to Tools/SLMRerankerExperiment/. Verified via dry-run-baseline persistent protocol on 234 candidate-exported fixture cases: 0 fallbacks, candidate_validation.exercised=true, 0 violations. No real 200M–0.5B model was benchmarked; the 5 installed Ollama models are all 9B+.",
       "fixtures_count": 234,
       "real_model_benchmarked": false,
       "ollama_available": true,
@@ -144,10 +147,35 @@
         "model_manifest": "example provided, parameter range enforced"
       },
       "next_steps": [
-        "Benchmark a real 200M\u20130.5B model through --provider command with llama-cli or similar",
+        "Benchmark a real 200M–0.5B model through --provider command with llama-cli or similar",
         "Benchmark through --provider ollama with a pre-installed tiny model (e.g., qwen2.5:0.5b)",
         "Compare against deterministic reranker on held-out Taiwan fixtures using candidate-validated output",
         "Gate: any candidate SLM must beat deterministic reranker before promotion to Phase 3"
+      ]
+    },
+    {
+      "id": "slm-benchmark-suite",
+      "name": "SLM Reranker Benchmark Suite Runner",
+      "status": "scaffold-verified",
+      "date": "2026-06-21T13:24:23+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit_suite": "9bec3f6b45ea72baf02ce01757af629e30ddf9fe",
+      "protocol_version": "1.2",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/slm_benchmark_suite_smoke.json",
+      "description": "Orchestrated benchmark suite runner that evaluates baseline, deterministic reranker, and SLM reranker across three canonical fixture sets. Produces aggregate metrics, relative error reduction, and gate evaluation.",
+      "fixtures_count": 234,
+      "real_model_benchmarked": false,
+      "gate_result": "FAIL",
+      "verification": [
+        "py_compile",
+        "self-test passed",
+        "dry-run-local-wrapper smoke"
+      ],
+      "next_steps": [
+        "Benchmark a real 200M-0.5B model through the suite",
+        "Gate: SLM must beat deterministic reranker before Phase 3"
       ]
     }
   ]
