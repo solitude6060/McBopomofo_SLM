@@ -21,7 +21,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-#include "Engine/DeterministicContextualScorer.h"
+#include "DeterministicContextualScorer.h"
 
 #include <algorithm>
 #include <initializer_list>

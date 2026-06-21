@@ -1,0 +1,43 @@
+{
+  "id": "phase3-deterministic-runtime-hook-static-gate",
+  "name": "Phase 3 Deterministic Runtime Hook Static Gate",
+  "status": "partial",
+  "date": "2026-06-22T02:21:45+08:00",
+  "branch": "slm-phase2-learnable",
+  "protocol_version": "1.0",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false
+  },
+  "runtime_default": "Off",
+  "typing_behavior_changed_by_default": false,
+  "implemented": [
+    "KeyHandler owns a deterministic contextual scorer instance.",
+    "The runtime hook is gated behind Bopomofo mode and ContextualRerankerMode raw value 1.",
+    "Plain Bopomofo and Off mode return before request construction.",
+    "Corrections are selected from existing candidates only and applied before the existing user override model so user overrides can still win.",
+    "The macOS app target now references ContextualScorer and DeterministicContextualScorer sources."
+  ],
+  "gate_result": "PARTIAL",
+  "verification": [
+    "opencode run attempted with an ultrawork prompt and failed before repository work due to PRAGMA wal_checkpoint(PASSIVE)",
+    "cmake --build Source/Engine/build --target McBopomofoLMLibTest",
+    "Source/Engine/build/McBopomofoLMLibTest: 119 passed, 2 skipped",
+    "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --self-test",
+    "python3 Tools/SLMRerankerExperiment/local_llm_scorer.py --self-test",
+    "git diff --check"
+  ],
+  "not_tested": [
+    "xcodebuild because xcodebuild is unavailable in this Linux environment",
+    "swift compiler checks because swift is unavailable in this Linux environment",
+    "manual macOS IMK typing and input menu dogfood"
+  ],
+  "next_steps": [
+    "Run xcodebuild and PreferencesTests on macOS.",
+    "Dogfood Off, Deterministic, and SLM Prototype menu switching with the Phase 3 privacy runbook.",
+    "Add content-free runtime counters for correction attempts, applied corrections, and latency buckets.",
+    "Defer tiny LLM runtime wiring until deterministic runtime dogfood passes."
+  ]
+}

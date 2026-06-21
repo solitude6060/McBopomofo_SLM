@@ -29,7 +29,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Engine/ContextualScorer.h"
+#include "ContextualScorer.h"
 
 namespace McBopomofo {
 

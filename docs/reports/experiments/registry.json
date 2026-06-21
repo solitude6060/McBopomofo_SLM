@@ -926,6 +926,42 @@
         "Use the dogfood runbook for manual menu and privacy validation",
         "Wire deterministic scorer after the preference surface is validated on macOS"
       ]
+    },
+    {
+      "id": "phase3-deterministic-runtime-hook-static-gate",
+      "name": "Phase 3 Deterministic Runtime Hook Static Gate",
+      "status": "partial",
+      "date": "2026-06-22T02:21:45+08:00",
+      "branch": "slm-phase2-learnable",
+      "protocol_version": "1.0",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase3/",
+      "summary_file": "docs/reports/experiments/phase3/deterministic_runtime_hook_static_gate.json",
+      "result_files": [
+        "docs/reports/experiments/phase3/deterministic_runtime_hook_static_gate.json"
+      ],
+      "description": "Adds a disabled-by-default deterministic runtime hook in KeyHandler. The hook is gated behind Bopomofo mode and the deterministic contextual reranker preference, preserves Off and Plain Bopomofo paths, applies only existing candidate corrections, and keeps the existing user override model after the deterministic hook so user overrides can still win.",
+      "runtime_default": "Off",
+      "typing_behavior_changed_by_default": false,
+      "gate_result": "PARTIAL",
+      "verification": [
+        "opencode ultrawork prompt attempted and failed before repo work due to PRAGMA wal_checkpoint(PASSIVE)",
+        "cmake --build Source/Engine/build --target McBopomofoLMLibTest",
+        "Source/Engine/build/McBopomofoLMLibTest: 119 passed, 2 skipped",
+        "run_benchmark_suite.py --self-test",
+        "local_llm_scorer.py --self-test",
+        "git diff --check"
+      ],
+      "not_tested": [
+        "xcodebuild unavailable in Linux",
+        "swift unavailable in Linux",
+        "manual macOS IMK dogfood"
+      ],
+      "next_steps": [
+        "Run macOS xcodebuild and PreferencesTests",
+        "Dogfood with the content-free Phase 3 runbook",
+        "Add runtime counters before enabling any tiny LLM path"
+      ]
     }
   ]
 }

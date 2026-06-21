@@ -22,6 +22,7 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 #import "KeyHandler.h"
+#import "Engine/DeterministicContextualScorer.h"
 #import "LanguageModelManager+Privates.h"
 #import "Mandarin.h"
 #import "McBopomofo-Swift.h"
@@ -48,6 +49,8 @@
 InputMode InputModeBopomofo = @"org.openvanilla.inputmethod.McBopomofo.Bopomofo";
 InputMode InputModePlainBopomofo = @"org.openvanilla.inputmethod.McBopomofo.PlainBopomofo";
 
+static constexpr NSInteger kContextualRerankerModeDeterministic = 1;
+
 @implementation KeyHandler {
     std::shared_ptr<Formosa::Gramambular2::LanguageModel> _emptySharedPtr;
 
@@ -59,6 +62,8 @@ InputMode InputModePlainBopomofo = @"org.openvanilla.inputmethod.McBopomofo.Plai
 
     // user override model
     McBopomofo::UserOverrideModel *_userOverrideModel;
+
+    McBopomofo::DeterministicContextualScorer *_deterministicContextualScorer;
 
     Formosa::Gramambular2::ReadingGrid *_grid;
     Formosa::Gramambular2::ReadingGrid::WalkResult _latestWalk;
@@ -115,6 +120,7 @@ InputMode InputModePlainBopomofo = @"org.openvanilla.inputmethod.McBopomofo.Plai
 - (void)dealloc
 {
     delete _bpmfReadingBuffer;
+    delete _deterministicContextualScorer;
     delete _grid;
 }
 
@@ -128,6 +134,7 @@ InputMode InputModePlainBopomofo = @"org.openvanilla.inputmethod.McBopomofo.Plai
         _languageModel = [LanguageModelManager languageModelMcBopomofo];
         _languageModel->setPhraseReplacementEnabled(Preferences.phraseReplacementEnabled);
         _userOverrideModel = [LanguageModelManager userOverrideModel];
+        _deterministicContextualScorer = new McBopomofo::DeterministicContextualScorer();
 
         // This returns a shared_ptr that in turn points to an unmanaged object.
         std::shared_ptr<Formosa::Gramambular2::LanguageModel> lm(_emptySharedPtr, _languageModel);
@@ -166,6 +173,93 @@ InputMode InputModePlainBopomofo = @"org.openvanilla.inputmethod.McBopomofo.Plai
         Preferences.keyboardLayout = KeyboardLayoutStandard;
     }
     _languageModel->setExternalConverterEnabled(Preferences.chineseConversionStyle == ChineseConversionStyleModel);
+}
+
+- (BOOL)_deterministicContextualRerankerEnabled
+{
+    return _inputMode == InputModeBopomofo &&
+           (NSInteger)Preferences.contextualRerankerMode == kContextualRerankerModeDeterministic &&
+           _deterministicContextualScorer != nullptr;
+}
+
+- (void)_applyDeterministicContextualRerankerIfEnabled
+{
+    if (![self _deterministicContextualRerankerEnabled] || _grid == nullptr || !_grid->length()) {
+        return;
+    }
+
+    McBopomofo::ContextualScoreRequest request;
+    request.readings = _grid->readings();
+    request.cursor = _grid->cursor();
+
+    size_t start = 0;
+    for (const auto &node : _latestWalk.nodes) {
+        request.baselinePath.push_back(McBopomofo::CandidateScoreInput{
+            node->reading(), node->value(), node->currentUnigram().rawValue(),
+            node->score(), start, node->spanningLength()});
+        start += node->spanningLength();
+    }
+
+    const auto &spans = _grid->spans();
+    for (size_t loc = 0; loc < spans.size(); ++loc) {
+        for (size_t len = 1; len <= Formosa::Gramambular2::ReadingGrid::kMaximumSpanLength && loc + len <= request.readings.size(); ++len) {
+            const auto &node = spans[loc].nodeOf(len);
+            if (node == nullptr) {
+                continue;
+            }
+            for (const auto &unigram : node->unigrams()) {
+                request.candidates.push_back(McBopomofo::CandidateScoreInput{
+                    node->reading(), unigram.value(), unigram.rawValue(),
+                    unigram.score(), loc, node->spanningLength()});
+            }
+        }
+    }
+
+    McBopomofo::ScorerOutput scorerOutput = _deterministicContextualScorer->suggestCorrections(request);
+    if (scorerOutput.corrections.empty()) {
+        return;
+    }
+
+    std::vector<McBopomofo::ScorerCorrection> selected;
+    std::vector<bool> occupied(_grid->length(), false);
+    for (const auto &correction : scorerOutput.corrections) {
+        if (correction.length == 0 || correction.start + correction.length > occupied.size()) {
+            continue;
+        }
+
+        bool overlaps = false;
+        for (size_t i = correction.start; i < correction.start + correction.length; ++i) {
+            overlaps = overlaps || occupied[i];
+        }
+        if (overlaps) {
+            continue;
+        }
+
+        selected.push_back(correction);
+        for (size_t i = correction.start; i < correction.start + correction.length; ++i) {
+            occupied[i] = true;
+        }
+    }
+
+    std::stable_sort(selected.begin(), selected.end(), [](const McBopomofo::ScorerCorrection &a, const McBopomofo::ScorerCorrection &b) {
+        if (a.start != b.start) {
+            return a.start < b.start;
+        }
+        return a.length > b.length;
+    });
+
+    bool overridden = false;
+    for (const auto &correction : selected) {
+        overridden = _grid->overrideCandidate(
+                         correction.start,
+                         Formosa::Gramambular2::ReadingGrid::Candidate(correction.reading, correction.value),
+                         Formosa::Gramambular2::ReadingGrid::Node::OverrideType::kOverrideValueWithHighScore) ||
+                     overridden;
+    }
+
+    if (overridden) {
+        [self _walk];
+    }
 }
 
 - (void)fixNodeWithReading:(NSString *)reading value:(NSString *)value originalCursorIndex:(size_t)originalCursorIndex useMoveCursorAfterSelectionSetting:(BOOL)flag
@@ -490,6 +584,7 @@ InputMode InputModePlainBopomofo = @"org.openvanilla.inputmethod.McBopomofo.Plai
                 _grid->deleteReadingBeforeCursor();
                 _grid->insertReading(newReading);
                 [self _walk];
+                [self _applyDeterministicContextualRerankerIfEnabled];
                 InputStateInputting *inputting = (InputStateInputting *)[self buildInputtingState];
                 stateCallback(inputting);
                 return YES;
@@ -526,6 +621,7 @@ InputMode InputModePlainBopomofo = @"org.openvanilla.inputmethod.McBopomofo.Plai
 
         _grid->insertReading(reading);
         [self _walk];
+        [self _applyDeterministicContextualRerankerIfEnabled];
 
         // get user override model suggestion
         if (_inputMode != InputModePlainBopomofo) {
