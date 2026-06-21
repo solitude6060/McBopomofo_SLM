@@ -156,55 +156,44 @@
     {
       "id": "slm-benchmark-suite",
       "name": "SLM Reranker Benchmark Suite Runner",
-      "status": "scaffold-verified",
-      "date": "2026-06-21T14:28:51+08:00",
+      "status": "benchmarked",
+      "date": "2026-06-21T14:36:55+08:00",
       "branch": "slm-phase2-learnable",
-      "commit_suite": "43e7211513b11a4e1330fa5378953cd526fea654",
+      "commit_suite": "96d012372d972ba98e374db8e4ad746334bc7bdf",
       "protocol_version": "1.2",
       "model": {
-        "model_name": "candidate-ranker-seed-character-count-gated",
-        "provider": "local-count-ranker",
-        "model_type": "candidate-ranker-v1",
-        "model_path": "Models/candidate_ranker_seed_char.json",
+        "model_name": "qwen2.5-0.5b",
+        "provider": "ollama-http",
+        "parameter_count": 500000000,
+        "quantization": "q4_k_m",
         "candidate_granularity": "character",
-        "selection": {
-          "override_margin": 0.1,
-          "min_non_baseline_feature_hits": 2,
-          "min_reading_candidate_count_for_override": 2,
-          "prefer_baseline_on_weak_override": true
-        },
-        "training_input_cases": 24,
-        "training_usable_cases": 21,
-        "training_source": "Tests/fixtures/contextual_bopomofo/ranker_training_seed.jsonl",
-        "contamination_guard": "ranker-train ids are outside canonical benchmark fixture prefixes"
+        "manifest": "Models/qwen2_5_0_5b_manifest.json",
+        "local_only": true
       },
       "results_dir": "docs/reports/experiments/phase2/",
-      "summary_file": "docs/reports/experiments/phase2/candidate_ranker_seed_char_benchmark.json",
+      "summary_file": "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_character_benchmark.json",
       "result_files": [
         "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_benchmark.json",
         "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_ollama_http_benchmark.json",
+        "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_character_benchmark.json",
         "docs/reports/experiments/phase2/candidate_ranker_heldout_clean_benchmark.json",
         "docs/reports/experiments/phase2/candidate_ranker_seed_benchmark.json",
         "docs/reports/experiments/phase2/candidate_ranker_seed_analysis.json",
         "docs/reports/experiments/phase2/candidate_ranker_seed_char_benchmark.json",
         "docs/reports/experiments/phase2/candidate_ranker_seed_char_analysis.json"
       ],
-      "description": "Character-granularity seed-trained non-generative candidate ranker benchmark with conservative count-gated baseline overrides. The ranker reaches aggregate accuracy 65.812% (154/234), +1.2346% relative error reduction versus baseline, 0 regressions in analyzer classification, p95 latency 133us, and still fails promotion because it remains below deterministic reranking.",
+      "description": "Real local qwen2.5:0.5b Ollama HTTP benchmark over character-granularity candidate requests. Character slots did not make the generative tiny LLM viable: aggregate accuracy is 26.0684%, fallbacks are 140/234, p95 latency is 1.801806s, and the promotion gate fails.",
       "fixtures_count": 234,
-      "real_model_benchmarked": false,
+      "real_model_benchmarked": true,
       "gate_result": "FAIL",
       "verification": [
-        "py_compile",
-        "candidate ranker trainer self-test",
-        "candidate ranker scorer self-test",
-        "candidate ranker analyzer self-test",
-        "full 234-case character-granularity count-gated benchmark",
-        "candidate ranker analysis"
+        "ollama list confirmed qwen2.5:0.5b installed",
+        "full 234-case character-granularity qwen2.5:0.5b Ollama HTTP benchmark",
+        "candidate validation exercised"
       ],
       "next_steps": [
-        "Expand independent character-granularity training data beyond 21 usable cases",
-        "Add stronger context features so candidate ranker can close the gap to deterministic reranking",
-        "Benchmark a real local 200M-0.5B model against character-granularity candidate requests",
+        "Do not pursue unconstrained generative tiny-LLM scoring for real-time typing without a constrained decoder",
+        "Prefer non-generative candidate rankers or a model that emits candidate indices under hard validation",
         "Gate: SLM must beat deterministic reranker before Phase 3"
       ]
     }

@@ -1,0 +1,254 @@
+{
+  "suite": "slm-benchmark-suite",
+  "date": "2026-06-21T14:36:55+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "96d012372d972ba98e374db8e4ad746334bc7bdf",
+  "fixtures": {
+    "taiwan_ambiguous": 100,
+    "english_mixed": 50,
+    "taiwan_specific": 84,
+    "total": 234
+  },
+  "scorer": {
+    "mode": "persistent",
+    "real_model_benchmarked": true,
+    "candidate_granularity": "character",
+    "model_manifest": {
+      "model_name": "qwen2.5-0.5b",
+      "provider": "ollama",
+      "parameter_count": 500000000,
+      "quantization": "q4_k_m",
+      "license": "apache-2.0",
+      "redistributable": true,
+      "local_only": true
+    }
+  },
+  "baseline": {
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_accuracy": 81.0,
+        "exact_matches": 81,
+        "errors": 19,
+        "latency_us": {
+          "p50": 2,
+          "p95": 2,
+          "p99": 4
+        },
+        "total_cases": 100
+      },
+      {
+        "fixture": "english_mixed",
+        "exact_accuracy": 38.0,
+        "exact_matches": 19,
+        "errors": 31,
+        "latency_us": {
+          "p50": 1,
+          "p95": 3,
+          "p99": 4
+        },
+        "total_cases": 50
+      },
+      {
+        "fixture": "taiwan_specific",
+        "exact_accuracy": 63.0952,
+        "exact_matches": 53,
+        "errors": 31,
+        "latency_us": {
+          "p50": 2,
+          "p95": 3,
+          "p99": 4
+        },
+        "total_cases": 84
+      }
+    ],
+    "aggregate": {
+      "total_cases": 234,
+      "exact_accuracy": 65.3846,
+      "exact_matches": 153,
+      "errors": 81,
+      "latency_us": {
+        "p50": 2,
+        "p95": 3,
+        "p99": 4
+      }
+    }
+  },
+  "deterministic": {
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_accuracy": 93.0,
+        "exact_matches": 93,
+        "errors": 7,
+        "latency_us": {
+          "p50": 222,
+          "p95": 463,
+          "p99": 535
+        },
+        "total_cases": 100
+      },
+      {
+        "fixture": "english_mixed",
+        "exact_accuracy": 48.0,
+        "exact_matches": 24,
+        "errors": 26,
+        "latency_us": {
+          "p50": 157,
+          "p95": 373,
+          "p99": 474
+        },
+        "total_cases": 50
+      },
+      {
+        "fixture": "taiwan_specific",
+        "exact_accuracy": 63.0952,
+        "exact_matches": 53,
+        "errors": 31,
+        "latency_us": {
+          "p50": 204,
+          "p95": 348,
+          "p99": 408
+        },
+        "total_cases": 84
+      }
+    ],
+    "aggregate": {
+      "total_cases": 234,
+      "exact_accuracy": 72.6496,
+      "exact_matches": 170,
+      "errors": 64,
+      "latency_us": {
+        "p50": 202,
+        "p95": 396,
+        "p99": 526
+      }
+    }
+  },
+  "slm": {
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_accuracy": 19.0,
+        "exact_matches": 19,
+        "errors": 81,
+        "fallbacks": 78,
+        "latency_us": {
+          "p50": 281608,
+          "p95": 30014713,
+          "p99": 30030066
+        },
+        "candidate_validation": {
+          "protocol_available": true,
+          "exercised": true,
+          "cases_with_candidates": 41,
+          "non_candidate_violations": 19
+        },
+        "fallback_breakdown": {
+          "output_not_candidate": 40,
+          "output_not_string": 9,
+          "timeout": 8,
+          "provider_error": 2,
+          "non_candidate_output": 19
+        },
+        "total_cases": 100
+      },
+      {
+        "fixture": "english_mixed",
+        "exact_accuracy": 18.0,
+        "exact_matches": 9,
+        "errors": 41,
+        "fallbacks": 22,
+        "latency_us": {
+          "p50": 284110,
+          "p95": 578773,
+          "p99": 1369004
+        },
+        "candidate_validation": {
+          "protocol_available": true,
+          "exercised": true,
+          "cases_with_candidates": 28,
+          "non_candidate_violations": 0
+        },
+        "fallback_breakdown": {
+          "output_not_candidate": 18,
+          "output_not_string": 3,
+          "empty_output": 1
+        },
+        "total_cases": 50
+      },
+      {
+        "fixture": "taiwan_specific",
+        "exact_accuracy": 39.2857,
+        "exact_matches": 33,
+        "errors": 51,
+        "fallbacks": 40,
+        "latency_us": {
+          "p50": 296122,
+          "p95": 1086640,
+          "p99": 5622620
+        },
+        "candidate_validation": {
+          "protocol_available": true,
+          "exercised": true,
+          "cases_with_candidates": 43,
+          "non_candidate_violations": 0
+        },
+        "fallback_breakdown": {
+          "output_not_candidate": 34,
+          "output_not_string": 6
+        },
+        "total_cases": 84
+      }
+    ],
+    "aggregate": {
+      "total_cases": 234,
+      "exact_accuracy": 26.0684,
+      "exact_matches": 61,
+      "errors": 173,
+      "fallbacks": 140,
+      "latency_us": {
+        "p50": 287035,
+        "p95": 1801806,
+        "p99": 30029971
+      },
+      "candidate_validation": {
+        "protocol_available": true,
+        "exercised": true,
+        "cases_with_candidates": 112,
+        "non_candidate_violations": 19
+      },
+      "fallback_breakdown": {
+        "output_not_candidate": 92,
+        "output_not_string": 18,
+        "timeout": 8,
+        "provider_error": 2,
+        "non_candidate_output": 19,
+        "empty_output": 1
+      }
+    }
+  },
+  "relative_error_reduction_pct": {
+    "slm_vs_baseline": {
+      "taiwan_ambiguous": -326.3158,
+      "english_mixed": -32.2581,
+      "taiwan_specific": -64.5161,
+      "aggregate": -113.5802
+    },
+    "slm_vs_deterministic": {
+      "taiwan_ambiguous": -1057.1429,
+      "english_mixed": -57.6923,
+      "taiwan_specific": -64.5161,
+      "aggregate": -170.3125
+    }
+  },
+  "gate": {
+    "result": "FAIL",
+    "reasons": [
+      "fallbacks 140 > threshold 0",
+      "SLM p95 latency 1801806us > target 20000us",
+      "SLM vs deterministic relative error reduction=-170.3125% (need > 0%)"
+    ]
+  },
+  "real_model_benchmarked": true
+}

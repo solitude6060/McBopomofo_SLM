@@ -1,0 +1,10 @@
+{
+  "model_name": "qwen2.5-0.5b",
+  "provider": "ollama",
+  "parameter_count": 500000000,
+  "quantization": "q4_k_m",
+  "license": "apache-2.0",
+  "redistributable": true,
+  "local_only": true,
+  "description": "Local Ollama qwen2.5:0.5b tiny LLM used for SLM candidate-reranker benchmarks."
+}
