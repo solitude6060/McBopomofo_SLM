@@ -49,6 +49,7 @@ private let kAllowMovingCursorWhenChoosingCandidates = "AllowMovingCursorWhenCho
 private let kPhraseReplacementEnabledKey = "PhraseReplacementEnabled"
 private let kChineseConversionStyleKey = "ChineseConversionStyle"
 private let kAssociatedPhrasesEnabledKey = "AssociatedPhrasesEnabled"
+private let kContextualRerankerModeKey = "ContextualRerankerMode"
 private let kLetterBehaviorKey = "LetterBehavior"
 private let kControlEnterOutputKey = "ControlEnterOutput"
 private let kShiftEnterEnabledKey = "ShiftEnterEnabled"
@@ -207,6 +208,23 @@ struct CandidateListTextSize {
     }
 }
 
+@objc enum ContextualRerankerMode: Int {
+    case off = 0
+    case deterministic = 1
+    case slmPrototype = 2
+
+    var name: String {
+        return switch self {
+        case .off:
+            "Off"
+        case .deterministic:
+            "Deterministic"
+        case .slmPrototype:
+            "SLM Prototype"
+        }
+    }
+}
+
 // MARK: -
 
 class Preferences: NSObject {
@@ -230,6 +248,7 @@ class Preferences: NSObject {
             kPhraseReplacementEnabledKey,
             kChineseConversionStyleKey,
             kAssociatedPhrasesEnabledKey,
+            kContextualRerankerModeKey,
             kControlEnterOutputKey,
             kShiftEnterEnabledKey,
             kRepeatedPunctuationToSelectCandidateEnabledKey,
@@ -255,6 +274,7 @@ class Preferences: NSObject {
         Preferences.chineseConversionStyle = Preferences.chineseConversionStyle
         Preferences.phraseReplacementEnabled = Preferences.phraseReplacementEnabled
         Preferences.associatedPhrasesEnabled = Preferences.associatedPhrasesEnabled
+        Preferences.contextualRerankerMode = Preferences.contextualRerankerMode
         Preferences.letterBehavior = Preferences.letterBehavior
         Preferences.controlEnterOutput = Preferences.controlEnterOutput
         Preferences.shiftEnterEnabled = Preferences.shiftEnterEnabled
@@ -447,6 +467,13 @@ extension Preferences {
     @objc static func toggleAssociatedPhrasesEnabled() -> Bool {
         associatedPhrasesEnabled = !associatedPhrasesEnabled
         return associatedPhrasesEnabled
+    }
+
+    @EnumUserDefault(key: kContextualRerankerModeKey, defaultValue: .off)
+    @objc static var contextualRerankerMode: ContextualRerankerMode
+
+    @objc static var contextualRerankerModeName: String {
+        contextualRerankerMode.name
     }
 
     @UserDefault(key: kShiftEnterEnabledKey, defaultValue: true)
@@ -648,6 +675,9 @@ extension Preferences {
         )
         lines.append(
             "  - Associated Phrases (Plain Bopomofo): \(Preferences.enableUserPhrasesInPlainBopomofo ? "Enabled" : "Disabled")"
+        )
+        lines.append(
+            "  - Experimental Contextual Reranker: \(Preferences.contextualRerankerMode.name)"
         )
 
         lines.append("  - Letter Keys: \(Preferences.letterBehavior)")

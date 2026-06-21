@@ -85,6 +85,17 @@ class McBopomofoInputMethodController: IMKInputController {
             action: #selector(toggleAssociatedPhrasesEnabled(_:)), keyEquivalent: "")
         associatedPhrasesItem.state = Preferences.associatedPhrasesEnabled.state
 
+        let contextualRerankerItem = NSMenuItem(
+            title: NSLocalizedString("Experimental Contextual Reranker", comment: ""),
+            action: nil,
+            keyEquivalent: "")
+        let contextualRerankerSubmenu = NSMenu(title: contextualRerankerItem.title)
+        addContextualRerankerModeItem(to: contextualRerankerSubmenu, mode: .off)
+        addContextualRerankerModeItem(to: contextualRerankerSubmenu, mode: .deterministic)
+        addContextualRerankerModeItem(to: contextualRerankerSubmenu, mode: .slmPrototype)
+        contextualRerankerItem.submenu = contextualRerankerSubmenu
+        menu.addItem(contextualRerankerItem)
+
         let inputMode = keyHandler.inputMode
 
         // Only Bopomofo mode supports Bopomofo Font Annotation. If support is
@@ -307,6 +318,30 @@ class McBopomofoInputMethodController: IMKInputController {
 
     @objc func toggleAssociatedPhrasesEnabled(_ sender: Any?) {
         _ = Preferences.toggleAssociatedPhrasesEnabled()
+    }
+
+    private func addContextualRerankerModeItem(to menu: NSMenu, mode: ContextualRerankerMode) {
+        let item = menu.addItem(
+            withTitle: NSLocalizedString(mode.name, comment: ""),
+            action: #selector(setContextualRerankerMode(_:)),
+            keyEquivalent: "")
+        item.target = self
+        item.representedObject = NSNumber(value: mode.rawValue)
+        item.state = (Preferences.contextualRerankerMode == mode).state
+    }
+
+    @objc func setContextualRerankerMode(_ sender: NSMenuItem) {
+        guard
+            let rawValue = sender.representedObject as? NSNumber,
+            let mode = ContextualRerankerMode(rawValue: rawValue.intValue)
+        else {
+            return
+        }
+        Preferences.contextualRerankerMode = mode
+        NotifierController.notify(
+            message: String(
+                format: NSLocalizedString("Contextual Reranker: %@", comment: ""),
+                mode.name))
     }
 
     @objc func toggleBopomofoFontAnnotationSupport(_ sender: Any?) {

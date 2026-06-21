@@ -1,0 +1,68 @@
+{
+  "report": "contextual_reranker_runtime_preference",
+  "date": "2026-06-22T02:11:21+08:00",
+  "branch": "slm-phase2-learnable",
+  "content_policy": {
+    "raw_typed_content_in_report": false,
+    "runtime_logging_added": false
+  },
+  "phase": "Phase 3 macOS experimental runtime",
+  "scope": {
+    "implemented": [
+      "disabled-by-default ContextualRerankerMode preference",
+      "input menu submenu for off, deterministic, and SLM prototype modes",
+      "settings report entry for the selected mode",
+      "preference tests for default, round-trip, and settings report coverage"
+    ],
+    "not_implemented": [
+      "reranker application in the live composing path",
+      "SLM model runtime invocation from the input method",
+      "latency/fallback counters in production runtime"
+    ]
+  },
+  "defaults": {
+    "contextual_reranker_mode": "Off",
+    "typing_behavior_changed": false,
+    "slm_enabled_by_default": false
+  },
+  "runtime_modes": [
+    {
+      "name": "Off",
+      "raw_value": 0,
+      "behavior": "baseline runtime behavior"
+    },
+    {
+      "name": "Deterministic",
+      "raw_value": 1,
+      "behavior": "reserved for Phase 3 deterministic scorer wiring"
+    },
+    {
+      "name": "SLM Prototype",
+      "raw_value": 2,
+      "behavior": "reserved for async or pre-commit prototype experiments only"
+    }
+  ],
+  "verification": [
+    "git diff --check",
+    "static symbol check for ContextualRerankerMode and input menu wiring",
+    "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --self-test",
+    "python3 Tools/SLMRerankerExperiment/local_llm_scorer.py --self-test"
+  ],
+  "not_tested": [
+    "macOS xcodebuild because xcodebuild is not installed in the Linux execution environment",
+    "Swift compiler checks because swift is not installed in the Linux execution environment",
+    "manual IMK input menu interaction"
+  ],
+  "gate_result": "PARTIAL",
+  "gate_reasons": [
+    "Phase 3 preference surface is in place and defaults off",
+    "typing behavior is intentionally unchanged until macOS build/manual validation is available",
+    "full Phase 3 runtime integration still needs scorer wiring, fallback counters, and dogfood checklist execution"
+  ],
+  "next_steps": [
+    "Run the McBopomofoTests PreferencesTests target on macOS",
+    "Wire deterministic scorer behind ContextualRerankerMode.deterministic with fail-closed behavior",
+    "Add content-free latency/fallback counters before any SLM prototype runtime path",
+    "Create the macOS dogfood runbook before enabling the preference for users"
+  ]
+}

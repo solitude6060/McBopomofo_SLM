@@ -858,6 +858,40 @@
         "Stop prompt-only qwen2.5:0.5b reranker experiments for this path",
         "Move future learned work toward constrained decoding or a fixed-output classifier"
       ]
+    },
+    {
+      "id": "phase3-contextual-reranker-runtime-preference",
+      "name": "Phase 3 Contextual Reranker Runtime Preference",
+      "status": "partial",
+      "date": "2026-06-22T02:11:21+08:00",
+      "branch": "slm-phase2-learnable",
+      "protocol_version": "1.0",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase3/",
+      "summary_file": "docs/reports/experiments/phase3/contextual_reranker_runtime_preference.json",
+      "result_files": [
+        "docs/reports/experiments/phase3/contextual_reranker_runtime_preference.json"
+      ],
+      "description": "Adds a disabled-by-default macOS runtime preference surface for contextual reranking. The input menu exposes Off, Deterministic, and SLM Prototype modes, and Preferences.createReport records the selected non-content setting. Typing behavior is intentionally unchanged until macOS build/manual IMK validation is available.",
+      "runtime_default": "Off",
+      "typing_behavior_changed": false,
+      "gate_result": "PARTIAL",
+      "verification": [
+        "git diff --check",
+        "static symbol check for ContextualRerankerMode and input menu wiring",
+        "run_benchmark_suite.py --self-test",
+        "local_llm_scorer.py --self-test"
+      ],
+      "not_tested": [
+        "xcodebuild and swift compiler checks unavailable in Linux environment",
+        "manual IMK input menu interaction"
+      ],
+      "next_steps": [
+        "Run PreferencesTests on macOS",
+        "Wire deterministic scorer behind the Deterministic mode with fail-closed behavior",
+        "Add content-free runtime counters before any model path",
+        "Create the macOS dogfood runbook"
+      ]
     }
   ]
 }

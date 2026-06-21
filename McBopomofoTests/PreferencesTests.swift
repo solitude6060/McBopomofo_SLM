@@ -200,6 +200,30 @@ final class PreferencesTests {
         #expect(Preferences.chineseConversionStyle == .model)
     }
 
+    @Test("Test contextual reranker mode setting")
+    func testContextualRerankerMode() {
+        #expect(Preferences.contextualRerankerMode == .off)
+        #expect(Preferences.contextualRerankerModeName == "Off")
+
+        Preferences.contextualRerankerMode = .deterministic
+        #expect(Preferences.contextualRerankerMode == .deterministic)
+        #expect(Preferences.contextualRerankerModeName == "Deterministic")
+
+        Preferences.contextualRerankerMode = .slmPrototype
+        #expect(Preferences.contextualRerankerMode == .slmPrototype)
+        #expect(Preferences.contextualRerankerModeName == "SLM Prototype")
+    }
+
+    @Test("Test contextual reranker mode appears in settings report")
+    func testContextualRerankerModeReport() {
+        var report = Preferences.createReport()
+        #expect(report.contains("Experimental Contextual Reranker: Off"))
+
+        Preferences.contextualRerankerMode = .deterministic
+        report = Preferences.createReport()
+        #expect(report.contains("Experimental Contextual Reranker: Deterministic"))
+    }
+
 }
 
 final class CandidateKeyValidationTests {
