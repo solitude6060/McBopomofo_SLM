@@ -1,0 +1,252 @@
+{
+  "suite": "slm-benchmark-suite",
+  "date": "2026-06-21T13:52:05+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "78d0d17dfa552fede497ef3f484d049c9dbcc0aa",
+  "fixtures": {
+    "taiwan_ambiguous": 100,
+    "english_mixed": 50,
+    "taiwan_specific": 84,
+    "total": 234
+  },
+  "scorer": {
+    "mode": "persistent",
+    "transport": "ollama-http",
+    "real_model_benchmarked": true,
+    "model_manifest": {
+      "model_name": "qwen2.5-0.5b",
+      "provider": "ollama",
+      "parameter_count": 500000000,
+      "quantization": "q4_k_m",
+      "license": "apache-2.0",
+      "redistributable": true,
+      "local_only": true
+    }
+  },
+  "baseline": {
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_accuracy": 81.0,
+        "exact_matches": 81,
+        "errors": 19,
+        "latency_us": {
+          "p50": 2,
+          "p95": 2,
+          "p99": 3
+        },
+        "total_cases": 100
+      },
+      {
+        "fixture": "english_mixed",
+        "exact_accuracy": 38.0,
+        "exact_matches": 19,
+        "errors": 31,
+        "latency_us": {
+          "p50": 2,
+          "p95": 4,
+          "p99": 6
+        },
+        "total_cases": 50
+      },
+      {
+        "fixture": "taiwan_specific",
+        "exact_accuracy": 63.0952,
+        "exact_matches": 53,
+        "errors": 31,
+        "latency_us": {
+          "p50": 2,
+          "p95": 3,
+          "p99": 4
+        },
+        "total_cases": 84
+      }
+    ],
+    "aggregate": {
+      "total_cases": 234,
+      "exact_accuracy": 65.3846,
+      "exact_matches": 153,
+      "errors": 81,
+      "latency_us": {
+        "p50": 2,
+        "p95": 3,
+        "p99": 5
+      }
+    }
+  },
+  "deterministic": {
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_accuracy": 93.0,
+        "exact_matches": 93,
+        "errors": 7,
+        "latency_us": {
+          "p50": 211,
+          "p95": 423,
+          "p99": 514
+        },
+        "total_cases": 100
+      },
+      {
+        "fixture": "english_mixed",
+        "exact_accuracy": 48.0,
+        "exact_matches": 24,
+        "errors": 26,
+        "latency_us": {
+          "p50": 159,
+          "p95": 371,
+          "p99": 463
+        },
+        "total_cases": 50
+      },
+      {
+        "fixture": "taiwan_specific",
+        "exact_accuracy": 63.0952,
+        "exact_matches": 53,
+        "errors": 31,
+        "latency_us": {
+          "p50": 204,
+          "p95": 355,
+          "p99": 408
+        },
+        "total_cases": 84
+      }
+    ],
+    "aggregate": {
+      "total_cases": 234,
+      "exact_accuracy": 72.6496,
+      "exact_matches": 170,
+      "errors": 64,
+      "latency_us": {
+        "p50": 190,
+        "p95": 376,
+        "p99": 475
+      }
+    }
+  },
+  "slm": {
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_accuracy": 50.0,
+        "exact_matches": 50,
+        "errors": 50,
+        "fallbacks": 42,
+        "latency_us": {
+          "p50": 272942,
+          "p95": 1047338,
+          "p99": 2000175
+        },
+        "candidate_validation": {
+          "protocol_available": true,
+          "exercised": true,
+          "cases_with_candidates": 58,
+          "non_candidate_violations": 0
+        },
+        "fallback_breakdown": {
+          "output_not_candidate": 35,
+          "output_not_string": 7
+        },
+        "total_cases": 100
+      },
+      {
+        "fixture": "english_mixed",
+        "exact_accuracy": 24.0,
+        "exact_matches": 12,
+        "errors": 38,
+        "fallbacks": 16,
+        "latency_us": {
+          "p50": 280259,
+          "p95": 615739,
+          "p99": 677482
+        },
+        "candidate_validation": {
+          "protocol_available": true,
+          "exercised": true,
+          "cases_with_candidates": 34,
+          "non_candidate_violations": 0
+        },
+        "fallback_breakdown": {
+          "output_not_candidate": 15,
+          "output_not_string": 1
+        },
+        "total_cases": 50
+      },
+      {
+        "fixture": "taiwan_specific",
+        "exact_accuracy": 10.7143,
+        "exact_matches": 9,
+        "errors": 75,
+        "fallbacks": 71,
+        "latency_us": {
+          "p50": 286929,
+          "p95": 5292735,
+          "p99": 30030168
+        },
+        "candidate_validation": {
+          "protocol_available": true,
+          "exercised": true,
+          "cases_with_candidates": 39,
+          "non_candidate_violations": 27
+        },
+        "fallback_breakdown": {
+          "output_not_string": 6,
+          "output_not_candidate": 34,
+          "timeout": 3,
+          "provider_error": 1,
+          "non_candidate_output": 27
+        },
+        "total_cases": 84
+      }
+    ],
+    "aggregate": {
+      "total_cases": 234,
+      "exact_accuracy": 30.3419,
+      "exact_matches": 71,
+      "errors": 163,
+      "fallbacks": 129,
+      "latency_us": {
+        "p50": 279270,
+        "p95": 1047338,
+        "p99": 30007986
+      },
+      "candidate_validation": {
+        "protocol_available": true,
+        "exercised": true,
+        "cases_with_candidates": 131,
+        "non_candidate_violations": 27
+      },
+      "fallback_breakdown": {
+        "output_not_candidate": 84,
+        "output_not_string": 14,
+        "timeout": 3,
+        "provider_error": 1,
+        "non_candidate_output": 27
+      }
+    }
+  },
+  "relative_error_reduction_pct": {
+    "slm_vs_baseline": {
+      "taiwan_ambiguous": -163.1579,
+      "english_mixed": -22.5806,
+      "taiwan_specific": -141.9355,
+      "aggregate": -101.2346
+    },
+    "slm_vs_deterministic": {
+      "taiwan_ambiguous": -614.2857,
+      "english_mixed": -46.1538,
+      "taiwan_specific": -141.9355,
+      "aggregate": -154.6875
+    }
+  },
+  "gate": {
+    "result": "FAIL",
+    "reasons": [
+      "fallbacks 129 > threshold 0",
+      "SLM p95 latency 1047338us > target 20000us",
+      "SLM vs deterministic relative error reduction=-154.6875% (need > 0%)"
+    ]
+  },
+  "real_model_benchmarked": true
+}

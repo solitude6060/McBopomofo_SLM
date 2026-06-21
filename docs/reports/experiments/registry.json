@@ -157,32 +157,38 @@
       "id": "slm-benchmark-suite",
       "name": "SLM Reranker Benchmark Suite Runner",
       "status": "benchmarked",
-      "date": "2026-06-21T13:41:25+08:00",
+      "date": "2026-06-21T13:52:05+08:00",
       "branch": "slm-phase2-learnable",
-      "commit_suite": "e3bb33b87b8cff62932584d230bff470959df7ba",
+      "commit_suite": "78d0d17dfa552fede497ef3f484d049c9dbcc0aa",
       "protocol_version": "1.2",
       "model": {
         "model_name": "qwen2.5-0.5b",
-        "provider": "ollama",
+        "provider": "ollama-http",
+        "ollama_backend": "ollama",
         "parameter_count": 500000000,
         "quantization": "q4_k_m",
         "local_only": true
       },
       "results_dir": "docs/reports/experiments/phase2/",
-      "summary_file": "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_benchmark.json",
-      "description": "Orchestrated benchmark suite runner evaluating baseline, deterministic reranker, and qwen2.5:0.5b SLM reranker across three canonical fixture sets. The tiny model is candidate-safe but underperforms baseline and deterministic reranking due to high fallback rate and high latency.",
+      "summary_file": "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_ollama_http_benchmark.json",
+      "result_files": [
+        "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_benchmark.json",
+        "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_ollama_http_benchmark.json"
+      ],
+      "description": "Orchestrated benchmark suite runner evaluating baseline, deterministic reranker, and qwen2.5:0.5b SLM reranker across three canonical fixture sets. The ollama-http transport avoids per-request CLI spawn but still fails the gate: aggregate accuracy regresses to 30.3419%, fallbacks rise to 129, and p95 latency is 1047338us.",
       "fixtures_count": 234,
       "real_model_benchmarked": true,
       "gate_result": "FAIL",
       "verification": [
         "py_compile",
         "self-test passed",
-        "qwen2.5:0.5b single-request Ollama smoke",
-        "full 234-case qwen2.5:0.5b benchmark"
+        "qwen2.5:0.5b single-request ollama-http smoke",
+        "full 234-case qwen2.5:0.5b ollama-http benchmark"
       ],
       "next_steps": [
-        "Investigate why qwen2.5:0.5b produces 104 missing_output_field fallbacks across 234 cases",
-        "Replace per-request ollama run with a lower-latency local inference path before considering input-method integration",
+        "Investigate output_not_candidate and output_not_string fallbacks before any further prompt tuning",
+        "Do not pursue Ollama transport as an IME latency path unless a model can approach the 20ms p95 gate",
+        "Consider a smaller supervised candidate classifier or native llama.cpp/Core ML path instead of general text generation",
         "Gate: SLM must beat deterministic reranker before Phase 3"
       ]
     }
