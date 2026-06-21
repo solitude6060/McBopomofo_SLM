@@ -77,6 +77,60 @@ static void writeMinimalModel(const std::string& path) {
   fclose(f);
 }
 
+// Writes a model with 3 unigrams and 2 bigrams for sign-direction testing.
+// Bigrams: 甲→乙 P=0.9 (log≈-0.105), 甲→丙 P=0.3 (log≈-1.204)
+// Unigrams: 甲 (count=200), 乙 (count=180), 丙 (count=60)
+static void writeDualBigramModel(const std::string& path) {
+  FILE* f = fopen(path.c_str(), "wb");
+  ASSERT_NE(f, nullptr);
+
+  uint32_t magic = 0x42494752;
+  fwrite(&magic, 4, 1, f);
+  uint32_t version = 1;
+  fwrite(&version, 4, 1, f);
+
+  uint32_t numUnigrams = 3;
+  uint32_t numBigrams = 2;
+  fwrite(&numUnigrams, 4, 1, f);
+  fwrite(&numBigrams, 4, 1, f);
+
+  // unigrams: 甲 (U+7532), 乙 (U+4E59), 丙 (U+4E19)
+  uint32_t cp = 0x7532;
+  uint32_t count = 200;
+  fwrite(&cp, 4, 1, f);
+  fwrite(&count, 4, 1, f);
+  cp = 0x4E59;
+  count = 180;
+  fwrite(&cp, 4, 1, f);
+  fwrite(&count, 4, 1, f);
+  cp = 0x4E19;
+  count = 60;
+  fwrite(&cp, 4, 1, f);
+  fwrite(&count, 4, 1, f);
+
+  // bigrams: 甲→乙 (count=180, log_prob=log(0.9)≈-0.1053605)
+  float logProb = -0.1053605f;
+  cp = 0x7532;
+  fwrite(&cp, 4, 1, f);
+  cp = 0x4E59;
+  fwrite(&cp, 4, 1, f);
+  count = 180;
+  fwrite(&count, 4, 1, f);
+  fwrite(&logProb, 4, 1, f);
+
+  // bigrams: 甲→丙 (count=60, log_prob=log(0.3)≈-1.20397)
+  logProb = -1.20397f;
+  cp = 0x7532;
+  fwrite(&cp, 4, 1, f);
+  cp = 0x4E19;
+  fwrite(&cp, 4, 1, f);
+  count = 60;
+  fwrite(&count, 4, 1, f);
+  fwrite(&logProb, 4, 1, f);
+
+  fclose(f);
+}
+
 // Writes a model with invalid magic bytes.
 static void writeInvalidMagicModel(const std::string& path) {
   FILE* f = fopen(path.c_str(), "wb");
@@ -167,6 +221,38 @@ TEST(BigramContextualScorerTest, ScoreDeltas_SizeMatchesCandidates) {
   for (size_t i = 0; i < deltas.size(); ++i) {
     EXPECT_TRUE(std::isfinite(deltas[i]));
   }
+  std::remove(tmpPath.c_str());
+}
+
+TEST(BigramContextualScorerTest, CandidatePreferredOverBaseline_SignCorrect) {
+  // This test catches reversed-sign bugs in the delta computation.
+  // Old implementation (bigramLogProbSum, baseline-candidate) produces
+  // a negative delta when both bigrams are known and candidate > baseline.
+  // Correct implementation (bigramScoreSum, candidate-baseline) is positive.
+  std::string tmpPath = "/tmp/test_bigram_sign_check.bin";
+  writeDualBigramModel(tmpPath);
+  BigramContextualScorer scorer(tmpPath);
+  ASSERT_TRUE(scorer.isModelLoaded());
+
+  ContextualScoreRequest req;
+  req.readings = {"ㄐㄧㄚˇ", "ㄧˇ"};
+  req.previousCommittedText = "甲";
+  // Candidate "乙" has higher bigram prob with "甲" than baseline "丙"
+  req.candidates.push_back(
+      CandidateScoreInput{"ㄧˇ", "乙", "乙", 2.0, 1, 1});
+  req.baselinePath.push_back(
+      CandidateScoreInput{"ㄐㄧㄚˇ", "甲", "甲", 3.0, 0, 1});
+  req.baselinePath.push_back(
+      CandidateScoreInput{"ㄅㄧㄥˇ", "丙", "丙", 1.0, 1, 1});
+
+  std::vector<double> deltas = scorer.scoreDeltas(req);
+  ASSERT_EQ(deltas.size(), 1);
+
+  // P(乙|甲)=0.9 > P(丙|甲)=0.3 → delta = 0.9 - 0.3 = +0.6 > 0
+  // Old (reversed) code: log(0.3) - log(0.9) = -1.099 < 0 → FAILS here
+  EXPECT_GT(deltas[0], 0.0);
+  EXPECT_NEAR(deltas[0], 0.6, 0.01);
+
   std::remove(tmpPath.c_str());
 }
 

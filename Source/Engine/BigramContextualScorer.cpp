@@ -77,17 +77,17 @@ std::vector<double> BigramContextualScorer::scoreDeltas(
       continue;
     }
 
-    double candidateSum = bigramLogProbSum(candidate.value, contextChar);
+    double candidateSum = bigramScoreSum(candidate.value, contextChar);
 
     double baselineSum = 0.0;
     for (const auto& entry : request.baselinePath) {
       if (entry.start == candidate.start) {
-        baselineSum = bigramLogProbSum(entry.value, contextChar);
+        baselineSum = bigramScoreSum(entry.value, contextChar);
         break;
       }
     }
 
-    double delta = baselineSum - candidateSum;
+    double delta = candidateSum - baselineSum;
     deltas.push_back(delta);
   }
 
@@ -200,23 +200,23 @@ size_t BigramContextualScorer::forEachCodepoint(const std::string& s,
   return count;
 }
 
-double BigramContextualScorer::bigramLogProbSum(
+double BigramContextualScorer::bigramScoreSum(
     const std::string& text, uint32_t prevChar) const {
   double sum = 0.0;
   uint32_t prev = prevChar;
   forEachCodepoint(text, [&](uint32_t cp, size_t) {
-    sum += lookupBigram(prev, cp);
+    sum += lookupBigramScore(prev, cp);
     prev = cp;
   });
   return sum;
 }
 
-double BigramContextualScorer::lookupBigram(uint32_t cp_a,
-                                            uint32_t cp_b) const {
+double BigramContextualScorer::lookupBigramScore(uint32_t cp_a,
+                                                 uint32_t cp_b) const {
   uint64_t key = ((uint64_t)cp_a << 32) | cp_b;
   auto it = bigramProbabilities_.find(key);
   if (it != bigramProbabilities_.end()) {
-    return static_cast<double>(it->second);
+    return std::exp(static_cast<double>(it->second));
   }
   return 0.0;
 }

@@ -36,12 +36,14 @@ namespace McBopomofo {
 // Character bigram contextual scorer for Phase 2 experiments.
 //
 // Loads a BIGR-format binary model (see bigram_trainer.py for format spec)
-// and computes score deltas based on bigram language model probabilities.
+// and computes score deltas from bigram language model evidence. The BIGR file
+// stores log probabilities, which are converted back to non-negative
+// probabilities before scoring so missing bigrams can remain a true no-op.
 // The scorer adjusts candidate scores when the bigram context supports the
 // candidate over the baseline, using the formula:
 //
-//   delta(candidate) = sum(log P(c_i|c_{i-1})) for all adjacent char pairs
-//                      - sum(log P(b_i|b_{i-1})) for baseline at same position
+//   delta(candidate) = sum(P(c_i|c_{i-1})) for adjacent candidate char pairs
+//                      - sum(P(b_i|b_{i-1})) for baseline at same position
 //
 // Missing bigrams contribute 0 to the delta (no opinion).
 // If the model fails to load, all deltas are 0.0 (fail-closed).
@@ -73,13 +75,12 @@ class BigramContextualScorer : public ContextualScorer {
   template <typename Fn>
   size_t forEachCodepoint(const std::string& s, Fn fn) const;
 
-  // Computes the sum of bigram log-probabilities for all adjacent character
-  // pairs in the given UTF-8 string, given the preceding character (0 if none).
-  double bigramLogProbSum(const std::string& text,
-                          uint32_t prevChar) const;
+  // Computes the sum of bigram evidence scores for all adjacent character
+  // pairs in the given UTF-8 string, given the preceding character.
+  double bigramScoreSum(const std::string& text, uint32_t prevChar) const;
 
-  // Looks up log P(cp_b | cp_a). Returns 0.0 if the bigram is unknown.
-  double lookupBigram(uint32_t cp_a, uint32_t cp_b) const;
+  // Looks up P(cp_b | cp_a). Returns 0.0 if the bigram is unknown.
+  double lookupBigramScore(uint32_t cp_a, uint32_t cp_b) const;
 
   std::string modelPath_;
   bool modelLoaded_ = false;
