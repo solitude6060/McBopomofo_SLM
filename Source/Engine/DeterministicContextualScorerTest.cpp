@@ -142,6 +142,102 @@ TEST(DeterministicScorerTest, NoCorrectionForBaselineValue) {
   EXPECT_TRUE(out.corrections.empty());
 }
 
+TEST(DeterministicScorerTest, NoCorrectionForBaselineSpanPrefix) {
+  DeterministicContextualScorer scorer;
+  ContextualScoreRequest req;
+  req.readings = {"ㄕㄜˋ", "ㄉㄧㄥˋ", "ㄉㄤˇ"};
+  req.protectedEnglishSpans = {"YAML"};
+  req.baselinePath.push_back(
+      CandidateInput{"ㄕㄜˋ-ㄉㄧㄥˋ-ㄉㄤˇ", "設定檔", "", -5.7, 0, 3});
+  req.candidates.push_back(
+      CandidateInput{"ㄕㄜˋ-ㄉㄧㄥˋ", "設定", "", -4.2, 0, 2});
+
+  ScorerOutput out = scorer.suggestCorrections(req);
+  for (const auto& c : out.corrections) {
+    EXPECT_NE(c.value, "設定")
+        << "baseline span prefix must not override 設定檔";
+  }
+}
+
+TEST(DeterministicScorerTest, ProtectedDockerContextSelectsImageTerms) {
+  DeterministicContextualScorer scorer;
+  ContextualScoreRequest req;
+  req.readings = {"ㄢ", "ㄓㄨㄤ", "ㄗㄨㄛˋ", "ㄐㄧㄥˋ", "ㄒㄧㄤˋ"};
+  req.protectedEnglishSpans = {"Dockerfile"};
+  req.baselinePath.push_back(
+      CandidateInput{"ㄢ-ㄓㄨㄤ", "安裝", "", -4.4, 0, 2});
+  req.baselinePath.push_back(CandidateInput{"ㄗㄨㄛˋ", "作", "", -2.7, 2, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄐㄧㄥˋ", "境", "", -3.4, 3, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄒㄧㄤˋ", "相", "", -3.0, 4, 1});
+  req.candidates.push_back(CandidateInput{"ㄗㄨㄛˋ", "做", "", -3.0, 2, 1});
+  req.candidates.push_back(CandidateInput{"ㄐㄧㄥˋ", "鏡", "", -4.1, 3, 1});
+  req.candidates.push_back(CandidateInput{"ㄒㄧㄤˋ", "像", "", -3.1, 4, 1});
+
+  ScorerOutput out = scorer.suggestCorrections(req);
+  bool foundDo = false;
+  bool foundMirror = false;
+  bool foundImage = false;
+  for (const auto& c : out.corrections) {
+    foundDo = foundDo || c.value == "做";
+    foundMirror = foundMirror || c.value == "鏡";
+    foundImage = foundImage || c.value == "像";
+  }
+  EXPECT_TRUE(foundDo);
+  EXPECT_TRUE(foundMirror);
+  EXPECT_TRUE(foundImage);
+}
+
+TEST(DeterministicScorerTest, ProtectedSshContextSelectsKeyTerms) {
+  DeterministicContextualScorer scorer;
+  ContextualScoreRequest req;
+  req.readings = {"ㄌㄧㄢˊ", "ㄒㄧㄢˋ", "ㄧㄠˋ", "ㄕㄜˋ", "ㄐㄧㄣ", "ㄧㄠˋ"};
+  req.protectedEnglishSpans = {"SSH"};
+  req.baselinePath.push_back(
+      CandidateInput{"ㄌㄧㄢˊ-ㄒㄧㄢˋ", "連線", "", -4.5, 0, 2});
+  req.baselinePath.push_back(CandidateInput{"ㄧㄠˋ", "要", "", -2.4, 2, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄕㄜˋ", "社", "", -3.1, 3, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄐㄧㄣ", "今", "", -3.1, 4, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄧㄠˋ", "要", "", -2.4, 5, 1});
+  req.candidates.push_back(CandidateInput{"ㄕㄜˋ", "設", "", -3.2, 3, 1});
+  req.candidates.push_back(CandidateInput{"ㄐㄧㄣ-ㄧㄠˋ", "金鑰", "", -6.0, 4, 2});
+
+  ScorerOutput out = scorer.suggestCorrections(req);
+  bool foundSet = false;
+  bool foundKey = false;
+  for (const auto& c : out.corrections) {
+    foundSet = foundSet || c.value == "設";
+    foundKey = foundKey || c.value == "金鑰";
+  }
+  EXPECT_TRUE(foundSet);
+  EXPECT_TRUE(foundKey);
+}
+
+TEST(DeterministicScorerTest, ProtectedYamlContextSelectsAlignment) {
+  DeterministicContextualScorer scorer;
+  ContextualScoreRequest req;
+  req.readings = {"ㄕㄜˋ", "ㄉㄧㄥˋ", "ㄉㄤˇ", "ㄍㄜˊ", "ㄕˋ", "ㄧㄠˋ", "ㄉㄨㄟˋ", "ㄑㄧˊ"};
+  req.protectedEnglishSpans = {"YAML"};
+  req.baselinePath.push_back(
+      CandidateInput{"ㄕㄜˋ-ㄉㄧㄥˋ-ㄉㄤˇ", "設定檔", "", -5.7, 0, 3});
+  req.baselinePath.push_back(
+      CandidateInput{"ㄍㄜˊ-ㄕˋ", "格式", "", -4.6, 3, 2});
+  req.baselinePath.push_back(CandidateInput{"ㄧㄠˋ", "要", "", -2.4, 5, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄉㄨㄟˋ", "對", "", -2.6, 6, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄑㄧˊ", "其", "", -2.9, 7, 1});
+  req.candidates.push_back(
+      CandidateInput{"ㄕㄜˋ-ㄉㄧㄥˋ", "設定", "", -4.2, 0, 2});
+  req.candidates.push_back(
+      CandidateInput{"ㄉㄨㄟˋ-ㄑㄧˊ", "對齊", "", -6.3, 6, 2});
+
+  ScorerOutput out = scorer.suggestCorrections(req);
+  bool foundAlignment = false;
+  for (const auto& c : out.corrections) {
+    EXPECT_NE(c.value, "設定");
+    foundAlignment = foundAlignment || c.value == "對齊";
+  }
+  EXPECT_TRUE(foundAlignment);
+}
+
 TEST(DeterministicScorerTest, ZaiZaiRuleFires) {
   DeterministicContextualScorer scorer;
   ContextualScoreRequest req;
@@ -206,7 +302,7 @@ TEST(DeterministicScorerTest, TechTermListIncludesCommonTerms) {
   req.readings = {"ㄒㄧㄚˋ", "ㄗㄞˇ"};
   req.protectedEnglishSpans = {"GitHub"};
   req.baselinePath.push_back(CandidateInput{"ㄒㄧㄚˋ", "下", "", -3.0, 0, 1});
-  req.baselinePath.push_back(CandidateInput{"ㄗㄞˇ", "載", "", -2.9, 1, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄗㄞˇ", "宰", "", -2.9, 1, 1});
   // bigram "下載"
   req.candidates.push_back(CandidateInput{"ㄒㄧㄚˋ-ㄗㄞˇ", "下載", "", -3.5, 0, 2});
 

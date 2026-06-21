@@ -519,6 +519,9 @@ class Evaluator {
        if (candidate.value == baselineValueAt(request, start)) {
          continue;
        }
+       if (candidate.value == baselineValueForSpan(request, start, length)) {
+         continue;
+       }
 
        viable.push_back(Correction{
            i, start, length, candidate.reading, candidate.value, deltas[i]});
@@ -590,6 +593,44 @@ class Evaluator {
       }
     }
     return "";
+  }
+
+  std::string baselineValueForSpan(
+      const McBopomofo::ContextualScoreRequest& request,
+      size_t readingIndex, size_t length) const {
+    const size_t end = readingIndex + std::max<size_t>(length, 1);
+    std::string result;
+    for (size_t pos = readingIndex; pos < end;) {
+      const McBopomofo::CandidateScoreInput* covering = nullptr;
+      for (const auto& item : request.baselinePath) {
+        if (pos >= item.start && pos < item.start + item.length) {
+          covering = &item;
+          break;
+        }
+      }
+      if (covering == nullptr) {
+        ++pos;
+        continue;
+      }
+
+      const size_t overlapStart = std::max(pos, covering->start);
+      const size_t overlapEnd =
+          std::min(end, covering->start + covering->length);
+      std::vector<std::string> chars = splitUTF8Codepoints(covering->value);
+      if (chars.size() == covering->length) {
+        for (size_t i = overlapStart - covering->start;
+             i < overlapEnd - covering->start; ++i) {
+          result += chars[i];
+        }
+      } else if (overlapStart == covering->start &&
+                 overlapEnd == covering->start + covering->length) {
+        result += covering->value;
+      }
+
+      size_t next = covering->start + covering->length;
+      pos = next > pos ? next : pos + 1;
+    }
+    return result;
   }
 
   static std::string joinSegments(const std::vector<OutputSegment>& segments) {

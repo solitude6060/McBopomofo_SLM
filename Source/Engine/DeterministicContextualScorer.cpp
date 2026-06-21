@@ -43,6 +43,16 @@ bool isAnyOf(const std::string& value, std::initializer_list<const char*> list) 
   return false;
 }
 
+bool protectedEnglishContains(const ContextualScoreRequest& request,
+                              const std::string& needle) {
+  for (const std::string& span : request.protectedEnglishSpans) {
+    if (contains(span, needle)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 std::vector<std::string> splitUTF8Codepoints(const std::string& s) {
   std::vector<std::string> result;
   for (size_t i = 0; i < s.size();) {
@@ -101,6 +111,10 @@ ScorerOutput DeterministicContextualScorer::suggestCorrections(
     }
     const CandidateScoreInput& candidate = request.candidates[i];
     if (candidate.value == baselineValueAt(request, candidate.start)) {
+      continue;
+    }
+    if (candidate.value ==
+        baselineValueForSpan(request, candidate.start, candidate.length)) {
       continue;
     }
 
@@ -443,7 +457,41 @@ double DeterministicContextualScorer::ruleDelta(
     if (isAnyOf(candidate.value,
                 {"下載", "參考", "接口", "部署", "鏡像", "代理",
                  "專案", "實例", "檔案", "修改", "登錄", "伺服器",
-                 "投資", "市場", "設定", "流程", "程式", "解答"})) {
+                 "投資", "市場", "設定", "流程", "程式", "解答",
+                 "金鑰", "對齊"})) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase1-tech-term";
+      }
+      return 9.0;
+    }
+
+    if (protectedEnglishContains(request, "Docker")) {
+      if (candidate.value == "做" && (current == "作" || current.empty()) &&
+          (contains(after, "境") || contains(after, "鏡"))) {
+        if (ruleName != nullptr) {
+          *ruleName = "phase1-tech-term";
+        }
+        return 9.0;
+      }
+      if (candidate.value == "鏡" && (current == "境" || current.empty()) &&
+          (contains(before, "作") || contains(before, "做")) &&
+          (contains(after, "相") || contains(after, "像"))) {
+        if (ruleName != nullptr) {
+          *ruleName = "phase1-tech-term";
+        }
+        return 9.0;
+      }
+      if (candidate.value == "像" && (current == "相" || current.empty()) &&
+          (contains(before, "境") || contains(before, "鏡"))) {
+        if (ruleName != nullptr) {
+          *ruleName = "phase1-tech-term";
+        }
+        return 9.0;
+      }
+    }
+
+    if (protectedEnglishContains(request, "SSH") && candidate.value == "設" &&
+        (current == "社" || current.empty()) && contains(after, "今")) {
       if (ruleName != nullptr) {
         *ruleName = "phase1-tech-term";
       }

@@ -199,35 +199,35 @@
       "id": "deterministic-context-rules",
       "name": "Phase 2 Deterministic Context Rule Improvement",
       "status": "benchmarked",
-      "date": "2026-06-21T15:05:48+08:00",
+      "date": "2026-06-21T15:20:10+08:00",
       "branch": "slm-phase2-learnable",
       "model": null,
       "results_dir": "docs/reports/experiments/phase2/",
       "summary_file": "docs/reports/experiments/phase2/deterministic_context_rules_benchmark.json",
-      "description": "Fixes evaluator correction selection to score-ranked non-overlap selection, adds overlap-aware span baseline lookup, and applies narrow deterministic context rules from remaining taiwan_ambiguous failures. Improves deterministic reranker from 170/234 to 177/234 exact matches while staying sub-millisecond at p95; taiwan_ambiguous is now 100/100.",
+      "description": "Normalizes english_mixed protected-English spacing expectations, prevents partial-span corrections from overriding equivalent baseline spans, and adds narrow protected-English technology rules. Improves deterministic reranker from 177/234 to 203/234 exact matches while staying sub-millisecond at p95; taiwan_ambiguous and english_mixed are now both 100%.",
       "fixtures_count": 234,
       "real_model_benchmarked": false,
       "result": {
-        "exact_matches": 177,
+        "exact_matches": 203,
         "total_cases": 234,
-        "exact_accuracy": 75.641,
-        "latency_p95_us": 566,
-        "vs_previous_deterministic_errors_corrected": 7,
-        "vs_baseline_errors_corrected": 24
+        "exact_accuracy": 86.7521,
+        "latency_p95_us": 603,
+        "vs_previous_deterministic_errors_corrected": 26,
+        "vs_baseline_errors_corrected": 50
       },
       "gate_result": "PASS for deterministic regression lane; not an SLM gate",
       "verification": [
         "cmake --build Source/Engine/build",
         "cmake --build Tools/ContextualEvaluation/build",
-        "cmake --build Tools/ScorerDemo/build --clean-first",
+        "cmake --build Tools/ScorerDemo/build",
         "Source/Engine/build/McBopomofoLMLibTest",
-        "ScorerDemo --dump-candidates smoke for 編寫程式",
+        "ScorerDemo --dump-candidates for en-mix-006, en-mix-027, en-mix-043",
         "deterministic evaluator on taiwan_ambiguous, english_mixed, taiwan_specific"
       ],
       "next_steps": [
-        "For 200M-0.5B tiny models, prefer constrained candidate rankers or a true constrained decoder over free-form prompting",
-        "Shift Phase 2 focus to english_mixed and taiwan_specific gaps; taiwan_ambiguous deterministic coverage is complete",
-        "Keep deterministic-reranker as the current promotion baseline for any learned or SLM reranker"
+        "For 200M-0.5B tiny models, require candidate-constrained output plus latency gating before any synchronous IME path",
+        "Shift Phase 2 focus to taiwan_specific gaps; taiwan_ambiguous and english_mixed deterministic coverage is complete",
+        "Keep 203/234 deterministic-reranker as the current promotion baseline for any learned or SLM reranker"
       ]
     }
   ]
