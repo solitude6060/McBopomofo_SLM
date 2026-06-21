@@ -1,0 +1,10 @@
+{
+  "model_name": "example-0.5b",
+  "provider": "ollama",
+  "parameter_count": 500000000,
+  "quantization": "q4_k_m",
+  "license": "apache-2.0",
+  "redistributable": true,
+  "local_only": true,
+  "description": "Example manifest for a 0.5B-class local model. Replace with actual model metadata before benchmarking. Parameter count enforces the [200M, 500M] range by default; use --allow-out-of-range-model to bypass for local experiments."
+}

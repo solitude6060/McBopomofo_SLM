@@ -360,6 +360,162 @@ verification:
 
 Neither mode performs any model inference. All are for scaffold testing only.
 
+## Local LLM Scorer
+
+`local_llm_scorer.py` wraps a local tiny-LLM model (200M–0.5B parameters) as
+an SLM Reranker protocol scorer. It is a **scaffold-only** wrapper — it does
+not bundle model weights or inference runtimes.
+
+### CLI
+
+```
+python3 local_llm_scorer.py [options]
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--persistent` | false | Persistent JSONL mode (read until EOF) |
+| `--provider` | `command` | Model provider: `command` or `ollama` |
+| `--command-template` | (none) | Command template with `{prompt}` or `{prompt_file}` placeholders |
+| `--model` | (none) | Model name (required for `--provider ollama`) |
+| `--model-manifest` | (none) | Path to model manifest JSON |
+| `--allow-out-of-range-model` | false | Bypass [200M, 500M] parameter check |
+| `--dry-run-baseline` | false | Return `baseline_output` without model invocation |
+
+### Providers
+
+**`--provider command`** with `--command-template <template>`:
+
+The template supports two placeholders:
+
+- `{prompt}` — substituted inline (shell-quoted). Example:
+  ```bash
+  python3 local_llm_scorer.py \
+    --provider command \
+    --command-template 'llama-cli --prompt {prompt} --temp 0 --no-display-prompt'
+  ```
+
+- `{prompt_file}` — prompt written to a temp file; the file path is substituted.
+  Safer for long prompts. Example:
+  ```bash
+  python3 local_llm_scorer.py \
+    --provider command \
+    --command-template 'llama-cli --file {prompt_file} --temp 0 --no-display-prompt'
+  ```
+
+If neither placeholder is present, the prompt is piped to the command's
+stdin.
+
+**`--provider ollama`** with `--model <name>`:
+
+Uses `ollama run <name>` with the prompt piped to stdin. The wrapper checks
+`ollama list` first and fails closed if the model is not installed — it
+never pulls models. Persistent runner mode keeps `local_llm_scorer.py` alive,
+but this provider still invokes `ollama run` for each request; treat its
+latency as a scaffold measurement unless the backend itself is already
+server-backed and warm. For the Phase 2 latency gate, prefer
+`--provider command` pointed at a persistent/server-backed local tiny model
+runtime, or add a dedicated provider that keeps the model loaded.
+
+```bash
+# Query a 0.5B model (must be pre-installed)
+python3 local_llm_scorer.py \
+  --provider ollama \
+  --model qwen2.5:0.5b
+```
+
+### Model Manifest
+
+A JSON file describing the model. The wrapper enforces
+`parameter_count ∈ [200M, 500M]` by default and exits with a fatal error if
+the manifest parameter count is outside this range.
+
+```json
+{
+  "model_name": "qwen2.5-0.5b",
+  "provider": "ollama",
+  "parameter_count": 500000000,
+  "quantization": "q4_k_m",
+  "license": "apache-2.0",
+  "redistributable": true,
+  "local_only": true
+}
+```
+
+Use `--allow-out-of-range-model` to bypass the parameter check for local
+experiments. The fact is reported in `scorer_name` (appends
+`-out-of-range`) and on stderr.
+
+### Model Size Warning (Phase 2 Gate)
+
+Ollama models ≥ 9B parameters (e.g., `glm4:9b`, `qwen3.5:9b`,
+`deepseek-r1:14b`) are **outside the typing latency target** for
+commit-time reranking (p95 < 20 ms). These large models:
+
+- Exceed the 0.5B parameter Phase 2 gate criterion.
+- Cannot meet the CPU latency budget for IME-integrated reranking.
+- Should **not** be used to satisfy the Phase 2 exit gate.
+
+Only 200M–0.5B models qualify. The manifest `parameter_count` field is the
+gatekeeper for this constraint.
+
+### Dry-Run Baseline Mode
+
+`--dry-run-baseline` returns `baseline_output` without invoking any model.
+The scorer_name is `local-llm-dry-run-baseline`. This is for wrapper
+protocol testing only:
+
+```bash
+# Single request
+echo '{"id":"test","readings":["ㄗㄞˋ","ㄐㄧㄢˋ"],"baseline_output":"在見"}' | \
+  python3 local_llm_scorer.py --dry-run-baseline
+
+# Persistent mode
+python3 run_experiment.py \
+  --persistent-scorer-command "python3 local_llm_scorer.py --dry-run-baseline --persistent" \
+  --fixtures /tmp/slm_taiwan_ambiguous.jsonl /tmp/slm_english_mixed.jsonl /tmp/slm_taiwan_specific.jsonl \
+  --timeout-ms 30 \
+  --output /tmp/local_llm_dry_summary.json
+```
+
+### Prompt Construction
+
+The wrapper builds a candidate-constrained prompt from request fields:
+
+```
+Bopomofo readings: ㄗㄞˋ ㄐㄧㄢˋ
+Candidates per position:
+  Position 1: 在, 再
+  Position 2: 見, 建
+Engine baseline: 在見
+Task: Select the correct Traditional Chinese output sequence from the candidates above.
+Output:
+```
+
+The prompt is constructed in memory and never logged to disk. The
+`{prompt_file}` template placeholder writes it to a temporary file that is
+cleaned up after execution.
+
+### Output Parsing
+
+The wrapper accepts two forms of model output:
+
+1. **JSON object** with an `"output"` string field (e.g.,
+   `{"output": "再見"}`).
+2. **Raw line** that equals one valid candidate-constrained output.
+
+If the output is invalid (empty, not in candidate set, or malformed JSON
+without a matching raw line), the response **omits** the `output` field,
+causing the runner to count a `missing_output_field` fallback.
+
+### Best-Effort Candidate Prevalidation
+
+The wrapper performs best-effort prevalidation of model output against the
+request's `candidates` field (same greedy left-to-right, longest-first
+algorithm as the runner). This is a courtesy check to avoid returning
+obviously bad output. The runner's authoritative `validate_candidates`
+remains the gatekeeper.
+
 ## Verification
 
 Before committing changes to this directory, run:
@@ -368,6 +524,7 @@ Before committing changes to this directory, run:
 # 1. Syntax check
 python3 -m py_compile mock_tiny_llm_scorer.py
 python3 -m py_compile run_experiment.py
+python3 -m py_compile local_llm_scorer.py
 
 # 2. Test mock scorer (default mode)
 echo '{"id":"v-test","readings":["ㄗㄞˋ","ㄐㄧㄢˋ"],"baseline_output":"在見","expected":"再見"}' | \
@@ -401,10 +558,25 @@ python3 run_experiment.py \
   --output /tmp/slm_persistent_mock.json \
   --per-case-output /tmp/slm_persistent_mock_cases.jsonl
 
-# 7. Run self-tests (validates candidate validation + persistent scorer integration)
+# 7. Test local LLM scorer (dry-run baseline mode)
+echo '{"id":"v-test","readings":["ㄗㄞˋ","ㄐㄧㄢˋ"],"baseline_output":"在見","expected":"再見"}' | \
+  python3 local_llm_scorer.py --dry-run-baseline
+
+# 8. Run local LLM scorer on candidate-exported requests via persistent protocol
+# Generate these /tmp/slm_*.jsonl files with the C++ evaluator first; raw
+# fixture files do not contain candidate slots and will not exercise
+# candidate_validation.exercised=true.
+python3 run_experiment.py \
+  --persistent-scorer-command "python3 local_llm_scorer.py --dry-run-baseline --persistent" \
+  --fixtures /tmp/slm_taiwan_ambiguous.jsonl /tmp/slm_english_mixed.jsonl /tmp/slm_taiwan_specific.jsonl \
+  --timeout-ms 30 \
+  --output /tmp/local_llm_dry_summary.json \
+  --per-case-output /tmp/local_llm_dry_cases.jsonl
+
+# 9. Run self-tests (validates candidate validation + persistent scorer integration)
 python3 run_experiment.py --self-test
 
-# 8. Verify no whitespace errors
+# 10. Verify no whitespace errors
 git diff --check
 ```
 
@@ -412,8 +584,10 @@ git diff --check
 
 ```
 Tools/SLMRerankerExperiment/
-├── README.md                  # This protocol document
-├── run_experiment.py          # Runner script (Python stdlib; PersistentScorer class)
-├── mock_tiny_llm_scorer.py    # Mock scorer for verification (supports --persistent)
-└── (future: real scorer wrappers, model download scripts)
+├── README.md                       # This protocol document
+├── run_experiment.py               # Runner script (Python stdlib; PersistentScorer class)
+├── mock_tiny_llm_scorer.py         # Mock scorer for verification (supports --persistent)
+├── local_llm_scorer.py             # Local tiny-LLM wrapper (--provider command/ollama, --dry-run-baseline)
+├── model_manifest.example.json     # Example model manifest for a 0.5B-class model
+└── (future: model download scripts, additional wrappers)
 ```

@@ -1,0 +1,67 @@
+{
+  "experiment": "local-llm-wrapper-smoke",
+  "date": "2026-06-21T12:55:30+08:00",
+  "branch": "slm-phase2-learnable",
+  "status": "wrapper-scaffold-verified",
+  "description": "Smoke verification for the local tiny-LLM scorer wrapper scaffold. Verifies the wrapper protocol (--dry-run-baseline mode), --provider command/ollama scaffolding, --model-manifest parameter enforcement, output parsing, and integration with the persistent scorer protocol.",
+  "fixtures": {
+    "taiwan_ambiguous": 100,
+    "english_mixed": 50,
+    "taiwan_specific": 84,
+    "total": 234
+  },
+  "wrapper_protocol": {
+    "dry_run_baseline_single": "verified",
+    "dry_run_baseline_persistent_fallbacks": 0,
+    "dry_run_baseline_cases": 234,
+    "candidate_validation_exercised": true,
+    "cases_with_candidates": 233,
+    "non_candidate_violations": 0,
+    "per_case_output_sanitized": true
+  },
+  "candidate_export_fixtures": {
+    "generated_by": "Tools/ContextualEvaluation/build/evaluator --slm-request-output",
+    "candidate_limit": 16,
+    "cases_with_candidates": 233,
+    "cases_without_candidates": 1,
+    "total_slots_across_fixtures": 1040,
+    "note_do_not_commit": "Generated request JSONL files are content-bearing and must not be committed. They were written to /tmp/ for ephemeral use."
+  },
+  "model_manifest": {
+    "example_provided": "model_manifest.example.json",
+    "parameter_range": "[200000000, 500000000]",
+    "allow_out_of_range_flag": "--allow-out-of-range-model",
+    "behavior_on_out_of_range": "Rejects with fatal error unless --allow-out-of-range-model is set; reports in scorer_name and stderr"
+  },
+  "provider_scaffolding": {
+    "command_provider": "available (--provider command --command-template). Supports {prompt}, {prompt_file}, and stdin pass-through.",
+    "ollama_provider": "available (--provider ollama --model). Checks ollama list before running; does not pull models; fails closed. Invokes ollama run per request, so persistent runner mode does not by itself prove loaded-model latency.",
+    "ollama_provider_fail_closed": "verified (exit 1 when model not found)"
+  },
+  "ollama_provider": {
+    "installed": true,
+    "models_available": 5,
+    "models_list": ["glm4:9b", "gemma4:e4b", "qwen3.5:9b", "gemma4:26b", "deepseek-r1:14b"],
+    "models_in_target_range": [],
+    "model_sizes_note": "All installed models are 9B+ parameters. None satisfy the 200M\u20130.5B Phase 2 gate criterion. These models exceed the typing latency budget (p95 < 20 ms commit-time reranking) and should not be promoted as satisfying the Phase 2 gate.",
+    "no_suitable_model_benchmarked": true
+  },
+  "verification": [
+    "py_compile: mock_tiny_llm_scorer.py, run_experiment.py, local_llm_scorer.py",
+    "Dry-run baseline single-request mode: produces correct JSON response with scorer_name 'local-llm-dry-run-baseline'",
+    "Dry-run baseline persistent mode: 234 cases, 0 fallbacks",
+    "Candidate-export fixtures: candidate_validation.exercised=true, 233 cases validated, 0 violations",
+    "Per-case output sanitized (scorer_output stripped)",
+    "run_experiment.py --self-test: PASSED",
+    "git diff --check: no whitespace errors"
+  ],
+  "remaining_risks": [
+    "No real 200M\u20130.5B model was benchmarked — only --dry-run-baseline mode was verified. Real model inference latency and output quality remain untested.",
+    "The --provider command path requires a separately installed inference binary (e.g., llama-cli). End-to-end verification depends on external tooling not present in this repository.",
+    "The --provider ollama path requires a 200M\u20130.5B model pre-installed via 'ollama pull'. No such model was present on this machine.",
+    "Output parser is strict (JSON or exact candidate match). Models that produce reasonable but slightly-different output (e.g., extra whitespace, partial output) will be rejected as fallbacks. This is by design but may require tuning.",
+    "Stderr from real model inference during persistent mode could fill the pipe buffer and block the process. The wrapper prints warnings to stderr conservatively.",
+    "Prompt template is a single hardcoded format. Future work may need configurable prompt templates per model."
+  ],
+  "conclusion": "Local tiny-LLM scorer wrapper scaffold verified. The wrapper correctly implements the SLM Reranker protocol in dry-run-baseline mode through both single-request and persistent protocols. Candidate validation is exercised with 233/234 cases having candidate slots, and all pass (0 violations). The model manifest enforcement rejects out-of-range parameter counts unless explicitly overridden. The wrapper is ready for real model benchmarking when a suitable 200M\u20130.5B model becomes available."
+}

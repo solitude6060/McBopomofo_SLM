@@ -114,6 +114,41 @@
         "Benchmark quantized 200M\u20130.5B models on the three fixture suites using persistent protocol",
         "Gate: any candidate SLM must beat deterministic reranker on held-out Taiwan fixtures before Phase 3"
       ]
+    },
+    {
+      "id": "local-llm-wrapper",
+      "name": "Local Tiny-LLM Scorer Wrapper Scaffold",
+      "status": "wrapper-scaffold-verified",
+      "date": "2026-06-21T12:55:30+08:00",
+      "branch": "slm-phase2-learnable",
+      "protocol_version": "1.2",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/local_llm_wrapper_smoke.json",
+      "description": "Local tiny-LLM scorer wrapper scaffold with --provider command/ollama, --dry-run-baseline, and --model-manifest parameter enforcement. Adds local_llm_scorer.py and model_manifest.example.json to Tools/SLMRerankerExperiment/. Verified via dry-run-baseline persistent protocol on 234 candidate-exported fixture cases: 0 fallbacks, candidate_validation.exercised=true, 0 violations. No real 200M\u20130.5B model was benchmarked; the 5 installed Ollama models are all 9B+.",
+      "fixtures_count": 234,
+      "real_model_benchmarked": false,
+      "ollama_available": true,
+      "ollama_models_in_target_range": [],
+      "candidate_validation": {
+        "protocol_available": true,
+        "exercised": true,
+        "cases_with_candidates": 233,
+        "non_candidate_violations": 0
+      },
+      "wrapper_protocol": {
+        "dry_run_baseline_single": "verified",
+        "dry_run_baseline_persistent_fallbacks": 0,
+        "command_provider": "scaffolded ({prompt}, {prompt_file}, stdin)",
+        "ollama_provider": "scaffolded (fail-closed on missing model)",
+        "model_manifest": "example provided, parameter range enforced"
+      },
+      "next_steps": [
+        "Benchmark a real 200M\u20130.5B model through --provider command with llama-cli or similar",
+        "Benchmark through --provider ollama with a pre-installed tiny model (e.g., qwen2.5:0.5b)",
+        "Compare against deterministic reranker on held-out Taiwan fixtures using candidate-validated output",
+        "Gate: any candidate SLM must beat deterministic reranker before promotion to Phase 3"
+      ]
     }
   ]
 }
