@@ -78,9 +78,10 @@ unbounded latency.
 - Prompts or model outputs when logging to disk
 - Any content from the fixture that could reconstruct user input
 
-The runner generates per-case output only when `--per-case-output` is
-explicitly passed. Reports aggregate metrics by fixture file and reference
-fixture IDs only.
+The runner generates sanitized per-case output only when `--per-case-output`
+is explicitly passed. Per-case JSONL omits scorer output, expected text,
+baseline text, candidate text, and readings; reports aggregate metrics by
+fixture file and reference fixture IDs only.
 
 ## External Scoring Protocol
 
@@ -184,7 +185,7 @@ python3 run_experiment.py \
 | `--scorer-command` | (required unless `--dry-run`) | External scorer command string |
 | `--timeout-ms` | 30 | Per-case timeout in milliseconds |
 | `--output` | stdout | Summary JSON output path |
-| `--per-case-output` | (none) | Optional per-case JSONL output path |
+| `--per-case-output` | (none) | Optional sanitized per-case JSONL output path |
 | `--dry-run` | false | Use built-in mock scorer (no subprocess) |
 | `--self-test` | false | Run self-tests (candidate validation unit tests + pipeline integration) and exit |
 

@@ -279,6 +279,12 @@ def compute_summary(results, fixture_names):
     return summary
 
 
+def sanitize_per_case_result(result):
+    sanitized = dict(result)
+    sanitized.pop("scorer_output", None)
+    return sanitized
+
+
 def run_self_test():
     """Run self-tests for candidate validation and pipeline integrity.
 
@@ -511,7 +517,7 @@ def main():
     if args.per_case_output:
         with open(args.per_case_output, "w", encoding="utf-8") as f:
             for r in results:
-                line = json.dumps(r, ensure_ascii=False)
+                line = json.dumps(sanitize_per_case_result(r), ensure_ascii=False)
                 f.write(line + "\n")
 
     summary = compute_summary(results, args.fixtures)
