@@ -1,0 +1,97 @@
+{
+  "suite": "slm-qwen2.5-0.5b-index-heldout-generalization",
+  "date": "2026-06-21T23:45:13+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "ffffa806b354afbe77b7226435a824b7dc8f8240",
+  "fixtures": {
+    "heldout_generalization": 63,
+    "total": 63
+  },
+  "scorer": {
+    "mode": "persistent",
+    "prompt_style": "indices",
+    "real_model_benchmarked": true,
+    "candidate_granularity": "character",
+    "model_manifest": {
+      "model_name": "qwen2.5-0.5b",
+      "provider": "ollama",
+      "parameter_count": 500000000,
+      "quantization": "q4_k_m",
+      "license": "apache-2.0",
+      "redistributable": true,
+      "local_only": true
+    }
+  },
+  "baseline": {
+    "exact_matches": 39,
+    "total_cases": 63,
+    "exact_accuracy": 61.9048,
+    "errors": 24,
+    "latency_us": {
+      "p50": 2,
+      "p95": 2,
+      "p99": 4
+    }
+  },
+  "deterministic": {
+    "exact_matches": 41,
+    "total_cases": 63,
+    "exact_accuracy": 65.0794,
+    "errors": 22,
+    "latency_us": {
+      "p50": 268,
+      "p95": 721,
+      "p99": 1040
+    }
+  },
+  "slm": {
+    "exact_matches": 8,
+    "total_cases": 63,
+    "exact_accuracy": 12.6984,
+    "errors": 55,
+    "fallbacks": 51,
+    "latency_us": {
+      "p50": 283427,
+      "p95": 499869,
+      "p99": 606847
+    },
+    "candidate_validation": {
+      "protocol_available": true,
+      "exercised": true,
+      "cases_with_candidates": 12,
+      "non_candidate_violations": 0
+    },
+    "fallback_breakdown": {
+      "indices_length_mismatch": 51
+    }
+  },
+  "relative_error_reduction_pct": {
+    "slm_vs_baseline": -129.1667,
+    "slm_vs_deterministic": -150.0
+  },
+  "gate": {
+    "result": "FAIL",
+    "reasons": [
+      "fallbacks 51 > threshold 0",
+      "SLM p95 latency 499869us > target 20000us",
+      "SLM vs deterministic relative error reduction=-150.0% (need > 0%)"
+    ]
+  },
+  "conclusion": "qwen2.5:0.5b with candidate-index prompting does not meet the heldout_generalization gate. It is substantially worse than deterministic accuracy, too slow for the prototype latency target, and usually emits the wrong number of indices.",
+  "raw_outputs": [
+    "/tmp/qwen_heldout_real.json",
+    "/tmp/qwen_heldout_work_real/slm_summary_heldout_generalization.json",
+    "/tmp/qwen_heldout_work_real/slm_per_case_heldout_generalization.jsonl",
+    "/tmp/qwen_heldout_work_real/slm_heldout_generalization.jsonl"
+  ],
+  "verification": [
+    "ollama list confirms qwen2.5:0.5b is installed locally",
+    "local_llm_scorer.py single-case ollama-http smoke succeeded under escalated localhost access",
+    "run_benchmark_suite.py --persistent-scorer-command local_llm_scorer.py --provider ollama-http --model qwen2.5:0.5b --prompt-style indices --fixtures heldout_generalization --slm-candidate-granularity character --no-gate"
+  ],
+  "next_steps": [
+    "Do not promote qwen2.5:0.5b prompt-only candidate-index scoring.",
+    "Prefer non-generative candidate rankers, constrained decoding, or distilled classifiers for the next tiny-model experiment.",
+    "Keep heldout_generalization as the primary non-saturated accuracy gate while preserving 234/234 on the saturated suite."
+  ]
+}
