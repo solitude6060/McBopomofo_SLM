@@ -1,0 +1,254 @@
+{
+  "suite": "candidate-ranker-synthetic-saturated",
+  "date": "2026-06-22T00:09:13+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "6def065b081fce49e5a4f371129ba7eb121c1905",
+  "fixtures": {
+    "taiwan_ambiguous": 100,
+    "english_mixed": 50,
+    "taiwan_specific": 84,
+    "total": 234
+  },
+  "scorer": {
+    "mode": "persistent",
+    "model_type": "candidate-ranker-v1",
+    "model_path": "Models/candidate_ranker_synthetic.json",
+    "candidate_granularity": "character",
+    "training": {
+      "input_cases": 35,
+      "usable_cases": 22,
+      "excluded_cases": 0,
+      "source_files": [
+        "slm_ranker_training_synthetic.jsonl"
+      ],
+      "candidate_granularity": "character",
+      "exclude_fixtures": ["heldout_generalization", "taiwan_ambiguous", "english_mixed", "taiwan_specific"],
+      "exclude_id_prefixes": ["hg-", "en-mix-", "tw-amb-", "tw-taiwan_specific-"],
+      "selection": {
+        "override_margin": 0.1,
+        "min_non_baseline_feature_hits": 2,
+        "min_reading_candidate_count_for_override": 2,
+        "prefer_baseline_on_weak_override": true
+      }
+    },
+    "real_model_benchmarked": false,
+    "candidate_granularity": "character",
+    "model_manifest": null
+  },
+  "baseline_reference": {
+    "source": "SLM request files generated at 6def065 (current evaluator with data-layer fixes)",
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_accuracy": 81.0,
+        "exact_matches": 81,
+        "errors": 19,
+        "total_cases": 100
+      },
+      {
+        "fixture": "english_mixed",
+        "exact_accuracy": 82.0,
+        "exact_matches": 41,
+        "errors": 9,
+        "total_cases": 50
+      },
+      {
+        "fixture": "taiwan_specific",
+        "exact_accuracy": 70.2381,
+        "exact_matches": 59,
+        "errors": 25,
+        "total_cases": 84
+      }
+    ],
+    "aggregate": {
+      "total_cases": 234,
+      "exact_accuracy": 77.3504,
+      "exact_matches": 181,
+      "errors": 53
+    }
+  },
+  "deterministic": {
+    "source": "docs/reports/experiments/phase2/deterministic_context_rules_benchmark.json",
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_accuracy": 100.0,
+        "exact_matches": 100,
+        "errors": 0,
+        "total_cases": 100
+      },
+      {
+        "fixture": "english_mixed",
+        "exact_accuracy": 100.0,
+        "exact_matches": 50,
+        "errors": 0,
+        "total_cases": 50
+      },
+      {
+        "fixture": "taiwan_specific",
+        "exact_accuracy": 100.0,
+        "exact_matches": 84,
+        "errors": 0,
+        "total_cases": 84
+      }
+    ],
+    "aggregate": {
+      "total_cases": 234,
+      "exact_accuracy": 100.0,
+      "exact_matches": 234,
+      "errors": 0
+    }
+  },
+  "candidate_ranker": {
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_accuracy": 82.0,
+        "exact_matches": 82,
+        "errors": 18,
+        "fallbacks": 0,
+        "latency_us": {
+          "p50": 57,
+          "p95": 133,
+          "p99": 13118
+        },
+        "candidate_validation": {
+          "protocol_available": true,
+          "exercised": true,
+          "cases_with_candidates": 100,
+          "non_candidate_violations": 0
+        },
+        "fallback_breakdown": {},
+        "total_cases": 100
+      },
+      {
+        "fixture": "english_mixed",
+        "exact_accuracy": 82.0,
+        "exact_matches": 41,
+        "errors": 9,
+        "fallbacks": 0,
+        "latency_us": {
+          "p50": 56,
+          "p95": 126,
+          "p99": 164
+        },
+        "candidate_validation": {
+          "protocol_available": true,
+          "exercised": true,
+          "cases_with_candidates": 50,
+          "non_candidate_violations": 0
+        },
+        "fallback_breakdown": {},
+        "total_cases": 50
+      },
+      {
+        "fixture": "taiwan_specific",
+        "exact_accuracy": 70.2381,
+        "exact_matches": 59,
+        "errors": 25,
+        "fallbacks": 0,
+        "latency_us": {
+          "p50": 66,
+          "p95": 120,
+          "p99": 440
+        },
+        "candidate_validation": {
+          "protocol_available": true,
+          "exercised": true,
+          "cases_with_candidates": 84,
+          "non_candidate_violations": 0
+        },
+        "fallback_breakdown": {},
+        "total_cases": 84
+      }
+    ],
+    "aggregate": {
+      "total_cases": 234,
+      "exact_accuracy": 77.7778,
+      "exact_matches": 182,
+      "errors": 52,
+      "fallbacks": 0,
+      "latency_us": {
+        "p50": 59,
+        "p95": 127,
+        "p99": 13118
+      },
+      "candidate_validation": {
+        "protocol_available": true,
+        "exercised": true,
+        "cases_with_candidates": 234,
+        "non_candidate_violations": 0
+      },
+      "fallback_breakdown": {}
+    }
+  },
+  "relative_error_reduction_pct": {
+    "slm_vs_baseline": {
+      "taiwan_ambiguous": 5.2632,
+      "english_mixed": 0.0,
+      "taiwan_specific": 0.0,
+      "aggregate": 1.8868
+    },
+    "slm_vs_deterministic": {
+      "taiwan_ambiguous": -100.0,
+      "english_mixed": -100.0,
+      "taiwan_specific": -100.0,
+      "aggregate": null,
+      "note": "deterministic has 0 errors on saturated suite; any ranker error is a regression"
+    }
+  },
+  "analysis": {
+    "aggregate": {
+      "changed_cases": 2,
+      "improved_cases": 1,
+      "regressed_cases": 0,
+      "non_baseline_evidence_cases": 2,
+      "expected_in_candidates": 230,
+      "total_slots": 1715,
+      "total_candidates": 4203,
+      "avg_candidates_per_slot": 2.45,
+      "multi_char_slot_pct": 4.26,
+      "rejected_by_count_cases": 3,
+      "feature_coverage_cases": {
+        "reading_candidate": 188,
+        "candidate": 216,
+        "transition": 100,
+        "baseline_prev_candidate": 90,
+        "baseline_next_candidate": 65,
+        "baseline_window_candidate": 27
+      }
+    },
+    "by_fixture_improvements": {
+      "taiwan_ambiguous": "81 to 82 (+1), 1 improved case, 1 non-baseline-evidence case. The one improvement overrides baseline on a case where training provides partial context match.",
+      "english_mixed": "41 to 41 (unchanged, ranker matches enhanced baseline at 82%). 0 changed, 2 rejected-by-count slots; the training includes English-mixed patterns but the gates are too conservative or evidence is insufficient.",
+      "taiwan_specific": "59 to 59 (unchanged). 1 changed case but no net accuracy impact; 1 non-baseline-evidence but rejected at gates."
+    }
+  },
+  "gate": {
+    "result": "FAIL",
+    "reasons": [
+      "Candidate ranker 182/234 (77.78%) vs deterministic 234/234 (100%): 52 regressed cases",
+      "slm_vs_deterministic relative error reduction is undefined (deterministic has 0 errors); ranker cannot match perfect deterministic accuracy",
+      "Gate requires both: (a) beat deterministic 41/63 on heldout AND (b) maintain 234/234 on saturated suite. Condition (b) is violated."
+    ]
+  },
+  "conclusion": "The candidate_ranker_synthetic model (22 usable cases, character granularity, conservative gates) shows a modest +1 improvement over the current evaluator baseline (+29 over the original 153/234 pre-data-fix baseline) with 0 regressed cases relative to baseline. However, it regresses 52 cases vs the deterministic reranker (234/234). The synthetic training data helps on saturated-suite cases with context overlap but provides no benefit on disjoint heldout contexts. The count-based feature approach is fundamentally limited: it cannot generalize to unseen context patterns.",
+  "raw_outputs": [
+    "/tmp/saturated_synthetic_ranker_benchmark.json",
+    "/tmp/saturated_synthetic_ranker_cases.jsonl",
+    "/tmp/ranker_synthetic_saturated_analysis.json"
+  ],
+  "verification": [
+    "train_candidate_ranker.py --self-test",
+    "candidate_ranker_scorer.py --self-test",
+    "analyze_candidate_ranker.py --self-test",
+    "run_benchmark_suite.py --persistent-scorer-command candidate_ranker_scorer.py --fixtures taiwan_ambiguous english_mixed taiwan_specific --slm-candidate-granularity character --no-gate",
+    "analyze_candidate_ranker.py --model Models/candidate_ranker_synthetic.json --requests /tmp/slm_taiwan_ambiguous.jsonl /tmp/slm_english_mixed.jsonl /tmp/slm_taiwan_specific.jsonl"
+  ],
+  "next_steps": [
+    "The count-based candidate-ranker-v1 approach is limited: it requires exact feature-vector overlap and cannot learn abstract disambiguation patterns.",
+    "Consider embedding-based candidate ranking (dense retrieval over context embeddings) or a trained classifier over character/reading n-grams.",
+    "A true 200M-0.5B tiny language model with constrained decoding remains a viable but high-latency path.",
+    "For the saturated suite, the deterministic reranker (234/234, p95 684us) is the correct production path. Learned rankers add complexity without benefit on solved cases."
+  ]
+}

@@ -366,6 +366,89 @@
         "Alternatively, test relaxed override margin / min_feature_hits thresholds only with saturated-suite and heldout no-regression checks",
         "Retain deterministic 41/63 as the heldout promotion gate and 234/234 as the saturated-suite no-regression constraint"
       ]
+    },
+    {
+      "id": "candidate-ranker-synthetic-heldout",
+      "name": "candidate_ranker_synthetic Heldout Generalization Benchmark",
+      "status": "benchmarked",
+      "date": "2026-06-22T00:08:34+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit": "6def065b081fce49e5a4f371129ba7eb121c1905",
+      "protocol_version": "1.2",
+      "model": "Models/candidate_ranker_synthetic.json",
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/candidate_ranker_synthetic_heldout_benchmark.json",
+      "result_files": [
+        "docs/reports/experiments/phase2/candidate_ranker_synthetic_heldout_benchmark.json",
+        "docs/reports/experiments/phase2/candidate_ranker_synthetic_heldout_analysis.json",
+        "docs/reports/experiments/phase2/candidate_ranker_synthetic_saturated_benchmark.json"
+      ],
+      "description": "Non-generative candidate ranker (candidate_ranker_synthetic, 22 usable cases from 35-case synthetic training fixture, character granularity, conservative selection gates) evaluated on heldout_generalization fixture (63 cases) and saturated suite (234 cases). Training fixture (ctx-train-*) has disjoint IDs and zero expected-sentence overlap with all evaluation fixtures. The ranker matches baseline exactly at 39/63 on heldout (0 changed, 0 improved, 0 regressed) with p95 128us latency. On the saturated suite, the ranker scores 182/234 (+1 vs current evaluator baseline of 181/234) but regresses 52 cases vs deterministic 234/234. The heldout gate fails: the count-based ranker has zero non-baseline evidence on heldout because exact feature-vector overlap is insufficient.",
+      "fixtures_count": 63,
+      "real_model_benchmarked": false,
+      "heldout_result": {
+        "exact_matches": 39,
+        "total_cases": 63,
+        "exact_accuracy": 61.9048,
+        "fallbacks": 0,
+        "latency_p95_us": 128,
+        "candidate_validation_exercised": true,
+        "non_candidate_violations": 0,
+        "changed_cases": 0,
+        "improved_cases": 0,
+        "regressed_cases": 0,
+        "non_baseline_evidence_cases": 0,
+        "rejected_by_count_cases": 1,
+        "training_contamination_check": {
+          "excluded_cases": 0,
+          "usable_cases": 22,
+          "training_fixture": "ranker_training_synthetic.jsonl (ctx-train-* IDs, 35 cases, 22 usable)",
+          "expected_sentence_overlap_with_eval_fixtures": 0
+        },
+        "comparison_vs_deterministic": {
+          "deterministic_exact_matches": 41,
+          "delta_matches": -2,
+          "relative_error_reduction_pct": -9.0909
+        }
+      },
+      "saturated_result": {
+        "exact_matches": 182,
+        "total_cases": 234,
+        "exact_accuracy": 77.7778,
+        "vs_baseline_delta": 1,
+        "vs_deterministic_delta": -52,
+        "fallbacks": 0,
+        "latency_p95_us": 127,
+        "changed_cases": 2,
+        "improved_cases": 1,
+        "regressed_vs_baseline": 0,
+        "non_baseline_evidence_cases": 2,
+        "candidate_validation_exercised": true
+      },
+      "conclusion": "candidate_ranker_synthetic does not beat deterministic 41/63 on heldout_generalization. The count-feature approach cannot generalize to disjoint evaluation contexts because zero training examples share exact feature vectors with heldout cases. On the saturated suite, it shows a modest +1 over the current baseline but regresses 52 cases vs deterministic 234/234. The synthetic training fixture provides insufficient context overlap for the ranker's exact-string feature matching to fire on either evaluation set. Recommend exploring alternative approaches (embedding-based similarity, classifier over n-grams, or true tiny language model with constrained decoding) that can generalize beyond exact feature overlap.",
+      "gate_result": "FAIL",
+      "gate_reasons": [
+        "candidate_ranker exact matches 39 < deterministic 41 on heldout (RER -9.09%)",
+        "non_baseline_evidence_cases = 0 on heldout: ranker cannot override baseline without training context overlap",
+        "52 regressed cases on saturated suite vs deterministic 234/234",
+        "Count-based feature matching is inherently local and does not generalize to unseen contexts"
+      ],
+      "verification": [
+        "train_candidate_ranker.py --self-test",
+        "candidate_ranker_scorer.py --self-test",
+        "analyze_candidate_ranker.py --self-test",
+        "fixture audit: ctx-train-* IDs and 0 expected-sentence overlap with heldout/canonical eval fixtures",
+        "train with --exclude-fixture heldout_generalization --exclude-id-prefix hg- (usable=22, excluded=0 because synthetic training IDs are disjoint)",
+        "heldout benchmark (39/63, 0 fallbacks, 0 candidate violations)",
+        "saturated benchmark (182/234, 0 fallbacks, 0 candidate violations)",
+        "analysis artifacts: /tmp/ranker_synthetic_heldout_analysis.json, /tmp/ranker_synthetic_saturated_analysis.json"
+      ],
+      "next_steps": [
+        "Abandon count-based candidate-ranker-v1 approach for disjoint-evaluation scenarios because exact feature matching cannot generalize",
+        "For generalization beyond exact string overlap: evaluate embedding-based similarity (encode context + candidate) or a trained classifier over character/reading n-grams",
+        "Alternatively, accept that the deterministic reranker (41/63 heldout, 234/234 saturated) is the correct production path and invest in expanding context rules rather than learned rankers",
+        "Any future learned ranker must use training data with measurable context overlap to evaluation cases or use a feature representation that supports generalization"
+      ]
     }
   ]
 }
