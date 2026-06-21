@@ -24,7 +24,7 @@
         "bigram_taiwan_specific.json"
       ],
       "exit_gate_result": "FAIL",
-      "exit_gate_criterion": "≥5% relative error reduction on held-out test fixtures",
+      "exit_gate_criterion": "\u22655% relative error reduction on held-out test fixtures",
       "exit_gate_actual": "0% relative error reduction (identical to baseline)",
       "conclusion": "Bigram language model from dictionary data lacks discriminatory power for homophone disambiguation. Recommend proceeding to SLM-based reranker (Phase 3) or training on larger corpora."
     },
@@ -40,17 +40,17 @@
       "model": null,
       "results_dir": "docs/reports/experiments/phase2/",
       "summary_file": "docs/reports/experiments/phase2/tiny_llm_scaffold_report.json",
-      "description": "External scorer protocol and benchmark harness for evaluating 200M–0.5B local tiny LLMs as candidate-constrained rerankers. The scaffold is verified with mock scorers but no real model has been benchmarked yet. Protocol v1.1 adds candidate-only output validation.",
+      "description": "External scorer protocol and benchmark harness for evaluating 200M\u20130.5B local tiny LLMs as candidate-constrained rerankers. The scaffold is verified with mock scorers but no real model has been benchmarked yet. Protocol v1.1 adds candidate-only output validation.",
       "protocol": "Tools/SLMRerankerExperiment/README.md",
       "fixtures_count": 234,
       "real_model_benchmarked": false,
       "candidate_validation": {
         "protocol_available": true,
         "exercised": false,
-        "note": "Candidate validation is implemented but not exercised by current fixtures — none supply a 'candidates' field."
+        "note": "Candidate validation is implemented but not exercised by current fixtures \u2014 none supply a 'candidates' field."
       },
       "next_steps": [
-        "Benchmark quantized 200M–0.5B models through the protocol",
+        "Benchmark quantized 200M\u20130.5B models through the protocol",
         "Compare against deterministic reranker on held-out Taiwan fixtures",
         "Gate: must beat deterministic reranker before promotion to Phase 3"
       ]
@@ -86,7 +86,32 @@
       "verification": "Build + dry-run + mock-scorer + self-test + git-diff-check",
       "next_steps": [
         "Implement llama.cpp wrapper scorer for real model evaluation",
-        "Benchmark quantized 200M–0.5B models on the three fixture suites with candidate validation",
+        "Benchmark quantized 200M\u20130.5B models on the three fixture suites with candidate validation",
+        "Gate: any candidate SLM must beat deterministic reranker on held-out Taiwan fixtures before Phase 3"
+      ]
+    },
+    {
+      "id": "persistent-scorer",
+      "name": "Persistent External Scorer Protocol",
+      "status": "verified",
+      "date": "2026-06-21T14:35:00+08:00",
+      "branch": "slm-phase2-learnable",
+      "protocol_version": "1.2",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/persistent_scorer_smoke.json",
+      "description": "Adds a persistent scorer protocol (--persistent-scorer-command) to the SLM reranker experiment runner. Keeps the scorer process alive for all fixture cases, communicating over stdin/stdout pipes. Eliminates per-case subprocess spawn overhead (~430x latency reduction at p95: 19ms to 45us). Mock scorer supports --persistent mode for protocol verification. select(2)-based timeout; Unix-only.",
+      "latency_comparison": {
+        "subprocess_per_case_mock_p95_us": 19380,
+        "persistent_mock_p95_us": 45,
+        "reduction_factor": 430
+      },
+      "fixtures_count": 234,
+      "real_model_benchmarked": false,
+      "verification": "Syntax check + self-test (includes persistent path) + dry-run + per-case mock + persistent mock + privacy check + git-diff-check",
+      "next_steps": [
+        "Implement llama.cpp wrapper scorer with persistent protocol support",
+        "Benchmark quantized 200M\u20130.5B models on the three fixture suites using persistent protocol",
         "Gate: any candidate SLM must beat deterministic reranker on held-out Taiwan fixtures before Phase 3"
       ]
     }

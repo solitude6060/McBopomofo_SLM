@@ -1,6 +1,6 @@
 # SLM Reranker Experiment: External Scorer Protocol
 
-Last updated: 2026-06-21T12:35:00+08:00
+Last updated: 2026-06-21T14:35:00+08:00
 
 ## Purpose
 
@@ -42,6 +42,91 @@ assets.
 The runner enforces the timeout at the subprocess level. The scorer itself
 should not enforce timeouts — it should process and respond as fast as
 possible.
+
+## Persistent Scorer Protocol
+
+### Latency Rationale
+
+The standard per-case subprocess scoring spawns a new process for each
+fixture case. Measured overhead for a no-op mock is p95 ≈ 19 ms (234 cases,
+3 fixture files), entirely dominated by Python interpreter startup and teardown.
+For tiny LLM wrappers targeting p95 < 20 ms commit-time reranking, this
+overhead consumes the entire budget before any inference happens.
+
+The persistent protocol keeps the scorer process alive for the full
+benchmark run, communicating over stdin/stdout pipes. Same mock under the
+persistent protocol: p95 ≈ 45 µs — a ~430× reduction in overhead, making it
+possible to measure actual model inference latency meaningfully.
+
+### Limitations of the select(2)-Based Approach
+
+The timeout is implemented with `select.select()` on the stdout pipe fd,
+with a per-case deadline. This is a Unix-only mechanism (Linux/macOS). A
+Windows-compatible implementation would require a different approach
+(e.g., `threading.Timer` or `asyncio` with `ProactorEventLoop`).
+
+The `select` approach makes a best-effort attempt to read a complete JSON
+line within the deadline. Because pipe writes are atomic up to `PIPE_BUF`
+(4096 bytes on Linux), a single `write + flush` from the scorer is almost
+always received as a complete line. The implementation buffers partial
+reads across calls for robustness.
+
+If the stdout pipe or stderr pipe fills up (e.g., a chatty scorer logging
+to stderr), the process may block. Production scorers should minimize
+stderr output during the benchmark loop.
+
+### Invocation
+
+The persistent scorer is started once and kept alive for all fixture cases:
+
+```bash
+python3 run_experiment.py \
+  --persistent-scorer-command "python3 path/to/scorer.py --persistent [args]" \
+  --fixtures path/to/fixtures.jsonl [...] \
+  --timeout-ms <milliseconds> \
+  --output path/to/summary.json \
+  --per-case-output path/to/per_case.jsonl
+```
+
+`--persistent-scorer-command` is mutually exclusive with `--scorer-command`
+and `--dry-run`.
+
+### Persistent Scorer Stdin/Stdout Protocol
+
+For each fixture case, the runner writes one JSON line to the scorer's
+stdin and reads one JSON line from the scorer's stdout. The JSON formats
+are identical to the per-case protocol described above.
+
+The scorer **must** flush stdout after each response. In Python:
+
+```python
+print(json.dumps(response, ensure_ascii=False), flush=True)
+```
+
+### Persistent Scorer Exit Behavior
+
+| Event | Runner action |
+|-------|---------------|
+| Process exits during run | Mark remaining cases as `persistent_process_died` fallback |
+| Timeout reading response | Mark case as `timeout` fallback, continue if process alive |
+| Broken pipe on write | Process is dead; remaining cases fallback with `broken_pipe` |
+| Invalid/missing JSON output | Mark case as fallback, continue |
+
+### Mock Scorer Persistent Mode
+
+The included `mock_tiny_llm_scorer.py` supports `--persistent`:
+
+```bash
+# Persistent mock (default mode)
+python3 mock_tiny_llm_scorer.py --persistent
+
+# Persistent oracle mock
+python3 mock_tiny_llm_scorer.py --persistent --oracle
+```
+
+In persistent mode, the mock reads JSONL lines from stdin until EOF,
+processing each line and writing one response per line. Default and
+`--oracle` single-request behavior is unchanged.
 
 ## Candidate-Only Output Constraint
 
@@ -187,7 +272,8 @@ python3 run_experiment.py \
 | `--output` | stdout | Summary JSON output path |
 | `--per-case-output` | (none) | Optional sanitized per-case JSONL output path |
 | `--dry-run` | false | Use built-in mock scorer (no subprocess) |
-| `--self-test` | false | Run self-tests (candidate validation unit tests + pipeline integration) and exit |
+| `--persistent-scorer-command` | (mutually exclusive with `--scorer-command` and `--dry-run`) | Persistent scorer command string; keeps process alive for all cases |
+| `--self-test` | false | Run self-tests (candidate validation unit tests + pipeline + persistent scorer integration) and exit |
 
 ## Generating SLM Request Data with Candidates
 
@@ -267,8 +353,12 @@ verification:
 - **Oracle mode** (`mock_tiny_llm_scorer.py --oracle`): Returns the
   `expected` field from the request — for verifying the runner/scaffold
   correctly detects exact matches.
+- **Persistent mode** (`mock_tiny_llm_scorer.py --persistent`): Reads
+  JSONL from stdin until EOF, processing each line as a separate request.
+  Compatible with `--oracle`. Designed to test the persistent scorer
+  protocol without process-spawn overhead.
 
-Neither mode performs any model inference. Both are for scaffold testing only.
+Neither mode performs any model inference. All are for scaffold testing only.
 
 ## Verification
 
@@ -303,10 +393,18 @@ python3 run_experiment.py \
   --timeout-ms 30 \
   --output /tmp/tiny_llm_summary.json
 
-# 6. Run self-tests (validates candidate validation logic)
+# 6. Run persistent mock on candidate-exported requests (requires pre-generated files in /tmp)
+python3 run_experiment.py \
+  --persistent-scorer-command "python3 mock_tiny_llm_scorer.py --persistent" \
+  --fixtures /tmp/slm_taiwan_ambiguous.jsonl /tmp/slm_english_mixed.jsonl /tmp/slm_taiwan_specific.jsonl \
+  --timeout-ms 500 \
+  --output /tmp/slm_persistent_mock.json \
+  --per-case-output /tmp/slm_persistent_mock_cases.jsonl
+
+# 7. Run self-tests (validates candidate validation + persistent scorer integration)
 python3 run_experiment.py --self-test
 
-# 7. Verify no whitespace errors
+# 8. Verify no whitespace errors
 git diff --check
 ```
 
@@ -315,7 +413,7 @@ git diff --check
 ```
 Tools/SLMRerankerExperiment/
 ├── README.md                  # This protocol document
-├── run_experiment.py          # Runner script (Python stdlib)
-├── mock_tiny_llm_scorer.py    # Mock scorer for verification
+├── run_experiment.py          # Runner script (Python stdlib; PersistentScorer class)
+├── mock_tiny_llm_scorer.py    # Mock scorer for verification (supports --persistent)
 └── (future: real scorer wrappers, model download scripts)
 ```

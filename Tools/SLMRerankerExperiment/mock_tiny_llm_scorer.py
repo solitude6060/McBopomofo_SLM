@@ -62,7 +62,39 @@ def main():
         action="store_true",
         help="Oracle mode: return expected field from request",
     )
+    parser.add_argument(
+        "--persistent",
+        action="store_true",
+        help="Persistent mode: read JSONL requests from stdin until EOF",
+    )
     args = parser.parse_args()
+
+    if args.persistent:
+        # Persistent mode: read JSONL line by line until EOF
+        for line in sys.stdin:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                request = json.loads(line)
+            except json.JSONDecodeError as e:
+                print(
+                    json.dumps({"error": f"invalid_json: {e}"}, ensure_ascii=False),
+                    flush=True,
+                )
+                continue
+
+            valid, error_msg = validate_request(request)
+            if not valid:
+                print(
+                    json.dumps({"error": error_msg}, ensure_ascii=False),
+                    flush=True,
+                )
+                continue
+
+            response = process_request(request, oracle_mode=args.oracle)
+            print(json.dumps(response, ensure_ascii=False), flush=True)
+        sys.exit(0)
 
     stdin_text = sys.stdin.read()
     if not stdin_text.strip():

@@ -21,6 +21,7 @@ import argparse
 import json
 import math
 import os
+import select
 import subprocess
 import sys
 import time
@@ -165,14 +166,112 @@ def builtin_mock(request):
     }, elapsed_us, None
 
 
-def evaluate_case(case, scorer_cmd, timeout_ms, dry_run):
-    request = build_scorer_request(case)
+class PersistentScorer:
+    """Manages a persistent scorer subprocess.
 
-    if dry_run:
-        response, elapsed_us, error = builtin_mock(request)
-    else:
-        response, elapsed_us, error = call_scorer(scorer_cmd, request, timeout_ms)
+    The scorer is started once and kept alive for the duration of the
+    benchmark. Per-case communication: write one JSON line to stdin, read
+    one JSON line from stdout. Timeouts use select(2) on the stdout pipe.
+    """
 
+    def __init__(self, cmd, timeout_ms):
+        self._timeout_s = timeout_ms / 1000.0
+        self._proc = subprocess.Popen(
+            cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        self._fd = self._proc.stdout.fileno()
+        self._buf = b""
+
+    def _read_line(self):
+        deadline = time.monotonic() + self._timeout_s
+        while time.monotonic() < deadline:
+            if b"\n" in self._buf:
+                line, self._buf = self._buf.split(b"\n", 1)
+                return line
+
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return None
+
+            r, _, _ = select.select([self._fd], [], [], remaining)
+            if not r:
+                return None
+
+            chunk = os.read(self._fd, 65536)
+            if not chunk:
+                return None
+            self._buf += chunk
+
+        return None
+
+    def score(self, request):
+        start = time.perf_counter()
+        input_bytes = (
+            json.dumps(request, ensure_ascii=False) + "\n"
+        ).encode("utf-8")
+
+        try:
+            self._proc.stdin.write(input_bytes)
+            self._proc.stdin.flush()
+        except BrokenPipeError:
+            elapsed_us = int((time.perf_counter() - start) * 1_000_000)
+            return None, elapsed_us, "broken_pipe"
+        except OSError as e:
+            elapsed_us = int((time.perf_counter() - start) * 1_000_000)
+            return None, elapsed_us, f"pipe_error:{e}"
+
+        line = self._read_line()
+        elapsed_us = int((time.perf_counter() - start) * 1_000_000)
+
+        if line is None:
+            retcode = self._proc.poll()
+            if retcode is not None:
+                return None, elapsed_us, f"persistent_exit_{retcode}"
+            return None, elapsed_us, "timeout"
+
+        try:
+            response = json.loads(line.decode("utf-8", errors="replace"))
+        except json.JSONDecodeError:
+            return None, elapsed_us, "invalid_json"
+
+        if not isinstance(response, dict):
+            return None, elapsed_us, "invalid_response_type"
+        if "output" not in response:
+            return None, elapsed_us, "missing_output_field"
+        if not isinstance(response["output"], str):
+            return None, elapsed_us, "output_not_string"
+
+        return response, elapsed_us, None
+
+    def close(self):
+        if self._proc.poll() is None:
+            self._proc.terminate()
+            try:
+                self._proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self._proc.kill()
+                self._proc.wait()
+        stderr_text = (
+            self._proc.stderr.read()
+            .decode("utf-8", errors="replace")
+            .strip()
+        )
+        if stderr_text:
+            print(f"Persistent scorer stderr: {stderr_text}", file=sys.stderr)
+        self._proc.stdin.close()
+        self._proc.stdout.close()
+        self._proc.stderr.close()
+
+    @property
+    def alive(self):
+        return self._proc.poll() is None
+
+
+def _fill_result(case, response, elapsed_us, error):
+    """Build a per-case result dict from a scorer response."""
     result = {
         "id": case.get("id", ""),
         "exact_match": False,
@@ -193,7 +292,6 @@ def evaluate_case(case, scorer_cmd, timeout_ms, dry_run):
     result["scorer_output"] = response["output"]
     result["scorer_name"] = response.get("scorer_name", "unknown")
 
-    # Candidate validation — only when the fixture supplies candidates.
     candidates = case.get("candidates")
     if candidates is not None:
         result["candidate_validated"] = True
@@ -206,9 +304,24 @@ def evaluate_case(case, scorer_cmd, timeout_ms, dry_run):
 
     expected = case.get("expected", "")
     if isinstance(expected, str) and expected:
-        result["exact_match"] = (response["output"] == expected)
+        result["exact_match"] = response["output"] == expected
 
     return result
+
+
+def evaluate_case(case, scorer_cmd, timeout_ms, dry_run):
+    request = build_scorer_request(case)
+    if dry_run:
+        response, elapsed_us, error = builtin_mock(request)
+    else:
+        response, elapsed_us, error = call_scorer(scorer_cmd, request, timeout_ms)
+    return _fill_result(case, response, elapsed_us, error)
+
+
+def evaluate_case_persistent(case, persistent_scorer):
+    request = build_scorer_request(case)
+    response, elapsed_us, error = persistent_scorer.score(request)
+    return _fill_result(case, response, elapsed_us, error)
 
 
 def compute_latency_percentiles(latencies):
@@ -417,10 +530,78 @@ def run_self_test():
         if r3["candidate_validated"]:
             errors.append("Pipeline: no-cand-001 should not be validated")
 
+        # ── Persistent scorer integration test ──
+
+        persistent_scorer_code = (
+            "#!/usr/bin/env python3\n"
+            "import sys, json\n"
+            "for line in sys.stdin:\n"
+            "    line = line.strip()\n"
+            "    if not line: continue\n"
+            "    req = json.loads(line)\n"
+            "    out = req.get('expected') or req.get('baseline_output', '')\n"
+            "    print(json.dumps({'output': out, 'scorer_name': "
+            "'persistent-self-test'}))\n"
+            "    sys.stdout.flush()\n"
+        )
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".py", delete=False, encoding="utf-8"
+        ) as f:
+            f.write(persistent_scorer_code)
+            persistent_scorer_path = f.name
+
+        persistent_scorer = PersistentScorer(
+            ["python3", persistent_scorer_path], 30000
+        )
+        try:
+            p_results = []
+            for case in fixture_cases:
+                p_results.append(
+                    evaluate_case_persistent(case, persistent_scorer)
+                )
+        finally:
+            persistent_scorer.close()
+
+        if len(p_results) != len(fixture_cases):
+            errors.append(
+                f"Persistent: expected {len(fixture_cases)} results, "
+                f"got {len(p_results)}"
+            )
+
+        pr1 = p_results[0]
+        if pr1["fallback"]:
+            errors.append(
+                "Persistent: cand-valid-001 should not fallback, "
+                f"got: {pr1['fallback_reason']}"
+            )
+        if not pr1["candidate_validated"]:
+            errors.append("Persistent: cand-valid-001 should be validated")
+        if pr1["candidate_valid"] is not True:
+            errors.append("Persistent: cand-valid-001 should be valid")
+
+        pr2 = p_results[1]
+        if not pr2["fallback"]:
+            errors.append("Persistent: cand-invalid-001 should fallback")
+        if pr2["fallback_reason"] != "non_candidate_output":
+            errors.append(
+                "Persistent: cand-invalid-001 reason should be "
+                f"non_candidate_output, got: {pr2['fallback_reason']}"
+            )
+
+        pr3 = p_results[2]
+        if pr3["fallback"]:
+            errors.append(
+                f"Persistent: no-cand-001 should not fallback, "
+                f"got: {pr3['fallback_reason']}"
+            )
+        if pr3["candidate_validated"]:
+            errors.append("Persistent: no-cand-001 should not be validated")
+
     finally:
         try:
             os.unlink(fixture_path)
             os.unlink(scorer_path)
+            os.unlink(persistent_scorer_path)
         except OSError:
             pass
 
@@ -431,7 +612,7 @@ def run_self_test():
 
     print(
         "SELF-TEST PASSED: validate_candidates unit tests "
-        "+ pipeline integration",
+        "+ pipeline + persistent scorer integration",
         file=sys.stderr,
     )
     return 0
@@ -477,6 +658,13 @@ def main():
         help="Use built-in mock scorer instead of external command",
     )
     parser.add_argument(
+        "--persistent-scorer-command",
+        type=str,
+        default=None,
+        help="Persistent scorer command string. Mutually exclusive with "
+             "--scorer-command and --dry-run.",
+    )
+    parser.add_argument(
         "--self-test",
         action="store_true",
         help="Run self-tests and exit",
@@ -490,8 +678,27 @@ def main():
         print("FATAL: --fixtures is required unless --self-test is used", file=sys.stderr)
         sys.exit(1)
 
-    if not args.dry_run and not args.scorer_command:
-        print("FATAL: --scorer-command is required unless --dry-run is set", file=sys.stderr)
+    if args.persistent_scorer_command and args.scorer_command:
+        print(
+            "FATAL: --persistent-scorer-command and --scorer-command "
+            "are mutually exclusive",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    if args.persistent_scorer_command and args.dry_run:
+        print(
+            "FATAL: --persistent-scorer-command and --dry-run "
+            "are mutually exclusive",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    if not args.dry_run and not args.scorer_command and not args.persistent_scorer_command:
+        print(
+            "FATAL: one of --scorer-command, --persistent-scorer-command, "
+            "or --dry-run is required",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     if args.scorer_command:
@@ -507,12 +714,57 @@ def main():
     print(f"Loaded {len(cases)} cases from {len(args.fixtures)} fixture file(s)", file=sys.stderr)
 
     results = []
-    for i, case in enumerate(cases):
-        result = evaluate_case(case, scorer_cmd, args.timeout_ms, args.dry_run)
-        results.append(result)
 
-        if result["fallback"]:
-            print(f"  [{i+1}/{len(cases)}] {result['id']}: FALLBACK ({result['fallback_reason']})", file=sys.stderr)
+    if args.persistent_scorer_command:
+        persistent_cmd = args.persistent_scorer_command.split()
+        persistent_scorer = PersistentScorer(persistent_cmd, args.timeout_ms)
+        try:
+            for i, case in enumerate(cases):
+                result = evaluate_case_persistent(case, persistent_scorer)
+                results.append(result)
+
+                if not persistent_scorer.alive:
+                    remaining = len(cases) - i - 1
+                    if remaining > 0:
+                        print(
+                            f"  Persistent process died, marking {remaining}"
+                            f" remaining cases as fallback",
+                            file=sys.stderr,
+                        )
+                        for j in range(i + 1, len(cases)):
+                            dead_result = {
+                                "id": cases[j].get("id", ""),
+                                "exact_match": False,
+                                "fallback": True,
+                                "fallback_reason": "persistent_process_died",
+                                "latency_us": 0,
+                                "scorer_output": None,
+                                "scorer_name": None,
+                                "candidate_validated": False,
+                                "candidate_valid": None,
+                            }
+                            results.append(dead_result)
+                        break
+
+                if result["fallback"]:
+                    print(
+                        f"  [{i+1}/{len(cases)}] {result['id']}: "
+                        f"FALLBACK ({result['fallback_reason']})",
+                        file=sys.stderr,
+                    )
+        finally:
+            persistent_scorer.close()
+    else:
+        for i, case in enumerate(cases):
+            result = evaluate_case(case, scorer_cmd, args.timeout_ms, args.dry_run)
+            results.append(result)
+
+            if result["fallback"]:
+                print(
+                    f"  [{i+1}/{len(cases)}] {result['id']}: "
+                    f"FALLBACK ({result['fallback_reason']})",
+                    file=sys.stderr,
+                )
 
     if args.per_case_output:
         with open(args.per_case_output, "w", encoding="utf-8") as f:

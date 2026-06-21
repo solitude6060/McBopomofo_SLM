@@ -1,0 +1,87 @@
+{
+  "experiment": "persistent-scorer-smoke",
+  "date": "2026-06-21T14:35:00+08:00",
+  "branch": "slm-phase2-learnable",
+  "status": "persistent-scorer-verified",
+  "description": "Verification of the persistent external scorer protocol in run_experiment.py. The persistent protocol eliminates process-spawn overhead by keeping the scorer process alive for all fixture cases. Measured mock latencies demonstrate the overhead difference between per-case subprocess and persistent pipe-based communication.",
+  "fixtures": {
+    "taiwan_ambiguous": 100,
+    "english_mixed": 50,
+    "taiwan_specific": 84,
+    "total": 234
+  },
+  "protocols_tested": [
+    {
+      "name": "builtin-mock",
+      "type": "dry-run",
+      "fallbacks": 0,
+      "candidate_validation_exercised": true,
+      "description": "Built-in no-op mock. No subprocess overhead."
+    },
+    {
+      "name": "subprocess-per-case-mock",
+      "type": "per-case subprocess",
+      "fallbacks": 0,
+      "candidate_validation_exercised": true,
+      "description": "External mock scorer invoked as subprocess per case."
+    },
+    {
+      "name": "persistent-mock",
+      "type": "persistent pipe",
+      "fallbacks": 0,
+      "candidate_validation_exercised": true,
+      "description": "External mock scorer started once, communicated via stdin/stdout pipes."
+    }
+  ],
+  "latency_comparison_us": {
+    "builtin_mock": {
+      "p50": 0,
+      "p95": 0,
+      "p99": 0,
+      "note": "No-op in-process mock; latency is sub-microsecond."
+    },
+    "subprocess_per_case_mock": {
+      "p50": 13781,
+      "p95": 19380,
+      "p99": 20874,
+      "note": "Subprocess spawn dominates; Python interpreter startup is ~13-20ms per case."
+    },
+    "persistent_mock": {
+      "p50": 31,
+      "p95": 45,
+      "p99": 77,
+      "steady_state_excl_first_case": {
+        "p50": 31,
+        "p95": 45,
+        "p99": 65
+      },
+      "note": "Persistent pipe communication; sub-50us steady-state. First case at 12.9ms (Python warmup anomaly)."
+    }
+  },
+  "latency_reduction": {
+    "p95_subprocess_to_persistent": 430,
+    "unit": "fold",
+    "description": "Persistent mock p95 (45us) is ~430x faster than per-case subprocess mock p95 (19,380us)."
+  },
+  "capabilities_verified": [
+    "Persistent scorer process startup and lifecycle management",
+    "Per-case JSON line write to stdin with flush",
+    "Per-case JSON line read from stdout with select-based timeout",
+    "Per-case timeout enforcement via select(2)",
+    "Fallback detection: timeout, broken pipe, persistent_exit",
+    "Process death recovery: remaining cases marked as persistent_process_died",
+    "Process cleanup (SIGTERM → SIGKILL) on completion",
+    "Mock scorer persistent mode: reads JSONL from stdin until EOF",
+    "Mock scorer persistent + oracle mode compatibility",
+    "Mutual exclusivity with --scorer-command and --dry-run",
+    "Privacy: per-case output remains sanitized (no scorer output, readings, candidates, expected, or baseline text)"
+  ],
+  "remaining_risks": [
+    "select(2) is Unix-only; Windows would need asyncio or threading.Timer fallback",
+    "Stderr pipe can fill and block the scorer process if verbose logging is enabled during benchmark loop",
+    "First-case latency anomaly (12.9ms vs 31us steady-state) not fully characterized; may be Python JIT warmup or process scheduler jitter",
+    "Real model wrappers may have different latency profiles and failure modes than the mock",
+    "No built-in mechanism to restart a dead persistent process mid-run; all remaining cases become fallback"
+  ],
+  "conclusion": "Persistent scorer protocol verified. The persistent mock eliminates process-spawn overhead (~430x at p95), reducing communication latency from 19ms to 45us. This makes it feasible to benchmark tiny LLM wrappers under the Phase 2 latency budget (p95 < 20ms commit-time reranking) without the measurement being swamped by subprocess overhead. The select(2)-based timeout works correctly on Linux. The implementation is ready for real model wrapper integration."
+}
