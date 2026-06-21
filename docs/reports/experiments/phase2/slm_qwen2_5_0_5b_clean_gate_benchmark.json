@@ -1,0 +1,89 @@
+{
+  "suite": "slm-qwen2.5-0.5b-clean-gate",
+  "date": "2026-06-22T01:59:18+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "faf46519ae2ebcacef970b14b57f20df8ea99b73",
+  "content_policy": {
+    "raw_case_strings_in_report": false,
+    "raw_benchmark_outputs_location": "/tmp/"
+  },
+  "fixture": {
+    "name": "heldout_generalization_clean",
+    "total_cases": 57,
+    "source": "fixture_hygiene_audit.py --export-clean heldout_generalization"
+  },
+  "scorer": {
+    "mode": "persistent",
+    "prompt_style": "indices",
+    "real_model_benchmarked": true,
+    "candidate_granularity": "character",
+    "model_manifest": {
+      "model_name": "qwen2.5-0.5b",
+      "provider": "ollama",
+      "parameter_count": 500000000,
+      "quantization": "q4_k_m",
+      "license": "apache-2.0",
+      "redistributable": true,
+      "local_only": true
+    }
+  },
+  "reference": {
+    "baseline": {
+      "exact_matches": 39,
+      "total_cases": 57,
+      "exact_accuracy": 68.4211,
+      "latency_microseconds_p95": 2
+    },
+    "deterministic": {
+      "exact_matches": 57,
+      "total_cases": 57,
+      "exact_accuracy": 100.0,
+      "latency_microseconds_p95": 705
+    }
+  },
+  "slm": {
+    "exact_matches": 12,
+    "total_cases": 57,
+    "exact_accuracy": 21.0526,
+    "fallbacks": 41,
+    "errors": 45,
+    "latency_microseconds": {
+      "p50": 282780,
+      "p95": 668875,
+      "p99": 1104754
+    },
+    "candidate_validation": {
+      "protocol_available": true,
+      "exercised": true,
+      "cases_with_candidates": 16,
+      "non_candidate_violations": 0
+    },
+    "fallback_breakdown": {
+      "indices_length_mismatch": 41
+    },
+    "relative_error_reduction_pct": {
+      "vs_baseline": -150.0,
+      "vs_deterministic": 0.0
+    }
+  },
+  "gate_result": "FAIL",
+  "gate_reasons": [
+    "qwen2.5:0.5b scores 12/57, below baseline 39/57 and deterministic 57/57",
+    "fallbacks 41 > threshold 0, all from indices_length_mismatch",
+    "SLM p95 latency 668875us exceeds the 20000us prototype target",
+    "candidate validation has 0 non-candidate violations, so the failure mode is instruction-following reliability rather than unsafe output"
+  ],
+  "decision": "Do not promote qwen2.5:0.5b prompt-only candidate-index scoring for the clean heldout gate. The 0.5B local model cannot reliably emit one candidate index per non-empty slot, and its latency is far above a synchronous typing path budget.",
+  "verification": [
+    "python3 Tools/SLMRerankerExperiment/local_llm_scorer.py --self-test",
+    "python3 -m json.tool Models/qwen2_5_0_5b_manifest.json",
+    "run_benchmark_suite.py qwen2.5:0.5b on heldout_generalization_clean with escalated localhost Ollama HTTP access",
+    "python3 -m json.tool /tmp/slm_clean_qwen2_5_0_5b.json",
+    "python3 -m json.tool /tmp/slm_clean_qwen2_5_0_5b/slm_summary_slm_heldout_generalization_clean.json"
+  ],
+  "next_steps": [
+    "Do not spend more cycles on prompt-only index-array generation for qwen2.5:0.5b",
+    "If tiny-model work continues, prefer a constrained decoder, distilled classifier, or embedding/classifier ranker that emits exactly one bounded candidate choice per slot",
+    "Keep deterministic reranker as the synchronous production-quality baseline for clean heldout promotion"
+  ]
+}
