@@ -1,0 +1,76 @@
+{
+  "experiment": "tiny-llm-scaffold-verification",
+  "date": "2026-06-21T12:12:52+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit_scaffold": "ac9c91b",
+  "status": "scaffold-verified",
+  "protocol_version": "1.0",
+  "description": "Scaffold verification for the SLM Reranker external scorer protocol. This report validates that the benchmark harness functions correctly. No real tiny-LLM model was evaluated.",
+  "fixtures": {
+    "taiwan_ambiguous": 100,
+    "english_mixed": 50,
+    "taiwan_specific": 84,
+    "total": 234
+  },
+  "scorers_tested": [
+    {
+      "name": "builtin-mock",
+      "mode": "dry-run (no subprocess)",
+      "exact_match_count": 0,
+      "total_cases": 234,
+      "fallbacks": 0,
+      "privacy_safe": true,
+      "claims_accuracy": false,
+      "description": "Built-in no-op mock that returns empty string. Does not claim any accuracy improvement. Validates the runner processes all cases and measures latency correctly."
+    },
+    {
+      "name": "mock-tiny-llm-scorer",
+      "mode": "default (no-op passthrough)",
+      "exact_match_count": 0,
+      "total_cases": 234,
+      "fallbacks": 0,
+      "privacy_safe": true,
+      "claims_accuracy": false,
+      "description": "External mock scorer returning empty baseline output. Demonstrates the subprocess invocation protocol, timeout enforcement, and fallback counting."
+    },
+    {
+      "name": "mock-tiny-llm-scorer-oracle",
+      "mode": "oracle (returns expected text)",
+      "exact_match_count": 234,
+      "total_cases": 234,
+      "fallbacks": 0,
+      "privacy_safe": false,
+      "claims_accuracy": true,
+      "description": "Oracle mock that returns the expected field from each request. Used to verify the runner correctly detects exact matches. 100% accuracy is expected — this is not a real model."
+    }
+  ],
+  "capabilities_verified": [
+    "JSONL fixture parsing with varying field sets",
+    "Subprocess invocation per fixture case",
+    "Per-case timeout enforcement (tested at 30ms and 500ms)",
+    "Fallback detection: timeout, non-zero exit, invalid JSON, missing output field",
+    "Exact-match comparison against expected text",
+    "Per-case JSONL output",
+    "Summary JSON with latency percentiles and fallback breakdown",
+    "Dry-run mode (built-in mock, no subprocess)",
+    "Privacy: no content-bearing data in report or per-case output beyond fixture IDs"
+  ],
+  "latency_us": {
+    "builtin_mock_p50": 0,
+    "builtin_mock_p95": 0,
+    "subprocess_mock_p50": 13586,
+    "subprocess_mock_p95": 17743,
+    "oracle_mock_p50": 14170,
+    "oracle_mock_p95": 19617
+  },
+  "real_model": null,
+  "real_model_benchmarked": false,
+  "live_ime_modified": false,
+  "conclusion": "Scaffold verified. The benchmark harness correctly processes 234 fixture cases, invokes external scorer commands, enforces timeouts, counts fallbacks, and produces reproducible reports. No real SLM was evaluated. No changes were made to the macOS live IME or C++ engine.",
+  "next_steps": [
+    "Implement llama.cpp wrapper scorer that conforms to the JSON stdin/stdout protocol",
+    "Benchmark 200M–0.5B quantized models (e.g., Qwen2.5-0.5B, Gemma-2-2B-it-Q4) on the three fixture suites",
+    "Establish per-fixture baseline accuracy with deterministic reranker for comparison",
+    "Gate: any candidate SLM must beat deterministic reranker on held-out Taiwan fixtures before promotable to Phase 3 runtime integration"
+  ]
+}

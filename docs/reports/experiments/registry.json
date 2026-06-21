@@ -27,6 +27,26 @@
       "exit_gate_criterion": "≥5% relative error reduction on held-out test fixtures",
       "exit_gate_actual": "0% relative error reduction (identical to baseline)",
       "conclusion": "Bigram language model from dictionary data lacks discriminatory power for homophone disambiguation. Recommend proceeding to SLM-based reranker (Phase 3) or training on larger corpora."
+    },
+    {
+      "id": "tiny-llm-scaffold",
+      "name": "Tiny-LLM Reranker Scaffold",
+      "status": "scaffold-verified",
+      "date": "2026-06-21T12:12:52+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit_scaffold": "ac9c91b",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/tiny_llm_scaffold_report.json",
+      "description": "External scorer protocol and benchmark harness for evaluating 200M–0.5B local tiny LLMs as candidate-constrained rerankers. The scaffold is verified with mock scorers but no real model has been benchmarked yet.",
+      "protocol": "Tools/SLMRerankerExperiment/README.md",
+      "fixtures_count": 234,
+      "real_model_benchmarked": false,
+      "next_steps": [
+        "Benchmark quantized 200M–0.5B models through the protocol",
+        "Compare against deterministic reranker on held-out Taiwan fixtures",
+        "Gate: must beat deterministic reranker before promotion to Phase 3"
+      ]
     }
   ]
 }
