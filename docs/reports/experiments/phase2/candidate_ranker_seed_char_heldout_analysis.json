@@ -1,0 +1,98 @@
+{
+  "aggregate": {
+    "avg_candidates_per_slot": 2.8041,
+    "baseline_exact_accuracy": 61.9048,
+    "baseline_exact_matches": 39,
+    "baseline_in_candidates": 63,
+    "cases_with_candidates": 63,
+    "changed_cases": 0,
+    "expected_in_candidates": 56,
+    "fallback_breakdown": {},
+    "fallbacks": 0,
+    "feature_coverage_cases": {
+      "baseline_next_candidate": 9,
+      "baseline_prev_candidate": 15,
+      "baseline_window_candidate": 3,
+      "candidate": 53,
+      "reading_candidate": 42,
+      "transition": 16
+    },
+    "improved_cases": 0,
+    "max_slot_size": 16,
+    "multi_char_slot_pct": 5.9908,
+    "multi_char_slots": 26,
+    "non_baseline_evidence_cases": 0,
+    "ranker_exact_accuracy": 61.9048,
+    "ranker_exact_matches": 39,
+    "ranker_in_candidates": 63,
+    "regressed_cases": 0,
+    "rejected_by_count_cases": 0,
+    "rejected_by_count_slots": 0,
+    "rejected_by_evidence_cases": 0,
+    "rejected_by_evidence_slots": 0,
+    "rejected_by_margin_cases": 0,
+    "rejected_by_margin_slots": 0,
+    "total_candidates": 1217,
+    "total_cases": 63,
+    "total_slots": 434
+  },
+  "by_fixture": {
+    "heldout_generalization": {
+      "avg_candidates_per_slot": 2.8041,
+      "baseline_exact_accuracy": 61.9048,
+      "baseline_exact_matches": 39,
+      "baseline_in_candidates": 63,
+      "cases_with_candidates": 63,
+      "changed_cases": 0,
+      "expected_in_candidates": 56,
+      "fallback_breakdown": {},
+      "fallbacks": 0,
+      "feature_coverage_cases": {
+        "baseline_next_candidate": 9,
+        "baseline_prev_candidate": 15,
+        "baseline_window_candidate": 3,
+        "candidate": 53,
+        "reading_candidate": 42,
+        "transition": 16
+      },
+      "improved_cases": 0,
+      "max_slot_size": 16,
+      "multi_char_slot_pct": 5.9908,
+      "multi_char_slots": 26,
+      "non_baseline_evidence_cases": 0,
+      "ranker_exact_accuracy": 61.9048,
+      "ranker_exact_matches": 39,
+      "ranker_in_candidates": 63,
+      "regressed_cases": 0,
+      "rejected_by_count_cases": 0,
+      "rejected_by_count_slots": 0,
+      "rejected_by_evidence_cases": 0,
+      "rejected_by_evidence_slots": 0,
+      "rejected_by_margin_cases": 0,
+      "rejected_by_margin_slots": 0,
+      "total_candidates": 1217,
+      "total_cases": 63,
+      "total_slots": 434
+    }
+  },
+  "model_training": {
+    "contamination_guard": "excluded cases are not counted",
+    "excluded_cases": 0,
+    "excluded_id_prefixes": [],
+    "input_cases": 24,
+    "skipped_expected_not_candidate": 3,
+    "skipped_without_candidates": 0,
+    "skipped_without_expected": 0,
+    "source_files": [
+      "ranker_training_seed_char_requests_after_guard.jsonl"
+    ],
+    "usable_cases": 21
+  },
+  "model_type": "candidate-ranker-v1",
+  "notes": [
+    "No text outputs, expected strings, prompts, or candidate strings are stored.",
+    "changed_cases counts any scorer output differing from baseline.",
+    "feature_coverage_cases counts cases where the selected tokens had matching model evidence."
+  ],
+  "report": "candidate-ranker-analysis"
+}

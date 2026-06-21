@@ -18,6 +18,7 @@ FIXTURE_PREFIXES = {
     "taiwan_ambiguous": ["tw-amb-"],
     "english_mixed": ["en-mix-"],
     "taiwan_specific": ["tw-taiwan_specific-"],
+    "heldout_generalization": ["hg-"],
 }
 
 

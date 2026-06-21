@@ -1,0 +1,122 @@
+{
+  "suite": "slm-benchmark-suite",
+  "fixture": "heldout_generalization",
+  "date": "2026-06-21T23:57:59+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "a62862e7550974d06eb585cb4667e96cdc754bb4",
+  "fixtures": {
+    "heldout_generalization": 63,
+    "total": 63
+  },
+  "scorer": {
+    "mode": "persistent",
+    "model_type": "candidate-ranker-v1",
+    "model_path": "Models/candidate_ranker_seed_char.json",
+    "candidate_granularity": "character",
+    "training": {
+      "input_cases": 24,
+      "usable_cases": 21,
+      "excluded_cases": 0,
+      "source_file": "Tests/fixtures/contextual_bopomofo/ranker_training_seed_char_requests_after_guard.jsonl",
+      "candidate_granularity": "character",
+      "contamination_guard": "ranker-train ids are outside hg- prefix"
+    },
+    "real_model_benchmarked": false
+  },
+  "baseline": {
+    "exact_accuracy": 61.9048,
+    "exact_matches": 39,
+    "errors": 24,
+    "total_cases": 63,
+    "latency_us": {
+      "p50": 2,
+      "p95": 4,
+      "p99": 6
+    }
+  },
+  "deterministic": {
+    "exact_accuracy": 65.0794,
+    "exact_matches": 41,
+    "errors": 22,
+    "total_cases": 63,
+    "latency_us": {
+      "p50": 269,
+      "p95": 871,
+      "p99": 1059
+    }
+  },
+  "candidate_ranker": {
+    "exact_accuracy": 61.9048,
+    "exact_matches": 39,
+    "errors": 24,
+    "fallbacks": 0,
+    "total_cases": 63,
+    "latency_us": {
+      "p50": 66,
+      "p95": 144,
+      "p99": 12536
+    },
+    "candidate_validation": {
+      "exercised": true,
+      "cases_with_candidates": 63,
+      "non_candidate_violations": 0
+    },
+    "fallback_breakdown": {}
+  },
+  "comparison": {
+    "vs_baseline": {
+      "delta_exact_matches": 0,
+      "relative_error_reduction_pct": 0.0
+    },
+    "vs_deterministic": {
+      "delta_exact_matches": -2,
+      "relative_error_reduction_pct": -9.0909
+    }
+  },
+  "analysis": {
+    "changed_cases": 0,
+    "improved_cases": 0,
+    "regressed_cases": 0,
+    "expected_in_candidates": 56,
+    "total_slots": 434,
+    "total_candidates": 1217,
+    "avg_candidates_per_slot": 2.8,
+    "multi_char_slot_pct": 5.99,
+    "non_baseline_evidence_cases": 0,
+    "feature_coverage_cases": {
+      "reading_candidate": 42,
+      "candidate": 53,
+      "transition": 16,
+      "baseline_prev_candidate": 15,
+      "baseline_next_candidate": 9,
+      "baseline_window_candidate": 3
+    }
+  },
+  "conclusion": "candidate_ranker_seed_char matches baseline exactly at 39/63 with 0 fallbacks and 0 candidate violations. It does not beat deterministic 41/63. The 21-case training seed provides insufficient heldout coverage: only 3 cases have baseline_window_candidate evidence. No slot-level overrides were attempted (0 improved, 0 regressed, 0 changed).",
+  "gate": {
+    "result": "FAIL",
+    "reasons": [
+      "candidate_ranker exact matches 39 < deterministic exact matches 41",
+      "candidate_ranker relative error reduction vs deterministic = -9.0909%",
+      "changed_cases = 0, so the ranker provides no heldout correction signal beyond baseline"
+    ]
+  },
+  "raw_outputs": [
+    "/tmp/candidate_ranker_seed_char_heldout_verify.json",
+    "/tmp/candidate_ranker_seed_char_heldout_verify_work/slm_heldout_generalization.jsonl"
+  ],
+  "verification": [
+    "train_candidate_ranker.py --self-test",
+    "candidate_ranker_scorer.py --self-test",
+    "run_benchmark_suite.py --self-test",
+    "analyze_candidate_ranker.py --self-test",
+    "train_candidate_ranker.py --exclude-fixture heldout_generalization on heldout requests (usable=0, excluded=63)",
+    "run_benchmark_suite.py --persistent-scorer-command candidate_ranker_scorer.py --fixtures heldout_generalization --slm-candidate-granularity character --no-gate",
+    "analyze_candidate_ranker.py --model Models/candidate_ranker_seed_char.json --requests /tmp/candidate_ranker_seed_char_heldout_verify_work/slm_heldout_generalization.jsonl"
+  ],
+  "next_steps": [
+    "Do not train on heldout_generalization and then report on the same fixture.",
+    "Create separate synthetic training data outside the hg- prefix or split future generated fixtures into disjoint train/eval sets before any learned-ranker claim.",
+    "Consider a more aggressive model only if it preserves 234/234 on the saturated suite and beats deterministic 41/63 on heldout_generalization."
+  ]
+}
