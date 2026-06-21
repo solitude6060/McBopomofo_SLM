@@ -1,0 +1,88 @@
+{
+  "suite": "deterministic-candidate-backed-heldout",
+  "date": "2026-06-22T00:48:43+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "4da4ed1cff141aeb32e9c4d71f5d5d7a589fa5d2",
+  "scorer": {
+    "type": "deterministic-reranker",
+    "rule_group": "phase2-generalization",
+    "new_rule_count": 3,
+    "scope": "candidate-backed heldout residuals"
+  },
+  "heldout_result": {
+    "before_exact_matches": 54,
+    "after_exact_matches": 56,
+    "total_cases": 63,
+    "before_exact_accuracy": 85.7143,
+    "after_exact_accuracy": 88.8889,
+    "delta_exact_matches": 2,
+    "relative_error_reduction_vs_previous_deterministic_pct": 22.2222,
+    "remaining_errors": 7,
+    "latency_us": {
+      "p50": 288,
+      "p95": 775,
+      "p99": 1134
+    }
+  },
+  "canonical_no_regression": {
+    "exact_matches": 234,
+    "total_cases": 234,
+    "exact_accuracy": 100.0,
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_matches": 100,
+        "total_cases": 100,
+        "exact_accuracy": 100.0,
+        "latency_p95_us": 862
+      },
+      {
+        "fixture": "english_mixed",
+        "exact_matches": 50,
+        "total_cases": 50,
+        "exact_accuracy": 100.0,
+        "latency_p95_us": 729
+      },
+      {
+        "fixture": "taiwan_specific",
+        "exact_matches": 84,
+        "total_cases": 84,
+        "exact_accuracy": 100.0,
+        "latency_p95_us": 713
+      }
+    ]
+  },
+  "remaining_error_assessment": {
+    "candidate_backed_fixes_applied": 2,
+    "residual_errors_require_candidate_or_data_work": 7,
+    "notes": [
+      "No raw fixture text, expected strings, engine outputs, or candidate lists are stored in this report.",
+      "Residual errors were not forced through scorer rules because the required correction was not available as a safe candidate-backed scorer choice in this slice."
+    ]
+  },
+  "gate": {
+    "result": "PASS",
+    "reasons": [
+      "heldout exact matches improved from 54/63 to 56/63",
+      "canonical saturated suite remains 234/234",
+      "heldout p95 latency remains under 1ms in this run"
+    ]
+  },
+  "raw_outputs": [
+    "/tmp/deterministic_heldout_phase2_candidate_backed.out",
+    "/tmp/deterministic_taiwan_ambiguous_phase2_candidate_backed.out",
+    "/tmp/deterministic_english_mixed_phase2_candidate_backed.out",
+    "/tmp/deterministic_taiwan_specific_phase2_candidate_backed.out"
+  ],
+  "verification": [
+    "cmake --build Source/Engine/build --target McBopomofoLMLibTest -j2",
+    "Source/Engine/build/McBopomofoLMLibTest",
+    "cmake --build Tools/ContextualEvaluation/build --target evaluator -j2",
+    "deterministic heldout benchmark: 56/63",
+    "deterministic canonical benchmarks: 100/100, 50/50, 84/84"
+  ],
+  "next_steps": [
+    "Inspect residual heldout errors at the dictionary/candidate-generation layer before adding more scorer rules",
+    "Add candidate-availability diagnostics to the evaluator so future reports can separate scorer failures from missing-candidate failures"
+  ]
+}

@@ -487,6 +487,36 @@ TEST(DeterministicScorerTest, Phase2GeneralizationEnglishSlangAndBigramRulesFire
 
   EXPECT_TRUE(hasCorrectionValue(
       scorer,
+      makeRequest({"ㄌㄧㄠˊ", "ㄒㄧㄚˋ", "ㄑㄩˋ"},
+                  {CandidateInput{"ㄌㄧㄠˊ", "療", "", -3.0, 0, 1},
+                   CandidateInput{"ㄒㄧㄚˋ", "下", "", -3.0, 1, 1},
+                   CandidateInput{"ㄑㄩˋ", "去", "", -3.0, 2, 1}},
+                  {CandidateInput{"ㄌㄧㄠˊ", "撩", "", -4.0, 0, 1}}),
+      "撩"));
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄐㄧㄚˋ", "ㄕˋ", "ㄕˊ", "ㄗㄨˊ"},
+                  {CandidateInput{"ㄐㄧㄚˋ", "價", "", -3.0, 0, 1},
+                   CandidateInput{"ㄕˋ", "是", "", -3.0, 1, 1},
+                   CandidateInput{"ㄕˊ", "十", "", -3.0, 2, 1},
+                   CandidateInput{"ㄗㄨˊ", "足", "", -3.0, 3, 1}},
+                  {CandidateInput{"ㄐㄧㄚˋ", "架", "", -4.0, 0, 1},
+                   CandidateInput{"ㄕˋ", "勢", "", -4.0, 1, 1}}),
+      "架"));
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
+      makeRequest({"ㄐㄧㄚˋ", "ㄕˋ", "ㄕˊ", "ㄗㄨˊ"},
+                  {CandidateInput{"ㄐㄧㄚˋ", "價", "", -3.0, 0, 1},
+                   CandidateInput{"ㄕˋ", "是", "", -3.0, 1, 1},
+                   CandidateInput{"ㄕˊ", "十", "", -3.0, 2, 1},
+                   CandidateInput{"ㄗㄨˊ", "足", "", -3.0, 3, 1}},
+                  {CandidateInput{"ㄐㄧㄚˋ", "架", "", -4.0, 0, 1},
+                   CandidateInput{"ㄕˋ", "勢", "", -4.0, 1, 1}}),
+      "勢"));
+
+  EXPECT_TRUE(hasCorrectionValue(
+      scorer,
       makeRequest({"ㄏㄨㄟˋ", "ㄔㄨ", "CSV"},
                   {CandidateInput{"ㄏㄨㄟˋ-ㄔㄨ", "會出", "", -3.0, 0, 2},
                    CandidateInput{"CSV", "CSV", "", -3.0, 2, 1}},

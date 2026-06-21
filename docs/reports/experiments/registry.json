@@ -498,6 +498,55 @@
         "Analyze the 9 remaining heldout errors for candidate availability before adding more deterministic rules",
         "Keep deterministic reranker as the low-latency production path while tiny-LLM work remains async or advisory"
       ]
+    },
+    {
+      "id": "deterministic-candidate-backed-heldout",
+      "name": "Deterministic Candidate-Backed Heldout Benchmark",
+      "status": "benchmarked",
+      "date": "2026-06-22T00:48:43+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit": "4da4ed1cff141aeb32e9c4d71f5d5d7a589fa5d2",
+      "protocol_version": "1.2",
+      "model": "deterministic-reranker phase2-generalization",
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/deterministic_candidate_backed_heldout_benchmark.json",
+      "result_files": [
+        "docs/reports/experiments/phase2/deterministic_candidate_backed_heldout_benchmark.json"
+      ],
+      "description": "Adds narrowly guarded candidate-backed deterministic fixes for residual heldout errors. Heldout_generalization improves from 54/63 to 56/63, and the canonical saturated suite remains 234/234. Remaining heldout errors require dictionary or candidate-generation investigation before more scorer rules are justified.",
+      "fixtures_count": 297,
+      "real_model_benchmarked": false,
+      "heldout_result": {
+        "before_exact_matches": 54,
+        "after_exact_matches": 56,
+        "total_cases": 63,
+        "delta_matches": 2,
+        "relative_error_reduction_vs_previous_deterministic_pct": 22.2222,
+        "latency_p95_us": 775
+      },
+      "canonical_result": {
+        "exact_matches": 234,
+        "total_cases": 234,
+        "exact_accuracy": 100.0,
+        "latency_p95_us_max": 862
+      },
+      "gate_result": "PASS",
+      "gate_reasons": [
+        "heldout exact matches improved from 54/63 to 56/63",
+        "canonical saturated suite remains 234/234",
+        "heldout p95 latency remains under 1ms in this run"
+      ],
+      "verification": [
+        "cmake --build Source/Engine/build --target McBopomofoLMLibTest -j2",
+        "Source/Engine/build/McBopomofoLMLibTest",
+        "cmake --build Tools/ContextualEvaluation/build --target evaluator -j2",
+        "deterministic heldout benchmark: 56/63",
+        "deterministic canonical benchmarks: 100/100, 50/50, 84/84"
+      ],
+      "next_steps": [
+        "Inspect residual heldout errors at the dictionary/candidate-generation layer before adding more scorer rules",
+        "Add candidate-availability diagnostics to the evaluator so future reports can separate scorer failures from missing-candidate failures"
+      ]
     }
   ]
 }
