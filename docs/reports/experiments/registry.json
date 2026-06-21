@@ -806,6 +806,58 @@
         "Prefer constrained decoding, distilled classifiers, or embedding/classifier rankers for the next learned-scorer experiment",
         "Keep deterministic reranker as the synchronous production-quality baseline"
       ]
+    },
+    {
+      "id": "slm-qwen2-5-0-5b-indices-repair-clean-gate",
+      "name": "qwen2.5:0.5b Index-Repair Clean Gate Benchmark",
+      "status": "benchmarked",
+      "date": "2026-06-22T02:07:00+08:00",
+      "branch": "slm-phase2-learnable",
+      "base_commit": "1bc960d7614b5fc463d32b16b1c8d203a3c905ac",
+      "protocol_version": "1.2",
+      "model": {
+        "model_name": "qwen2.5-0.5b",
+        "provider": "ollama-http",
+        "parameter_count": 500000000,
+        "quantization": "q4_k_m",
+        "candidate_granularity": "character",
+        "prompt_style": "indices",
+        "indices_repair": "baseline-fill",
+        "manifest": "Models/qwen2_5_0_5b_manifest.json",
+        "local_only": true
+      },
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_indices_repair_clean_gate_benchmark.json",
+      "result_files": [
+        "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_indices_repair_clean_gate_benchmark.json"
+      ],
+      "description": "Content-free clean gate benchmark for qwen2.5:0.5b with the local scorer's optional --indices-repair baseline-fill mode. Repair reduces fallbacks from 41 to 34 by converting wrong-length arrays into candidate-bounded outputs when possible, but exact matches stay at 12/57 and p95 latency remains 518524us. The prompt-only tiny LLM path still fails baseline 39/57 and deterministic 57/57.",
+      "fixture": "heldout_generalization_clean",
+      "total_cases": 57,
+      "real_model_benchmarked": true,
+      "result": {
+        "exact_matches": 12,
+        "total_cases": 57,
+        "exact_accuracy": 21.0526,
+        "fallbacks": 34,
+        "latency_p95_us": 518524,
+        "slm_vs_baseline_rer_pct": -150.0,
+        "candidate_validation_cases": 23,
+        "non_candidate_violations": 0
+      },
+      "gate_result": "FAIL",
+      "verification": [
+        "local_llm_scorer.py --self-test",
+        "run_benchmark_suite.py qwen2.5:0.5b with --indices-repair baseline-fill on heldout_generalization_clean",
+        "json.tool /tmp/slm_clean_qwen2_5_0_5b_repair.json",
+        "json.tool /tmp/slm_clean_qwen2_5_0_5b_repair/slm_summary_slm_heldout_generalization_clean.json",
+        "git diff --check"
+      ],
+      "next_steps": [
+        "Keep --indices-repair baseline-fill as a diagnostic hardening mode only",
+        "Stop prompt-only qwen2.5:0.5b reranker experiments for this path",
+        "Move future learned work toward constrained decoding or a fixed-output classifier"
+      ]
     }
   ]
 }

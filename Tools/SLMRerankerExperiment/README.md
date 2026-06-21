@@ -622,15 +622,24 @@ cleaned up after execution.
 
 ### Output Parsing
 
-The wrapper accepts two forms of model output:
+The wrapper accepts three forms of model output:
 
 1. **JSON object** with an `"output"` string field (e.g.,
    `{"output": "再見"}`).
-2. **Raw line** that equals one valid candidate-constrained output.
+2. **JSON object/list** with 1-based candidate indices when
+   `--prompt-style indices` is used (e.g., `{"indices": [2, 1]}` or
+   `[2, 1]`).
+3. **Raw line** that equals one valid candidate-constrained output.
 
 If the output is invalid (empty, not in candidate set, or malformed JSON
 without a matching raw line), the response **omits** the `output` field,
 causing the runner to count a `missing_output_field` fallback.
+
+`--indices-repair baseline-fill` is an optional diagnostic mode for
+candidate-index prompts. If the model emits too few indices, the missing suffix
+is filled from the baseline candidate indices; if it emits too many, extras are
+truncated. Repaired outputs still pass the same candidate validation, and
+non-integer or out-of-range kept indices fail closed.
 
 ### Best-Effort Candidate Prevalidation
 

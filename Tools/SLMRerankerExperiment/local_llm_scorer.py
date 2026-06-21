@@ -43,6 +43,7 @@ PARAM_MAX = 500_000_000
 
 _PROVIDER_CHOICES = ("command", "ollama", "ollama-http")
 _PROMPT_STYLE_CHOICES = ("output", "indices")
+_INDICES_REPAIR_CHOICES = ("none", "baseline-fill")
 
 def validate_request(request):
     """Return (is_valid, error_reason)."""
@@ -479,7 +480,39 @@ def output_from_indices(indices, candidates):
     return "".join(output), None
 
 
-def parse_model_output(raw_output, request):
+def output_from_repaired_indices(indices, candidates, baseline_output,
+                                 repair_mode):
+    """Repair a wrong-length index array, then validate normally."""
+    if repair_mode != "baseline-fill":
+        return None, "indices_length_mismatch"
+
+    non_empty_slots = [slot for slot in candidates or [] if slot]
+    target_len = len(non_empty_slots)
+    baseline_indices = candidate_indices_for_output(baseline_output, candidates)
+    if baseline_indices is None or len(baseline_indices) != target_len:
+        return None, "indices_length_mismatch"
+
+    repaired = list(indices[:target_len])
+    if len(repaired) < target_len:
+        repaired.extend(baseline_indices[len(repaired):])
+    return output_from_indices(repaired, candidates)
+
+
+def output_from_indices_with_repair(indices, request, repair_mode):
+    """Convert model indices to output, optionally repairing length only."""
+    candidates = request.get("candidates")
+    output, err = output_from_indices(indices, candidates)
+    if err != "indices_length_mismatch":
+        return output, err
+    return output_from_repaired_indices(
+        indices,
+        candidates,
+        request.get("baseline_output", ""),
+        repair_mode,
+    )
+
+
+def parse_model_output(raw_output, request, indices_repair="none"):
     """Parse and validate raw model *output*.
 
     The model may emit:
@@ -504,7 +537,9 @@ def parse_model_output(raw_output, request):
             return None, "invalid_json_object"
 
         if isinstance(parsed, list):
-            output, err = output_from_indices(parsed, candidates)
+            output, err = output_from_indices_with_repair(
+                parsed, request, indices_repair
+            )
             if err:
                 return None, err
             return output, None
@@ -520,7 +555,9 @@ def parse_model_output(raw_output, request):
             return None, "output_not_string"
 
         if isinstance(parsed, dict) and "indices" in parsed:
-            output, err = output_from_indices(parsed["indices"], candidates)
+            output, err = output_from_indices_with_repair(
+                parsed["indices"], request, indices_repair
+            )
             if err:
                 return None, err
             return output, None
@@ -540,7 +577,7 @@ def process_request(request, provider, command_template, model_name,
                     manifest, allow_out_of_range, dry_run_baseline,
                     ollama_format_json=True, ollama_keepalive="5m",
                     ollama_url="http://127.0.0.1:11434",
-                    prompt_style="output"):
+                    prompt_style="output", indices_repair="none"):
     """Process a single request and return a response dict.
 
     When the model cannot produce valid output the response **omits** the
@@ -588,7 +625,12 @@ def process_request(request, provider, command_template, model_name,
             "error_reason": "provider_error",
         }
 
-    output, parse_error = parse_model_output(raw_output, request)
+    effective_indices_repair = (
+        indices_repair if prompt_style == "indices" else "none"
+    )
+    output, parse_error = parse_model_output(
+        raw_output, request, indices_repair=effective_indices_repair
+    )
     if parse_error:
         rid = request.get("id", "?")
         print(f"WARN: [{rid}] parse error: {parse_error}", file=sys.stderr)
@@ -670,6 +712,16 @@ def build_arg_parser():
         help="Prompt and parse style: output text or 1-based candidate indices",
     )
     parser.add_argument(
+        "--indices-repair",
+        choices=_INDICES_REPAIR_CHOICES,
+        default="none",
+        help=(
+            "Optional repair for wrong-length candidate index arrays. "
+            "'baseline-fill' pads missing suffix indices from the baseline "
+            "or truncates extra indices; default: none."
+        ),
+    )
+    parser.add_argument(
         "--ollama-format-json",
         action="store_true",
         default=True,
@@ -718,9 +770,56 @@ def run_self_test():
     if output != "BC" or err is not None:
         errors.append(f"indices list parse failed: output={output!r} err={err!r}")
 
+    output, err = parse_model_output("[2]", request)
+    if output is not None or err != "indices_length_mismatch":
+        errors.append(
+            "default index repair changed strict length mismatch behavior: "
+            f"output={output!r} err={err!r}"
+        )
+
+    output, err = parse_model_output(
+        "[2]", request, indices_repair="baseline-fill"
+    )
+    if output != "BC" or err is not None:
+        errors.append(
+            f"baseline-fill short repair failed: output={output!r} err={err!r}"
+        )
+
+    output, err = parse_model_output(
+        '{"indices":[2,1,1]}', request, indices_repair="baseline-fill"
+    )
+    if output != "BC" or err is not None:
+        errors.append(
+            f"baseline-fill long repair failed: output={output!r} err={err!r}"
+        )
+
     output, err = parse_model_output('{"indices":[3,1]}', request)
     if output is not None or err != "index_out_of_range":
         errors.append(f"invalid index accepted: output={output!r} err={err!r}")
+
+    output, err = parse_model_output(
+        '{"indices":[3]}', request, indices_repair="baseline-fill"
+    )
+    if output is not None or err != "index_out_of_range":
+        errors.append(
+            "baseline-fill hid an out-of-range kept index: "
+            f"output={output!r} err={err!r}"
+        )
+
+    bad_baseline_request = {
+        "id": "self-test-bad-baseline",
+        "readings": ["r1", "r2"],
+        "baseline_output": "ZZ",
+        "candidates": [["A", "B"], ["C"]],
+    }
+    output, err = parse_model_output(
+        "[2]", bad_baseline_request, indices_repair="baseline-fill"
+    )
+    if output is not None or err != "indices_length_mismatch":
+        errors.append(
+            "baseline-fill repaired without mappable baseline: "
+            f"output={output!r} err={err!r}"
+        )
 
     prompt = build_prompt(request, prompt_style="indices")
     if '{"indices": [1, 2, 3]}' not in prompt:
@@ -819,6 +918,7 @@ def main():
             ollama_keepalive=args.ollama_keepalive,
             ollama_url=args.ollama_url,
             prompt_style=args.prompt_style,
+            indices_repair=args.indices_repair,
         )
 
     if args.persistent:

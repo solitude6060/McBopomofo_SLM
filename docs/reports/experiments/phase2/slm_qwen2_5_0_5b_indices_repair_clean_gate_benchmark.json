@@ -1,0 +1,100 @@
+{
+  "suite": "slm-qwen2.5-0.5b-indices-repair-clean-gate",
+  "date": "2026-06-22T02:07:00+08:00",
+  "branch": "slm-phase2-learnable",
+  "base_commit": "1bc960d7614b5fc463d32b16b1c8d203a3c905ac",
+  "content_policy": {
+    "raw_case_strings_in_report": false,
+    "raw_benchmark_outputs_location": "/tmp/"
+  },
+  "fixture": {
+    "name": "heldout_generalization_clean",
+    "total_cases": 57,
+    "source": "fixture_hygiene_audit.py --export-clean heldout_generalization"
+  },
+  "scorer": {
+    "mode": "persistent",
+    "prompt_style": "indices",
+    "indices_repair": "baseline-fill",
+    "real_model_benchmarked": true,
+    "candidate_granularity": "character",
+    "model_manifest": {
+      "model_name": "qwen2.5-0.5b",
+      "provider": "ollama",
+      "parameter_count": 500000000,
+      "quantization": "q4_k_m",
+      "license": "apache-2.0",
+      "redistributable": true,
+      "local_only": true
+    }
+  },
+  "reference": {
+    "baseline": {
+      "exact_matches": 39,
+      "total_cases": 57,
+      "exact_accuracy": 68.4211,
+      "latency_microseconds_p95": 2
+    },
+    "deterministic": {
+      "exact_matches": 57,
+      "total_cases": 57,
+      "exact_accuracy": 100.0,
+      "latency_microseconds_p95": 711
+    },
+    "strict_qwen_without_repair": {
+      "exact_matches": 12,
+      "total_cases": 57,
+      "exact_accuracy": 21.0526,
+      "fallbacks": 41,
+      "fallback_reason": "indices_length_mismatch",
+      "latency_microseconds_p95": 668875
+    }
+  },
+  "slm": {
+    "exact_matches": 12,
+    "total_cases": 57,
+    "exact_accuracy": 21.0526,
+    "fallbacks": 34,
+    "errors": 45,
+    "latency_microseconds": {
+      "p50": 275538,
+      "p95": 518524,
+      "p99": 967970
+    },
+    "candidate_validation": {
+      "protocol_available": true,
+      "exercised": true,
+      "cases_with_candidates": 23,
+      "non_candidate_violations": 0
+    },
+    "fallback_breakdown": {
+      "index_out_of_range": 34
+    },
+    "relative_error_reduction_pct": {
+      "vs_baseline": -150.0,
+      "vs_deterministic": 0.0
+    }
+  },
+  "gate_result": "FAIL",
+  "gate_reasons": [
+    "baseline-fill repair reduces fallbacks from 41 to 34 but does not improve exact matches beyond 12/57",
+    "qwen2.5:0.5b remains below baseline 39/57 and deterministic 57/57",
+    "fallbacks 34 > threshold 0, now from index_out_of_range after length repair",
+    "SLM p95 latency 518524us exceeds the 20000us prototype target",
+    "candidate validation still has 0 non-candidate violations"
+  ],
+  "decision": "Keep --indices-repair baseline-fill as an optional diagnostic hardening mode, but do not promote qwen2.5:0.5b prompt-only candidate-index scoring. Repair removes parser strictness as the main uncertainty and shows the model still fails accuracy, fallback, and latency gates.",
+  "verification": [
+    "python3 -m py_compile Tools/SLMRerankerExperiment/local_llm_scorer.py",
+    "python3 Tools/SLMRerankerExperiment/local_llm_scorer.py --self-test",
+    "run_benchmark_suite.py qwen2.5:0.5b with --indices-repair baseline-fill on heldout_generalization_clean using escalated localhost Ollama HTTP access",
+    "python3 -m json.tool /tmp/slm_clean_qwen2_5_0_5b_repair.json",
+    "python3 -m json.tool /tmp/slm_clean_qwen2_5_0_5b_repair/slm_summary_slm_heldout_generalization_clean.json",
+    "git diff --check"
+  ],
+  "next_steps": [
+    "Stop prompt-only qwen2.5:0.5b experiments for this reranker path",
+    "Use constrained decoding only if it can guarantee in-range indices without free-form generation",
+    "Prefer a distilled classifier or deterministic production path for synchronous typing correction"
+  ]
+}
