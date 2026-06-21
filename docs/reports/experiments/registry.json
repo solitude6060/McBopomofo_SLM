@@ -199,21 +199,21 @@
       "id": "deterministic-context-rules",
       "name": "Phase 2 Deterministic Context Rule Improvement",
       "status": "benchmarked",
-      "date": "2026-06-21T14:50:31+08:00",
+      "date": "2026-06-21T14:59:13+08:00",
       "branch": "slm-phase2-learnable",
       "model": null,
       "results_dir": "docs/reports/experiments/phase2/",
       "summary_file": "docs/reports/experiments/phase2/deterministic_context_rules_benchmark.json",
-      "description": "Fixes evaluator correction selection to score-ranked non-overlap selection and adds six narrow deterministic context rules from remaining taiwan_ambiguous failures. Improves deterministic reranker from 170/234 to 174/234 exact matches while staying sub-millisecond at p95.",
+      "description": "Fixes evaluator correction selection to score-ranked non-overlap selection, adds span-aware baseline lookup, and applies narrow deterministic context rules from remaining taiwan_ambiguous failures. Improves deterministic reranker from 170/234 to 176/234 exact matches while staying sub-millisecond at p95.",
       "fixtures_count": 234,
       "real_model_benchmarked": false,
       "result": {
-        "exact_matches": 174,
+        "exact_matches": 176,
         "total_cases": 234,
-        "exact_accuracy": 74.359,
-        "latency_p95_us": 445,
-        "vs_previous_deterministic_errors_corrected": 4,
-        "vs_baseline_errors_corrected": 21
+        "exact_accuracy": 75.2137,
+        "latency_p95_us": 456,
+        "vs_previous_deterministic_errors_corrected": 6,
+        "vs_baseline_errors_corrected": 23
       },
       "gate_result": "PASS for deterministic regression lane; not an SLM gate",
       "verification": [
@@ -224,7 +224,7 @@
       ],
       "next_steps": [
         "For 200M-0.5B tiny models, prefer constrained candidate rankers or a true constrained decoder over free-form prompting",
-        "Investigate whether tw-amb-061 needs dictionary unigram/segmentation support rather than another scorer-only rule",
+        "Investigate whether tw-amb-094 needs candidate coverage/segmentation support rather than another scorer-only rule",
         "Keep deterministic-reranker as the current promotion baseline for any learned or SLM reranker"
       ]
     }

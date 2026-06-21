@@ -1,10 +1,10 @@
 {
   "suite": "phase2-deterministic-context-rules",
-  "date": "2026-06-21T14:50:31+08:00",
+  "date": "2026-06-21T14:59:13+08:00",
   "branch": "slm-phase2-learnable",
   "scorer": {
     "name": "deterministic-reranker",
-    "change": "Score-ranked non-overlap correction selection plus six narrow Phase 2 context rules for remaining Taiwan ambiguous failures",
+    "change": "Score-ranked non-overlap correction selection, span-aware baseline lookup, and narrow Phase 2 context rules for remaining Taiwan ambiguous failures",
     "real_model_benchmarked": false
   },
   "fixtures": {
@@ -31,13 +31,13 @@
     "per_fixture": [
       {
         "fixture": "taiwan_ambiguous",
-        "exact_accuracy": 97.0,
-        "exact_matches": 97,
-        "errors": 3,
+        "exact_accuracy": 99.0,
+        "exact_matches": 99,
+        "errors": 1,
         "latency_us": {
-          "p50": 233,
-          "p95": 475,
-          "p99": 581
+          "p50": 255,
+          "p95": 533,
+          "p99": 665
         },
         "total_cases": 100
       },
@@ -47,9 +47,9 @@
         "exact_matches": 24,
         "errors": 26,
         "latency_us": {
-          "p50": 172,
-          "p95": 395,
-          "p99": 492
+          "p50": 183,
+          "p95": 412,
+          "p99": 533
         },
         "total_cases": 50
       },
@@ -59,48 +59,51 @@
         "exact_matches": 53,
         "errors": 31,
         "latency_us": {
-          "p50": 245,
-          "p95": 428,
-          "p99": 606
+          "p50": 238,
+          "p95": 388,
+          "p99": 552
         },
         "total_cases": 84
       }
     ],
     "aggregate": {
       "total_cases": 234,
-      "exact_accuracy": 74.359,
-      "exact_matches": 174,
-      "errors": 60,
+      "exact_accuracy": 75.2137,
+      "exact_matches": 176,
+      "errors": 58,
       "latency_us": {
-        "p50": 221,
-        "p95": 445,
-        "p99": 555
+        "p50": 232,
+        "p95": 456,
+        "p99": 591
       }
     }
   },
   "deltas": {
     "vs_baseline": {
-      "accuracy_delta_pp": 8.9744,
-      "errors_corrected": 21,
-      "relative_error_reduction_pct": 25.9259
+      "accuracy_delta_pp": 9.8291,
+      "errors_corrected": 23,
+      "relative_error_reduction_pct": 28.3951
     },
     "vs_previous_deterministic": {
-      "accuracy_delta_pp": 1.7094,
-      "errors_corrected": 4,
-      "relative_error_reduction_pct": 6.25
+      "accuracy_delta_pp": 2.5641,
+      "errors_corrected": 6,
+      "relative_error_reduction_pct": 9.375
     }
   },
   "fixed_cases": [
+    "tw-amb-061",
     "tw-amb-062",
     "tw-amb-065",
     "tw-amb-068",
-    "tw-amb-069"
+    "tw-amb-069",
+    "tw-amb-081"
   ],
   "remaining_taiwan_ambiguous_errors": [
-    "tw-amb-061",
-    "tw-amb-081",
     "tw-amb-094"
   ],
+  "remaining_gap": {
+    "tw-amb-094": "Expected 編寫程式很有趣 but current output is 編寫成是很有趣. Data contains 程式 for ㄔㄥˊ-ㄕˋ, but the verified scorer path did not surface a usable correction; treat as candidate coverage/segmentation investigation, not a proven scorer-rule fix."
+  },
   "tiny_llm_context": {
     "best_prompted_tiny_llm_result": "qwen2.5:0.5b candidate-index smoke remains 14/100 on taiwan_ambiguous with p95 514115us and 81 fallbacks",
     "current_fastest_learned_path": "candidate-ranker-v1 character model remains 154/234 with p95 124us",
@@ -115,8 +118,8 @@
     "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl"
   ],
   "raw_outputs": [
-    "/tmp/det_taiwan_ambiguous_phase2_context_rules.jsonl",
-    "/tmp/det_english_mixed_phase2_context_rules.jsonl",
-    "/tmp/det_taiwan_specific_phase2_context_rules.jsonl"
+    "/tmp/det_taiwan_ambiguous_phase2_variant_closeout.jsonl",
+    "/tmp/det_english_mixed_phase2_variant_closeout.jsonl",
+    "/tmp/det_taiwan_specific_phase2_variant_closeout.jsonl"
   ]
 }

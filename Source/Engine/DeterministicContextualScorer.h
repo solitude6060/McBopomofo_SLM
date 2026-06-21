@@ -66,6 +66,9 @@ class DeterministicContextualScorer : public ContextualScorer {
  private:
   std::string baselineValueAt(const ContextualScoreRequest& request,
                               size_t readingIndex) const;
+  std::string baselineValueForSpan(const ContextualScoreRequest& request,
+                                   size_t readingIndex,
+                                   size_t length) const;
   std::string baselineValueBefore(const ContextualScoreRequest& request,
                                   size_t readingIndex) const;
   std::string baselineValueAfter(const ContextualScoreRequest& request,

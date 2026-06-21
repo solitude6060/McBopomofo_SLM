@@ -117,6 +117,30 @@ std::string DeterministicContextualScorer::baselineValueAt(
   return "";
 }
 
+std::string DeterministicContextualScorer::baselineValueForSpan(
+    const ContextualScoreRequest& request, size_t readingIndex,
+    size_t length) const {
+  const size_t end = readingIndex + std::max<size_t>(length, 1);
+  std::string result;
+  for (size_t pos = readingIndex; pos < end;) {
+    const CandidateScoreInput* covering = nullptr;
+    for (const CandidateScoreInput& item : request.baselinePath) {
+      if (pos >= item.start && pos < item.start + item.length) {
+        covering = &item;
+        break;
+      }
+    }
+    if (covering == nullptr) {
+      ++pos;
+      continue;
+    }
+    result += covering->value;
+    size_t next = covering->start + covering->length;
+    pos = next > pos ? next : pos + 1;
+  }
+  return result;
+}
+
 std::string DeterministicContextualScorer::baselineValueBefore(
     const ContextualScoreRequest& request, size_t readingIndex) const {
   const CandidateScoreInput* best = nullptr;
@@ -160,6 +184,8 @@ double DeterministicContextualScorer::ruleDelta(
   const std::string after = baselineValueAfterSpan(
       request, candidate.start, std::max<size_t>(candidate.length, 1));
   const std::string current = baselineValueAt(request, candidate.start);
+  const std::string currentSpan = baselineValueForSpan(
+      request, candidate.start, std::max<size_t>(candidate.length, 1));
   const bool hasProtectedEnglish = !request.protectedEnglishSpans.empty();
 
   if (ruleEnabled("zai-zai") && candidate.value == "再" &&
@@ -280,6 +306,24 @@ double DeterministicContextualScorer::ruleDelta(
 
     if (candidate.value == "圓" && (current == "員" || current.empty()) &&
         contains(before, "很")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-context";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "煙" && (current == "菸" || current.empty()) &&
+        contains(before, "吸")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-context";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "吸煙" &&
+        (currentSpan == "吸菸" || currentSpan.empty()) &&
+        (contains(before, "止") || contains(before, "禁止") ||
+         contains(before, "所"))) {
       if (ruleName != nullptr) {
         *ruleName = "phase2-context";
       }

@@ -292,4 +292,28 @@ TEST(DeterministicScorerTest, Phase2AdjectiveRulesFire) {
   EXPECT_TRUE(foundNew);
 }
 
+TEST(DeterministicScorerTest, Phase2VariantRulesFire) {
+  DeterministicContextualScorer scorer;
+  ContextualScoreRequest req;
+  req.readings = {"ㄐㄧㄣˋ", "ㄓˇ", "ㄒㄧ", "ㄧㄢ"};
+  req.baselinePath.push_back(CandidateInput{"ㄐㄧㄣˋ", "禁", "", -3.0, 0, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄓˇ", "止", "", -3.0, 1, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄒㄧ-ㄧㄢ", "吸菸", "", -3.0, 2, 2});
+  req.candidates.push_back(CandidateInput{"ㄒㄧ-ㄧㄢ", "吸菸", "", -3.0, 2, 2});
+  req.candidates.push_back(CandidateInput{"ㄒㄧ-ㄧㄢ", "吸煙", "", -4.0, 2, 2});
+
+  ScorerOutput out = scorer.suggestCorrections(req);
+  bool foundSmoke = false;
+  for (const auto& c : out.corrections) {
+    if (c.value == "吸煙") {
+      foundSmoke = true;
+      EXPECT_EQ(c.start, 2u);
+      EXPECT_EQ(c.length, 2u);
+      EXPECT_GT(c.scoreDelta, 0.0);
+      break;
+    }
+  }
+  EXPECT_TRUE(foundSmoke);
+}
+
 }  // namespace McBopomofo
