@@ -59,6 +59,29 @@ static std::string trim(const std::string& s) {
   return s.substr(start, end - start);
 }
 
+static std::vector<std::string> splitUTF8Codepoints(const std::string& s) {
+  std::vector<std::string> result;
+  for (size_t i = 0; i < s.size();) {
+    unsigned char c = static_cast<unsigned char>(s[i]);
+    size_t len = 1;
+    if ((c & 0x80) == 0x00) {
+      len = 1;
+    } else if ((c & 0xE0) == 0xC0) {
+      len = 2;
+    } else if ((c & 0xF0) == 0xE0) {
+      len = 3;
+    } else if ((c & 0xF8) == 0xF0) {
+      len = 4;
+    }
+    if (i + len > s.size()) {
+      len = 1;
+    }
+    result.push_back(s.substr(i, len));
+    i += len;
+  }
+  return result;
+}
+
 static std::string unescapeJSON(const std::string& s) {
   std::string out;
   out.reserve(s.size());
@@ -297,6 +320,11 @@ class Evaluator {
      Bigram
    };
 
+   enum class SlmCandidateGranularity {
+     Node,
+     Character
+   };
+
    explicit Evaluator(const char* dataPath, ScorerType scorerType,
                       const std::string& modelPath = "")
        : scorerType_(scorerType), modelPath_(modelPath) {
@@ -330,6 +358,9 @@ class Evaluator {
 
    void setSlmOutput(FILE* f) { slmOutput_ = f; }
    void setSlmCandidateLimit(size_t limit) { slmCandidateLimit_ = limit; }
+   void setSlmCandidateGranularity(SlmCandidateGranularity granularity) {
+     slmCandidateGranularity_ = granularity;
+   }
 
  private:
    struct OutputSegment {
@@ -678,10 +709,56 @@ class Evaluator {
           candidates.resize(slmCandidateLimit_);
         }
       }
-      result.slots.push_back(std::move(candidates));
+      if (slmCandidateGranularity_ == SlmCandidateGranularity::Character) {
+        addCharacterSlotsForSlm(node->value(), candidates, &result.slots);
+      } else {
+        result.slots.push_back(std::move(candidates));
+      }
       readingOffset += length;
     }
     return result;
+  }
+
+  void addCharacterSlotsForSlm(
+      const std::string& baselineValue,
+      const std::vector<std::string>& nodeCandidates,
+      std::vector<std::vector<std::string>>* slots) const {
+    std::vector<std::string> baselineChars = splitUTF8Codepoints(baselineValue);
+    if (baselineChars.empty()) {
+      slots->push_back(nodeCandidates);
+      return;
+    }
+
+    std::vector<std::vector<std::string>> charSlots;
+    std::vector<std::unordered_set<std::string>> seen;
+    charSlots.reserve(baselineChars.size());
+    seen.reserve(baselineChars.size());
+
+    for (const auto& ch : baselineChars) {
+      charSlots.push_back({ch});
+      std::unordered_set<std::string> slotSeen;
+      slotSeen.insert(ch);
+      seen.push_back(std::move(slotSeen));
+    }
+
+    for (const auto& candidate : nodeCandidates) {
+      std::vector<std::string> candidateChars = splitUTF8Codepoints(candidate);
+      if (candidateChars.size() != baselineChars.size()) {
+        continue;
+      }
+      for (size_t i = 0; i < candidateChars.size(); ++i) {
+        if (charSlots[i].size() >= slmCandidateLimit_) {
+          continue;
+        }
+        if (seen[i].insert(candidateChars[i]).second) {
+          charSlots[i].push_back(candidateChars[i]);
+        }
+      }
+    }
+
+    for (auto& slot : charSlots) {
+      slots->push_back(std::move(slot));
+    }
   }
 
   void writeSlmRequest(const TestCase& tc) {
@@ -789,6 +866,8 @@ class Evaluator {
   std::unique_ptr<McBopomofo::ContextualScorer> scorer_;
   FILE* slmOutput_ = nullptr;
   size_t slmCandidateLimit_ = 16;
+  SlmCandidateGranularity slmCandidateGranularity_ =
+      SlmCandidateGranularity::Node;
 };
 
 static std::string escapeJSON(const std::string& s) {
@@ -898,10 +977,11 @@ static void printSummaryJSON(const std::vector<PerCaseResult>& results,
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    fprintf(stderr, "Usage: %s <data.txt> [--scorer baseline|deterministic|bigram] [--model <path>] [--reranker] [--slm-request-output <path>] [--slm-candidate-limit <N>] [test_cases.jsonl]\n", argv[0]);
+    fprintf(stderr, "Usage: %s <data.txt> [--scorer baseline|deterministic|bigram] [--model <path>] [--reranker] [--slm-request-output <path>] [--slm-candidate-limit <N>] [--slm-candidate-granularity node|character] [test_cases.jsonl]\n", argv[0]);
     fprintf(stderr, "  If test_cases.jsonl is omitted, reads from stdin.\n");
     fprintf(stderr, "  --slm-request-output <path>   Write candidate-constrained SLM request JSONL to <path>\n");
     fprintf(stderr, "  --slm-candidate-limit <N>     Max candidates per slot (default 16, always includes baseline)\n");
+    fprintf(stderr, "  --slm-candidate-granularity   Candidate slot export granularity (default node)\n");
     return 1;
   }
 
@@ -916,6 +996,8 @@ int main(int argc, char* argv[]) {
   const char* testCasesPath = nullptr;
   const char* slmRequestOutputPath = nullptr;
   size_t slmCandidateLimit = 16;
+  Evaluator::SlmCandidateGranularity slmCandidateGranularity =
+      Evaluator::SlmCandidateGranularity::Node;
 
   for (int i = 2; i < argc; ++i) {
     if (std::strcmp(argv[i], "--scorer") == 0) {
@@ -969,11 +1051,30 @@ int main(int argc, char* argv[]) {
       slmCandidateLimit = static_cast<size_t>(val);
       continue;
     }
+    if (std::strcmp(argv[i], "--slm-candidate-granularity") == 0) {
+      if (i + 1 >= argc) {
+        fprintf(stderr, "FATAL: --slm-candidate-granularity requires a value\n");
+        return 1;
+      }
+      const char* granularityArg = argv[++i];
+      if (std::strcmp(granularityArg, "node") == 0) {
+        slmCandidateGranularity = Evaluator::SlmCandidateGranularity::Node;
+      } else if (std::strcmp(granularityArg, "character") == 0) {
+        slmCandidateGranularity =
+            Evaluator::SlmCandidateGranularity::Character;
+      } else {
+        fprintf(stderr, "FATAL: unknown --slm-candidate-granularity '%s' (expected node|character)\n",
+                granularityArg);
+        return 1;
+      }
+      continue;
+    }
     testCasesPath = argv[i];
   }
 
   Evaluator evaluator(dataPath, scorerType, modelPath);
   evaluator.setSlmCandidateLimit(slmCandidateLimit);
+  evaluator.setSlmCandidateGranularity(slmCandidateGranularity);
 
   FILE* slmOutput = nullptr;
   if (slmRequestOutputPath != nullptr) {

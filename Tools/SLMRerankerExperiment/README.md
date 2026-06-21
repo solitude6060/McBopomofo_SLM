@@ -289,6 +289,7 @@ in the runner.
 |------|---------|-------------|
 | `--slm-request-output <path>` | (none) | Write candidate-constrained SLM request JSONL to `<path>` |
 | `--slm-candidate-limit <N>` | 16 | Max candidates per slot; the baseline node value is always included |
+| `--slm-candidate-granularity node\|character` | node | Export slots as baseline Viterbi nodes or aligned single-character slots |
 
 ### Generating Requests
 
@@ -297,6 +298,7 @@ cd Tools/ContextualEvaluation
 ./build/evaluator ../../Source/Data/data.txt \
   --slm-request-output /tmp/slm_requests.jsonl \
   --slm-candidate-limit 16 \
+  --slm-candidate-granularity character \
   ../../Tests/fixtures/contextual_bopomofo/taiwan_ambiguous.jsonl
 ```
 

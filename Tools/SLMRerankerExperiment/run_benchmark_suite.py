@@ -113,7 +113,8 @@ def parse_evaluator_output(stdout_text):
 
 
 def run_evaluator(fixture_path, scorer=None, slm_request_output=None,
-                  candidate_limit=16, timeout=120):
+                  candidate_limit=16, slm_candidate_granularity="node",
+                  timeout=120):
     """Run the C++ evaluator subprocess.
 
     Returns (per_case, summary) on success.
@@ -126,6 +127,7 @@ def run_evaluator(fixture_path, scorer=None, slm_request_output=None,
         cmd.extend([
             "--slm-request-output", slm_request_output,
             "--slm-candidate-limit", str(candidate_limit),
+            "--slm-candidate-granularity", slm_candidate_granularity,
         ])
     cmd.append(fixture_path)
 
@@ -388,7 +390,7 @@ def _aggregate_slm_metrics(slm_fixtures, latencies):
 def build_report(baseline_data, deterministic_data, slm_data,
                  fixture_names, fixture_paths, scorer_mode,
                  model_manifest, real_model_benchmarked,
-                 gate_thresholds):
+                 gate_thresholds, slm_candidate_granularity):
     """Assemble the comprehensive suite report dict.
 
     *slm_data* is a list of [{"name": ..., "summary": ...}, ...] per fixture.
@@ -490,6 +492,7 @@ def build_report(baseline_data, deterministic_data, slm_data,
     scorer_info = {
         "mode": scorer_mode,
         "real_model_benchmarked": real_model_benchmarked,
+        "candidate_granularity": slm_candidate_granularity,
     }
     if model_manifest and real_model_benchmarked:
         # Include sanitized manifest fields only
@@ -656,6 +659,12 @@ def build_arg_parser():
         type=int,
         default=16,
         help="Max candidates per slot (default: 16)",
+    )
+    parser.add_argument(
+        "--slm-candidate-granularity",
+        choices=["node", "character"],
+        default="node",
+        help="Candidate slot export granularity (default: node)",
     )
     parser.add_argument(
         "--scorer-command",
@@ -1111,6 +1120,7 @@ def main():
             scorer="deterministic",
             slm_request_output=req_path,
             candidate_limit=args.candidate_limit,
+            slm_candidate_granularity=args.slm_candidate_granularity,
         )
         if not os.path.isfile(req_path):
             raise RuntimeError(f"SLM request export failed: {req_path}")
@@ -1160,7 +1170,7 @@ def main():
         baseline_data, deterministic_data, slm_data,
         fixture_names, fixture_paths, scorer_mode,
         model_manifest, real_model_benchmarked,
-        gate_thresholds,
+        gate_thresholds, args.slm_candidate_granularity,
     )
 
     # -- Output --
