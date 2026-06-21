@@ -5,5 +5,6 @@
 @import Foundation;
 
 #import "KeyHandler.h"
+#import "ContextualRerankerDiagnostics.h"
 #import "LanguageModelManager.h"
 #import "ServiceProviderInputHelper.h"

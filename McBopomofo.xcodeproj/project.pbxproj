@@ -71,6 +71,7 @@
 		D44FB74D2792189A003C80A6 /* PhraseReplacementMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D44FB74B2792189A003C80A6 /* PhraseReplacementMap.cpp */; };
 		D456576E279E4F7B00DF6BC9 /* KeyHandlerInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = D456576D279E4F7B00DF6BC9 /* KeyHandlerInput.swift */; };
 		D461B792279DAC010070E734 /* InputState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D461B791279DAC010070E734 /* InputState.swift */; };
+		D4C0DE222F33A00100D53D7B /* ContextualRerankerDiagnostics.mm in Sources */ = {isa = PBXBuildFile; fileRef = D4C0DE212F33A00100D53D7B /* ContextualRerankerDiagnostics.mm */; };
 		D476CB492827DB6300F48552 /* add-phrase-hook.sh in Resources */ = {isa = PBXBuildFile; fileRef = D476CB482827DB6300F48552 /* add-phrase-hook.sh */; };
 		D47B92C027972AD100458394 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = D47B92BF27972AC800458394 /* main.swift */; };
 		D47D73A427A5D43900255A50 /* KeyHandlerBopomofoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D47D73A327A5D43900255A50 /* KeyHandlerBopomofoTests.swift */; };
@@ -250,6 +251,8 @@
 		D4E33D8E27A838F0006DB1CF /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D4E33D9027A838F4006DB1CF /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D4E33D9127A838F7006DB1CF /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		D4C0DE202F33A00100D53D7B /* ContextualRerankerDiagnostics.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContextualRerankerDiagnostics.h; sourceTree = "<group>"; };
+		D4C0DE212F33A00100D53D7B /* ContextualRerankerDiagnostics.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ContextualRerankerDiagnostics.mm; sourceTree = "<group>"; };
 		D4E569DA27A34CC100AC2CEF /* KeyHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyHandler.h; sourceTree = "<group>"; };
 		D4E569DB27A34CC100AC2CEF /* KeyHandler.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = KeyHandler.mm; sourceTree = "<group>"; };
 		D4E5EEE22E68A9B30068BC58 /* SystemCharacterInfo */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = SystemCharacterInfo; path = Packages/SystemCharacterInfo; sourceTree = "<group>"; };
@@ -337,6 +340,8 @@
 				D41355D6278D7409005E5CBD /* LanguageModelManager.h */,
 				D495583A27A5C6C4006ADE1C /* LanguageModelManager+Privates.h */,
 				D41355D7278D7409005E5CBD /* LanguageModelManager.mm */,
+				D4C0DE202F33A00100D53D7B /* ContextualRerankerDiagnostics.h */,
+				D4C0DE212F33A00100D53D7B /* ContextualRerankerDiagnostics.mm */,
 				D4E569DA27A34CC100AC2CEF /* KeyHandler.h */,
 				D4E569DB27A34CC100AC2CEF /* KeyHandler.mm */,
 				D43FC40A2B23788400ED5A1C /* InputMacro.swift */,
@@ -765,6 +770,7 @@
 				D44FB74D2792189A003C80A6 /* PhraseReplacementMap.cpp in Sources */,
 				D4A13D5A27A59F0B003BE359 /* InputMethodController.swift in Sources */,
 				D44FB74527915565003C80A6 /* Preferences.swift in Sources */,
+				D4C0DE222F33A00100D53D7B /* ContextualRerankerDiagnostics.mm in Sources */,
 				6A660A702EAF371000D53D7B /* ByteBlockBackedDictionary.cpp in Sources */,
 				D4C0DE132F33A00100D53D7B /* DeterministicContextualScorer.cpp in Sources */,
 				6A833E522F0A0FB30086AD0C /* VariantAnnotator.cpp in Sources */,

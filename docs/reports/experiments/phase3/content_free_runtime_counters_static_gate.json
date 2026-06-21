@@ -1,0 +1,41 @@
+{
+  "id": "phase3-content-free-runtime-counters-static-gate",
+  "name": "Phase 3 Content-Free Runtime Counters Static Gate",
+  "status": "partial",
+  "date": "2026-06-22T02:26:08+08:00",
+  "branch": "slm-phase2-learnable",
+  "protocol_version": "1.0",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false,
+    "network_output": false,
+    "persistent_runtime_log": false
+  },
+  "implemented": [
+    "Adds an in-memory ContextualRerankerDiagnostics singleton.",
+    "Records disabled-path counts, enabled attempts, applied corrections, and latency buckets.",
+    "Latency buckets are <2ms, 2-20ms, 20-100ms, and >100ms.",
+    "Preferences.createReport includes aggregate diagnostics only.",
+    "Preferences tests reset diagnostics and assert the zero-count report shape."
+  ],
+  "gate_result": "PARTIAL",
+  "verification": [
+    "static privacy review of diagnostics fields",
+    "json.tool content-free runtime counters report",
+    "json.tool registry",
+    "git diff --check"
+  ],
+  "not_tested": [
+    "xcodebuild because xcodebuild is unavailable in this Linux environment",
+    "swift compiler checks because swift is unavailable in this Linux environment",
+    "manual macOS Preferences.createReport output"
+  ],
+  "next_steps": [
+    "Run macOS tests to confirm Swift can see the ObjC diagnostics class.",
+    "Dogfood deterministic mode and capture only aggregate report lines.",
+    "Use counters to decide whether deterministic mode stays under the interactive latency budget."
+  ]
+}

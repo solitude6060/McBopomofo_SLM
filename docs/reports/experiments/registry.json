@@ -962,6 +962,43 @@
         "Dogfood with the content-free Phase 3 runbook",
         "Add runtime counters before enabling any tiny LLM path"
       ]
+    },
+    {
+      "id": "phase3-content-free-runtime-counters-static-gate",
+      "name": "Phase 3 Content-Free Runtime Counters Static Gate",
+      "status": "partial",
+      "date": "2026-06-22T02:26:08+08:00",
+      "branch": "slm-phase2-learnable",
+      "protocol_version": "1.0",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase3/",
+      "summary_file": "docs/reports/experiments/phase3/content_free_runtime_counters_static_gate.json",
+      "result_files": [
+        "docs/reports/experiments/phase3/content_free_runtime_counters_static_gate.json"
+      ],
+      "description": "Adds an in-memory content-free diagnostics singleton for the experimental reranker runtime. KeyHandler records disabled paths, enabled attempts, applied corrections, and latency buckets only. Preferences.createReport exposes aggregate counters without raw text, readings, candidate strings, committed text, network output, or persistent runtime logs.",
+      "privacy": {
+        "content_free": true,
+        "persistent_runtime_log": false,
+        "network_output": false
+      },
+      "gate_result": "PARTIAL",
+      "verification": [
+        "static privacy review of diagnostics fields",
+        "json.tool content-free runtime counters report",
+        "json.tool registry",
+        "git diff --check"
+      ],
+      "not_tested": [
+        "xcodebuild unavailable in Linux",
+        "swift unavailable in Linux",
+        "manual macOS Preferences.createReport output"
+      ],
+      "next_steps": [
+        "Run macOS xcodebuild and PreferencesTests",
+        "Dogfood deterministic mode with aggregate report lines only",
+        "Use latency bucket counts to validate the interactive budget"
+      ]
     }
   ]
 }

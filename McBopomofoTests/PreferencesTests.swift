@@ -32,6 +32,7 @@ final class PreferencesTests {
         Preferences.allKeys.forEach {
             UserDefaults.standard.removeObject(forKey: $0)
         }
+        ContextualRerankerDiagnostics.reset()
     }
 
     func makeSnapshot() -> [String: Any] {
@@ -216,8 +217,11 @@ final class PreferencesTests {
 
     @Test("Test contextual reranker mode appears in settings report")
     func testContextualRerankerModeReport() {
+        ContextualRerankerDiagnostics.reset()
+
         var report = Preferences.createReport()
         #expect(report.contains("Experimental Contextual Reranker: Off"))
+        #expect(report.contains("Experimental Contextual Reranker Diagnostics: Disabled: 0, Attempts: 0, Applied: 0"))
 
         Preferences.contextualRerankerMode = .deterministic
         report = Preferences.createReport()

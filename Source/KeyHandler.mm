@@ -22,6 +22,7 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 #import "KeyHandler.h"
+#import "ContextualRerankerDiagnostics.h"
 #import "Engine/DeterministicContextualScorer.h"
 #import "LanguageModelManager+Privates.h"
 #import "Mandarin.h"
@@ -32,6 +33,7 @@
 #import "reading_grid.h"
 
 #import <algorithm>
+#import <chrono>
 #import <optional>
 #import <sstream>
 #import <string>
@@ -184,9 +186,17 @@ static constexpr NSInteger kContextualRerankerModeDeterministic = 1;
 
 - (void)_applyDeterministicContextualRerankerIfEnabled
 {
-    if (![self _deterministicContextualRerankerEnabled] || _grid == nullptr || !_grid->length()) {
+    if (![self _deterministicContextualRerankerEnabled]) {
+        [ContextualRerankerDiagnostics recordDisabledPath];
         return;
     }
+
+    if (_grid == nullptr || !_grid->length()) {
+        return;
+    }
+
+    const auto startTime = std::chrono::steady_clock::now();
+    bool appliedCorrection = false;
 
     McBopomofo::ContextualScoreRequest request;
     request.readings = _grid->readings();
@@ -217,6 +227,9 @@ static constexpr NSInteger kContextualRerankerModeDeterministic = 1;
 
     McBopomofo::ScorerOutput scorerOutput = _deterministicContextualScorer->suggestCorrections(request);
     if (scorerOutput.corrections.empty()) {
+        const auto endTime = std::chrono::steady_clock::now();
+        const auto elapsedMicroseconds = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
+        [ContextualRerankerDiagnostics recordAttemptWithAppliedCorrection:NO elapsedMicroseconds:(uint64_t)elapsedMicroseconds];
         return;
     }
 
@@ -259,7 +272,12 @@ static constexpr NSInteger kContextualRerankerModeDeterministic = 1;
 
     if (overridden) {
         [self _walk];
+        appliedCorrection = true;
     }
+
+    const auto endTime = std::chrono::steady_clock::now();
+    const auto elapsedMicroseconds = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
+    [ContextualRerankerDiagnostics recordAttemptWithAppliedCorrection:appliedCorrection elapsedMicroseconds:(uint64_t)elapsedMicroseconds];
 }
 
 - (void)fixNodeWithReading:(NSString *)reading value:(NSString *)value originalCursorIndex:(size_t)originalCursorIndex useMoveCursorAfterSelectionSetting:(BOOL)flag

@@ -3,4 +3,5 @@
 //  expose to Swift.
 //
 
+#import "ContextualRerankerDiagnostics.h"
 #import "ServiceProviderInputHelper.h"

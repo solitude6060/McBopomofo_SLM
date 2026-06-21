@@ -679,6 +679,9 @@ extension Preferences {
         lines.append(
             "  - Experimental Contextual Reranker: \(Preferences.contextualRerankerMode.name)"
         )
+        lines.append(
+            "  - Experimental Contextual Reranker Diagnostics: \(ContextualRerankerDiagnostics.diagnosticReport())"
+        )
 
         lines.append("  - Letter Keys: \(Preferences.letterBehavior)")
         lines.append("  - Ctrl + Enter Key: \(Preferences.controlEnterOutput.name)")
