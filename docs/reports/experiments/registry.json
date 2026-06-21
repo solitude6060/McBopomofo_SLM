@@ -595,6 +595,52 @@
         "Inspect the remaining deterministic failure with expected CJK characters present but no complete candidate-slot reconstruction path",
         "Future scorer improvements can now be evaluated against separate candidate-slot availability and missing-candidate counts"
       ]
+    },
+    {
+      "id": "deterministic-xiang-preposition-heldout",
+      "name": "Deterministic Xiang Preposition Heldout Benchmark",
+      "status": "verified",
+      "date": "2026-06-22T01:20:00+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit": "d1fbc2a8abc60996b82362a4d06a38f389fb5261",
+      "protocol_version": "1.0",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/deterministic_xiang_preposition_heldout_benchmark.json",
+      "result_files": [
+        "docs/reports/experiments/phase2/deterministic_xiang_preposition_heldout_benchmark.json"
+      ],
+      "description": "Adds one narrow phase2-generalization rule for the last same-reading heldout scorer-selection failure. Fixture and data files are unchanged. Heldout_generalization improves from 56/63 to 57/63, canonical remains 234/234, and measured p95 latencies stay below 2ms.",
+      "heldout_result": {
+        "before_exact_matches": 56,
+        "after_exact_matches": 57,
+        "total_cases": 63,
+        "delta_matches": 1,
+        "latency_p95_us": 1107
+      },
+      "canonical_result": {
+        "exact_matches": 234,
+        "total_cases": 234,
+        "exact_accuracy": 100.0,
+        "latency_p95_us_max": 1112
+      },
+      "gate_result": "PASS",
+      "gate_reasons": [
+        "heldout exact matches improved from 56/63 to 57/63",
+        "canonical saturated suite remains 234/234",
+        "all measured p95 latencies remain below 2ms"
+      ],
+      "verification": [
+        "cmake --build Source/Engine/build --target McBopomofoLMLibTest -j2",
+        "Source/Engine/build/McBopomofoLMLibTest: 119 passed, 2 skipped",
+        "cmake --build Tools/ContextualEvaluation/build --target evaluator -j2",
+        "deterministic heldout with --candidate-diagnostics: 57/63",
+        "deterministic canonical with --candidate-diagnostics: 100/100, 50/50, 84/84"
+      ],
+      "next_steps": [
+        "Add a content-free fixture hygiene audit before using heldout_generalization as a promotion gate",
+        "Do not add broader scorer rules for the six remaining reading/fixture hygiene failures"
+      ]
     }
   ]
 }
