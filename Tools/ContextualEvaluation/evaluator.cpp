@@ -503,33 +503,55 @@ class Evaluator {
      }
 
      std::vector<double> deltas = scorer_->scoreDeltas(request);
-     std::vector<Correction> selected;
-     std::vector<bool> occupied(grid.length(), false);
-     
+     std::vector<Correction> viable;
+
      for (size_t i = 0; i < deltas.size(); ++i) {
        if (deltas[i] <= 0.0) continue;
-       
+
        const auto& candidate = request.candidates[i];
        size_t start = candidate.start;
        size_t length = candidate.length;
-       
-       if (length == 0 || start + length > occupied.size()) {
+
+       if (length == 0 || start + length > grid.length()) {
          continue;
        }
-       
+
+       if (candidate.value == baselineValueAt(request, start)) {
+         continue;
+       }
+
+       viable.push_back(Correction{
+           i, start, length, candidate.reading, candidate.value, deltas[i]});
+     }
+
+     std::stable_sort(
+         viable.begin(), viable.end(),
+         [](const Correction& a, const Correction& b) {
+           if (a.scoreDelta != b.scoreDelta) {
+             return a.scoreDelta > b.scoreDelta;
+           }
+           if (a.length != b.length) {
+             return a.length > b.length;
+           }
+           return a.candidateIndex < b.candidateIndex;
+         });
+
+     std::vector<Correction> selected;
+     std::vector<bool> occupied(grid.length(), false);
+     for (const auto& correction : viable) {
        bool overlaps = false;
-       for (size_t j = start; j < start + length; ++j) {
+       for (size_t j = correction.start;
+            j < correction.start + correction.length; ++j) {
          overlaps = overlaps || occupied[j];
        }
        if (overlaps) {
          continue;
        }
-       
-       selected.push_back(Correction{
-         i, start, length, candidate.reading, candidate.value, deltas[i]
-       });
-       
-       for (size_t j = start; j < start + length; ++j) {
+
+       selected.push_back(correction);
+
+       for (size_t j = correction.start;
+            j < correction.start + correction.length; ++j) {
          occupied[j] = true;
        }
      }
@@ -557,6 +579,18 @@ class Evaluator {
        *walkResult = grid.walk();
      }
    }
+
+  std::string baselineValueAt(
+      const McBopomofo::ContextualScoreRequest& request,
+      size_t readingIndex) const {
+    for (const auto& item : request.baselinePath) {
+      if (readingIndex >= item.start &&
+          readingIndex < item.start + item.length) {
+        return item.value;
+      }
+    }
+    return "";
+  }
 
   static std::string joinSegments(const std::vector<OutputSegment>& segments) {
     std::string output;

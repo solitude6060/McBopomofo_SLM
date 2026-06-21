@@ -194,6 +194,39 @@
         "Prefer non-generative candidate rankers or a true constrained decoder",
         "Gate: SLM must beat deterministic reranker before Phase 3"
       ]
+    },
+    {
+      "id": "deterministic-context-rules",
+      "name": "Phase 2 Deterministic Context Rule Improvement",
+      "status": "benchmarked",
+      "date": "2026-06-21T14:50:31+08:00",
+      "branch": "slm-phase2-learnable",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/deterministic_context_rules_benchmark.json",
+      "description": "Fixes evaluator correction selection to score-ranked non-overlap selection and adds six narrow deterministic context rules from remaining taiwan_ambiguous failures. Improves deterministic reranker from 170/234 to 174/234 exact matches while staying sub-millisecond at p95.",
+      "fixtures_count": 234,
+      "real_model_benchmarked": false,
+      "result": {
+        "exact_matches": 174,
+        "total_cases": 234,
+        "exact_accuracy": 74.359,
+        "latency_p95_us": 445,
+        "vs_previous_deterministic_errors_corrected": 4,
+        "vs_baseline_errors_corrected": 21
+      },
+      "gate_result": "PASS for deterministic regression lane; not an SLM gate",
+      "verification": [
+        "cmake --build Source/Engine/build",
+        "cmake --build Tools/ContextualEvaluation/build",
+        "Source/Engine/build/McBopomofoLMLibTest",
+        "deterministic evaluator on taiwan_ambiguous, english_mixed, taiwan_specific"
+      ],
+      "next_steps": [
+        "For 200M-0.5B tiny models, prefer constrained candidate rankers or a true constrained decoder over free-form prompting",
+        "Investigate whether tw-amb-061 needs dictionary unigram/segmentation support rather than another scorer-only rule",
+        "Keep deterministic-reranker as the current promotion baseline for any learned or SLM reranker"
+      ]
     }
   ]
 }

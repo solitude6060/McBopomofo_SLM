@@ -1,0 +1,122 @@
+{
+  "suite": "phase2-deterministic-context-rules",
+  "date": "2026-06-21T14:50:31+08:00",
+  "branch": "slm-phase2-learnable",
+  "scorer": {
+    "name": "deterministic-reranker",
+    "change": "Score-ranked non-overlap correction selection plus six narrow Phase 2 context rules for remaining Taiwan ambiguous failures",
+    "real_model_benchmarked": false
+  },
+  "fixtures": {
+    "taiwan_ambiguous": 100,
+    "english_mixed": 50,
+    "taiwan_specific": 84,
+    "total": 234
+  },
+  "baseline_reference": {
+    "source": "docs/reports/experiments/phase2/candidate_ranker_seed_char_benchmark.json",
+    "exact_matches": 153,
+    "total_cases": 234,
+    "exact_accuracy": 65.3846,
+    "errors": 81
+  },
+  "previous_deterministic_reference": {
+    "source": "docs/reports/experiments/phase2/candidate_ranker_seed_char_benchmark.json",
+    "exact_matches": 170,
+    "total_cases": 234,
+    "exact_accuracy": 72.6496,
+    "errors": 64
+  },
+  "current_deterministic": {
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_accuracy": 97.0,
+        "exact_matches": 97,
+        "errors": 3,
+        "latency_us": {
+          "p50": 233,
+          "p95": 475,
+          "p99": 581
+        },
+        "total_cases": 100
+      },
+      {
+        "fixture": "english_mixed",
+        "exact_accuracy": 48.0,
+        "exact_matches": 24,
+        "errors": 26,
+        "latency_us": {
+          "p50": 172,
+          "p95": 395,
+          "p99": 492
+        },
+        "total_cases": 50
+      },
+      {
+        "fixture": "taiwan_specific",
+        "exact_accuracy": 63.0952,
+        "exact_matches": 53,
+        "errors": 31,
+        "latency_us": {
+          "p50": 245,
+          "p95": 428,
+          "p99": 606
+        },
+        "total_cases": 84
+      }
+    ],
+    "aggregate": {
+      "total_cases": 234,
+      "exact_accuracy": 74.359,
+      "exact_matches": 174,
+      "errors": 60,
+      "latency_us": {
+        "p50": 221,
+        "p95": 445,
+        "p99": 555
+      }
+    }
+  },
+  "deltas": {
+    "vs_baseline": {
+      "accuracy_delta_pp": 8.9744,
+      "errors_corrected": 21,
+      "relative_error_reduction_pct": 25.9259
+    },
+    "vs_previous_deterministic": {
+      "accuracy_delta_pp": 1.7094,
+      "errors_corrected": 4,
+      "relative_error_reduction_pct": 6.25
+    }
+  },
+  "fixed_cases": [
+    "tw-amb-062",
+    "tw-amb-065",
+    "tw-amb-068",
+    "tw-amb-069"
+  ],
+  "remaining_taiwan_ambiguous_errors": [
+    "tw-amb-061",
+    "tw-amb-081",
+    "tw-amb-094"
+  ],
+  "tiny_llm_context": {
+    "best_prompted_tiny_llm_result": "qwen2.5:0.5b candidate-index smoke remains 14/100 on taiwan_ambiguous with p95 514115us and 81 fallbacks",
+    "current_fastest_learned_path": "candidate-ranker-v1 character model remains 154/234 with p95 124us",
+    "recommendation": "Use constrained candidate rankers or a true constrained decoder for 200M-0.5B models; free-form tiny LLM prompting is currently both slower and less accurate than deterministic rules"
+  },
+  "verification": [
+    "cmake --build Source/Engine/build",
+    "cmake --build Tools/ContextualEvaluation/build",
+    "Source/Engine/build/McBopomofoLMLibTest",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/taiwan_ambiguous.jsonl",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/english_mixed.jsonl",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl"
+  ],
+  "raw_outputs": [
+    "/tmp/det_taiwan_ambiguous_phase2_context_rules.jsonl",
+    "/tmp/det_english_mixed_phase2_context_rules.jsonl",
+    "/tmp/det_taiwan_specific_phase2_context_rules.jsonl"
+  ]
+}

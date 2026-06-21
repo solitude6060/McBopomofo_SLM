@@ -221,4 +221,75 @@ TEST(DeterministicScorerTest, TechTermListIncludesCommonTerms) {
   EXPECT_TRUE(found);
 }
 
+TEST(DeterministicScorerTest, Phase2TaiwanAmbiguousRulesFire) {
+  DeterministicContextualScorer scorer;
+  ContextualScoreRequest req;
+  req.readings = {"ㄧㄡˇ", "ㄕˊ", "ㄍㄜ˙"};
+  req.baselinePath.push_back(CandidateInput{"ㄧㄡˇ", "有", "", -3.0, 0, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄕˊ", "時", "", -3.0, 1, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄍㄜ˙", "個", "", -3.0, 2, 1});
+  req.candidates.push_back(CandidateInput{"ㄕˊ", "時", "", -3.0, 1, 1});
+  req.candidates.push_back(CandidateInput{"ㄕˊ", "十", "", -4.0, 1, 1});
+
+  ScorerOutput out = scorer.suggestCorrections(req);
+  bool foundTen = false;
+  for (const auto& c : out.corrections) {
+    if (c.value == "十") {
+      foundTen = true;
+      EXPECT_EQ(c.start, 1u);
+      EXPECT_GT(c.scoreDelta, 0.0);
+      break;
+    }
+  }
+  EXPECT_TRUE(foundTen);
+}
+
+TEST(DeterministicScorerTest, Phase2PhraseRulesFire) {
+  DeterministicContextualScorer scorer;
+  ContextualScoreRequest req;
+  req.readings = {"ㄗˋ", "ㄐㄧˇ", "ㄉㄨㄥˋ", "ㄕㄡˇ", "ㄗㄨㄛˋ", "ㄅㄧˇ"};
+  req.baselinePath.push_back(CandidateInput{"ㄗˋ", "自", "", -3.0, 0, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄐㄧˇ", "己", "", -3.0, 1, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄉㄨㄥˋ", "動", "", -3.0, 2, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄕㄡˇ", "手", "", -3.0, 3, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄗㄨㄛˋ", "作", "", -3.0, 4, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄅㄧˇ", "比", "", -3.0, 5, 1});
+  req.candidates.push_back(CandidateInput{"ㄗㄨㄛˋ", "作", "", -3.0, 4, 1});
+  req.candidates.push_back(CandidateInput{"ㄗㄨㄛˋ", "做", "", -4.0, 4, 1});
+
+  ScorerOutput out = scorer.suggestCorrections(req);
+  bool foundDo = false;
+  for (const auto& c : out.corrections) {
+    if (c.value == "做") {
+      foundDo = true;
+      EXPECT_EQ(c.start, 4u);
+      EXPECT_GT(c.scoreDelta, 0.0);
+      break;
+    }
+  }
+  EXPECT_TRUE(foundDo);
+}
+
+TEST(DeterministicScorerTest, Phase2AdjectiveRulesFire) {
+  DeterministicContextualScorer scorer;
+  ContextualScoreRequest req;
+  req.readings = {"ㄏㄣˇ", "ㄒㄧㄣ"};
+  req.baselinePath.push_back(CandidateInput{"ㄏㄣˇ", "很", "", -3.0, 0, 1});
+  req.baselinePath.push_back(CandidateInput{"ㄒㄧㄣ", "心", "", -3.0, 1, 1});
+  req.candidates.push_back(CandidateInput{"ㄒㄧㄣ", "心", "", -3.0, 1, 1});
+  req.candidates.push_back(CandidateInput{"ㄒㄧㄣ", "新", "", -4.0, 1, 1});
+
+  ScorerOutput out = scorer.suggestCorrections(req);
+  bool foundNew = false;
+  for (const auto& c : out.corrections) {
+    if (c.value == "新") {
+      foundNew = true;
+      EXPECT_EQ(c.start, 1u);
+      EXPECT_GT(c.scoreDelta, 0.0);
+      break;
+    }
+  }
+  EXPECT_TRUE(foundNew);
+}
+
 }  // namespace McBopomofo

@@ -204,6 +204,15 @@ double DeterministicContextualScorer::ruleDelta(
       return 11.0;
     }
 
+    if (candidate.value == "做" && (current == "作" || current.empty()) &&
+        (contains(before, "手") || contains(before, "動手")) &&
+        (contains(after, "比") || contains(after, "比較"))) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-context";
+      }
+      return 11.0;
+    }
+
     if (candidate.value == "遍" && (current == "變" || current.empty()) &&
         (contains(before, "一") || contains(before, "讀"))) {
       if (ruleName != nullptr) {
@@ -241,6 +250,40 @@ double DeterministicContextualScorer::ruleDelta(
         *ruleName = "phase1-homophone";
       }
       return 9.0;
+    }
+
+    if (candidate.value == "十" &&
+        (current == "時" || contains(current, "時") || current.empty()) &&
+        contains(after, "個")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-context";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "新" && (current == "心" || current.empty()) &&
+        contains(before, "很")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-context";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "畫" && (current == "化" || current.empty()) &&
+        (contains(before, "圈") || contains(before, "圓圈")) &&
+        (contains(after, "得") || contains(after, "的"))) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-context";
+      }
+      return 11.0;
+    }
+
+    if (candidate.value == "圓" && (current == "員" || current.empty()) &&
+        contains(before, "很")) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-context";
+      }
+      return 11.0;
     }
   }
 
@@ -295,6 +338,15 @@ double DeterministicContextualScorer::ruleDelta(
         (after.empty() || contains(after, "養成"))) {
       if (ruleName != nullptr) {
         *ruleName = "phase1-bigram";
+      }
+      return 14.0;
+    }
+
+    if (candidate.value == "繼承" &&
+        (current == "計程" || current.empty()) &&
+        (after.empty() || contains(after, "了"))) {
+      if (ruleName != nullptr) {
+        *ruleName = "phase2-bigram";
       }
       return 14.0;
     }
