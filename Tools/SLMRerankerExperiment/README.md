@@ -521,6 +521,21 @@ independent seed split for exercising this path. It is not part of the 234-case
 benchmark suite and uses `ranker-train-` ids so contamination checks can keep it
 separate from held-out benchmark fixtures.
 
+Use `analyze_candidate_ranker.py` on exported SLM request JSONL files to
+diagnose ranker coverage without storing text outputs in the report:
+
+```bash
+python3 analyze_candidate_ranker.py \
+  --model Models/candidate_ranker_seed.json \
+  --requests /tmp/slm_taiwan_ambiguous.jsonl /tmp/slm_english_mixed.jsonl \
+  --output /tmp/candidate_ranker_analysis.json
+```
+
+The analysis report tracks changed cases, improved/regressed counts, candidate
+coverage, multi-character candidate-slot rate, and feature coverage. High
+multi-character slot rates mean the exported candidate lattice is often too
+coarse for single-character homophone learning.
+
 ```json
 {
   "model_name": "qwen2.5-0.5b",
