@@ -56,6 +56,22 @@ def validate_request(request):
         return False, "missing required field: baseline_output"
     return True, ""
 
+
+def enumerate_valid_outputs(candidates, limit=64):
+    """Return every candidate-constrained output when the product is small."""
+    if not candidates:
+        return []
+
+    outputs = [""]
+    for slot in candidates:
+        if not slot:
+            continue
+        if len(outputs) * len(slot) > limit:
+            return []
+        outputs = [prefix + cand for prefix in outputs for cand in slot]
+
+    return outputs
+
 def load_manifest(path):
     """Load and validate a model manifest JSON file.
 
@@ -113,6 +129,8 @@ def build_prompt(request):
 
     The prompt is built in memory and never written to disk unless the
     caller explicitly uses ``{prompt_file}`` in the command template.
+    The prompt explicitly requests a JSON response to facilitate strict
+    output parsing.
     """
     readings = request.get("readings", [])
     baseline = request.get("baseline_output", "")
@@ -126,8 +144,22 @@ def build_prompt(request):
             cand_lines.append(f"  Position {idx + 1}: {', '.join(slot)}")
         parts.append("Candidates per position:\n" + "\n".join(cand_lines))
 
+        valid_outputs = enumerate_valid_outputs(candidates)
+        if valid_outputs:
+            valid_lines = [f"  - {out}" for out in valid_outputs]
+            parts.append("Valid full outputs (copy exactly one):\n" + "\n".join(valid_lines))
+
     parts.append(f"Engine baseline: {baseline}")
-    parts.append("Task: Select the correct Traditional Chinese output sequence from the candidates above.")
+    parts.append(
+        "Task: Select the correct Traditional Chinese output sequence.\n"
+        "Rules:\n"
+        "- Choose exactly one candidate from each position, in order.\n"
+        "- Candidate text values are the only allowed output tokens.\n"
+        "- Never output readings, Bopomofo symbols, pinyin, English, explanations, markdown, or alternatives.\n"
+        "- Only use the baseline as a fallback if uncertain.\n"
+        "- Return a single JSON object in exactly this format:\n"
+        '  {"output": "<your selection>"}'
+    )
     parts.append("Output:")
     return "\n".join(parts)
 
@@ -230,13 +262,33 @@ def run_command_provider(prompt, command_template):
     return _run_subprocess(cmd_list, stdin_input=prompt, timeout=120)
 
 
-def run_ollama_provider(prompt, model_name):
-    """Run ``ollama run <model>`` with *prompt* piped to stdin."""
-    return _run_subprocess(
-        ["ollama", "run", model_name],
-        stdin_input=prompt,
-        timeout=120,
-    )
+def run_ollama_provider(prompt, model_name, format_json=True, keepalive="5m"):
+    """Run ``ollama run <model>`` with *prompt* piped to stdin.
+
+    When *format_json* is True (default), passes ``--format json`` to
+    ``ollama run``. Some Ollama modes return the model text inside a
+    ``response`` envelope, so that field is unwrapped when present.
+    *keepalive* sets the model load keepalive duration (default ``"5m"``).
+    """
+    cmd = ["ollama", "run", model_name]
+    if format_json:
+        cmd.extend(["--format", "json"])
+    cmd.extend(["--keepalive", keepalive])
+
+    raw_output, error = _run_subprocess(cmd, stdin_input=prompt, timeout=120)
+    if error or not raw_output:
+        return raw_output, error
+
+    if format_json:
+        try:
+            envelope = json.loads(raw_output)
+        except json.JSONDecodeError:
+            pass
+        else:
+            if isinstance(envelope, dict) and "response" in envelope:
+                return envelope["response"], None
+
+    return raw_output, error
 
 def validate_candidates_simple(output, candidates):
     """Best-effort prevalidation that *output* can be formed from *candidates*.
@@ -306,7 +358,8 @@ def parse_model_output(raw_output, request):
     return None, "output does not match any valid candidate-constrained form"
 
 def process_request(request, provider, command_template, model_name,
-                    manifest, allow_out_of_range, dry_run_baseline):
+                    manifest, allow_out_of_range, dry_run_baseline,
+                    ollama_format_json=True, ollama_keepalive="5m"):
     """Process a single request and return a response dict.
 
     When the model cannot produce valid output the response **omits** the
@@ -331,7 +384,11 @@ def process_request(request, provider, command_template, model_name,
     if provider == "command":
         raw_output, error = run_command_provider(prompt, command_template)
     elif provider == "ollama":
-        raw_output, error = run_ollama_provider(prompt, model_name)
+        raw_output, error = run_ollama_provider(
+            prompt, model_name,
+            format_json=ollama_format_json,
+            keepalive=ollama_keepalive,
+        )
 
     elapsed = int((time.perf_counter() - start) * 1_000_000)
 
@@ -411,6 +468,27 @@ def build_arg_parser():
         action="store_true",
         help="Dry-run baseline mode: return baseline_output without invoking any model",
     )
+    parser.add_argument(
+        "--ollama-format-json",
+        action="store_true",
+        default=True,
+        dest="ollama_format_json",
+        help="Pass --format json to ollama run and expect JSON output "
+             "(default: true for --provider ollama)",
+    )
+    parser.add_argument(
+        "--no-ollama-format-json",
+        action="store_false",
+        dest="ollama_format_json",
+        help="Disable --format json for ollama run",
+    )
+    parser.add_argument(
+        "--ollama-keepalive",
+        type=str,
+        default="5m",
+        metavar="DURATION",
+        help="Keepalive duration for ollama run (default: 5m)",
+    )
     return parser
 
 
@@ -476,6 +554,8 @@ def main():
             manifest=manifest,
             allow_out_of_range=manifest_out_of_range,
             dry_run_baseline=args.dry_run_baseline,
+            ollama_format_json=args.ollama_format_json,
+            ollama_keepalive=args.ollama_keepalive,
         )
 
     if args.persistent:

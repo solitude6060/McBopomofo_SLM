@@ -381,6 +381,8 @@ python3 local_llm_scorer.py [options]
 | `--model-manifest` | (none) | Path to model manifest JSON |
 | `--allow-out-of-range-model` | false | Bypass [200M, 500M] parameter check |
 | `--dry-run-baseline` | false | Return `baseline_output` without model invocation |
+| `--ollama-format-json` | true | Pass `--format json` to `ollama run` for structured JSON output. Use `--no-ollama-format-json` to disable. |
+| `--ollama-keepalive` | `5m` | Keepalive duration for `ollama run` (e.g., `5m`, `10m`, `0`) |
 
 ### Providers
 
@@ -417,11 +419,37 @@ server-backed and warm. For the Phase 2 latency gate, prefer
 `--provider command` pointed at a persistent/server-backed local tiny model
 runtime, or add a dedicated provider that keeps the model loaded.
 
+By default the wrapper passes `--format json` to `ollama run` (controlled by
+`--ollama-format-json` / `--no-ollama-format-json`) and sets a 5-minute
+keepalive (`--ollama-keepalive 5m`).  When `--format json` is active, Ollama
+encourages the model to return a JSON object directly. Some Ollama modes wrap
+model text in a `response` field; the wrapper extracts that field when present
+and otherwise parses the returned JSON directly. This mode improves
+compatibility with the strict JSON parser but does **not** guarantee output
+accuracy - models may still produce incorrect output.
+
+The `--no-ollama-format-json` flag is provided in case a model or Ollama
+version has compatibility issues with `--format json`.  When disabled, the
+wrapper receives raw text output and applies the same two-stage parse
+(JSON object first, then raw candidate match).
+
 ```bash
-# Query a 0.5B model (must be pre-installed)
+# Query a 0.5B model with default JSON format output (must be pre-installed)
 python3 local_llm_scorer.py \
   --provider ollama \
   --model qwen2.5:0.5b
+
+# Disable JSON format for models that do not support it cleanly
+python3 local_llm_scorer.py \
+  --provider ollama \
+  --model qwen2.5:0.5b \
+  --no-ollama-format-json
+
+# Custom keepalive for long-running persistent sessions
+python3 local_llm_scorer.py \
+  --provider ollama \
+  --model qwen2.5:0.5b \
+  --ollama-keepalive 10m
 ```
 
 ### Model Manifest
