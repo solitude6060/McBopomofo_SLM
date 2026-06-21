@@ -229,6 +229,52 @@
         "Expand held-out/generalization fixtures because the current 234-case suite is saturated",
         "Keep 234/234 deterministic-reranker as the current promotion baseline; tiny LLMs must match it here and win on new held-out cases or provide a clear latency/capability advantage"
       ]
+    },
+    {
+      "id": "heldout-generalization-benchmark",
+      "name": "Heldout Generalization Fixture & Baseline",
+      "status": "benchmarked",
+      "date": "2026-06-21T23:40:53+08:00",
+      "branch": "slm-phase2-learnable",
+      "base_commit": "f757d01",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/heldout_generalization_benchmark.json",
+      "result_files": [
+        "docs/reports/experiments/phase2/heldout_generalization_benchmark.json"
+      ],
+      "description": "63-case held-out generalization fixture with 6 categories (homophone 12, taiwan_specific 10, english_mixed 10, slang 10, punctuation_spacing 10, stress_test 11). Baseline evaluator scores 39/63 (61.9%); deterministic reranker scores 41/63 (65.1%) with p95 837us. The 234-case saturated suite is at 234/234 deterministic; this fixture provides held-out headroom (22 remaining errors) for tiny-LLM or improved reranker evaluation.",
+      "fixtures": {
+        "heldout_generalization": 63,
+        "total": 63
+      },
+      "baseline": {
+        "exact_matches": 39,
+        "total_cases": 63,
+        "exact_accuracy": 61.9,
+        "latency_p95_us": 4
+      },
+      "deterministic": {
+        "exact_matches": 41,
+        "total_cases": 63,
+        "exact_accuracy": 65.1,
+        "latency_p95_us": 837,
+        "vs_baseline_errors_corrected": 2
+      },
+      "saturation_gate": "The 234-case suite is saturated at 234/234 (deterministic). The heldout fixture provides the only remaining headroom for reranker improvement. Candidate rerankers must maintain 234/234 on the saturated suite AND beat deterministic 41/63 (65.1%) on heldout_generalization.",
+      "verification": [
+        "python3 JSONL parse validation",
+        "evaluator baseline on heldout_generalization (39/63, p95 4us, 0 missing_readings)",
+        "evaluator deterministic on heldout_generalization (41/63, p95 837us, 0 missing_readings)",
+        "py_compile run_benchmark_suite.py",
+        "run_benchmark_suite.py --self-test",
+        "run_benchmark_suite.py --dry-run-local-wrapper --fixtures heldout_generalization --no-gate (63 requests exported, candidate validation exercised, 0 non-candidate violations)"
+      ],
+      "next_steps": [
+        "Benchmark tiny LLMs against deterministic 41/63 (65.1%) on heldout_generalization as the primary improvement signal",
+        "Maintain 234/234 on the saturated suite as the no-regression constraint",
+        "If SLM fails to beat deterministic, consider non-generative candidate rankers or sub-200M model distillation"
+      ]
     }
   ]
 }

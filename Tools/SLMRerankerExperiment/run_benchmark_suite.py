@@ -73,6 +73,7 @@ FIXTURE_NAME_MAP = {
     "taiwan_ambiguous": "taiwan_ambiguous.jsonl",
     "english_mixed": "english_mixed.jsonl",
     "taiwan_specific": "taiwan_specific.jsonl",
+    "heldout_generalization": "heldout_generalization.jsonl",
 }
 
 

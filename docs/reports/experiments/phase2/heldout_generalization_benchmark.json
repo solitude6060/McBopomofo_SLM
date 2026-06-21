@@ -1,0 +1,103 @@
+{
+  "suite": "heldout-generalization-benchmark",
+  "date": "2026-06-21T23:40:53+08:00",
+  "fixtures": {
+    "heldout_generalization": 63,
+    "total": 63
+  },
+  "saturation_context": {
+    "existing_suite": "234/234 exact matches, p95 684us (deterministic reranker)",
+    "purpose": "This fixture is NOT part of the 234-case suite and is NOT solved by the deterministic reranker. It provides headroom for tiny-LLM or improved reranker improvement measurement.",
+    "existing_deterministic_reference": {
+      "source": "docs/reports/experiments/phase2/deterministic_context_rules_benchmark.json",
+      "exact_matches": 234,
+      "total_cases": 234,
+      "exact_accuracy": 100.0,
+      "p95_us": 684
+    }
+  },
+  "categories": {
+    "homophone": 12,
+    "taiwan_specific": 10,
+    "english_mixed": 10,
+    "slang": 10,
+    "punctuation_spacing": 10,
+    "stress_test": 11
+  },
+  "baseline": {
+    "per_fixture": [
+      {
+        "fixture": "heldout_generalization",
+        "exact_accuracy": 61.9048,
+        "exact_matches": 39,
+        "errors": 24,
+        "total_cases": 63,
+        "latency_us": {
+          "p50": 3,
+          "p95": 4,
+          "p99": 6
+        }
+      }
+    ],
+    "aggregate": {
+      "total_cases": 63,
+      "exact_accuracy": 61.9048,
+      "exact_matches": 39,
+      "errors": 24,
+      "latency_us": {
+        "p50": 3,
+        "p95": 4,
+        "p99": 6
+      }
+    }
+  },
+  "deterministic": {
+    "per_fixture": [
+      {
+        "fixture": "heldout_generalization",
+        "exact_accuracy": 65.0794,
+        "exact_matches": 41,
+        "errors": 22,
+        "total_cases": 63,
+        "latency_us": {
+          "p50": 351,
+          "p95": 837,
+          "p99": 1053
+        }
+      }
+    ],
+    "aggregate": {
+      "total_cases": 63,
+      "exact_accuracy": 65.0794,
+      "exact_matches": 41,
+      "errors": 22,
+      "latency_us": {
+        "p50": 351,
+        "p95": 837,
+        "p99": 1053
+      }
+    }
+  },
+  "deltas": {
+    "vs_baseline": {
+      "accuracy_delta_pp": 3.1746,
+      "errors_corrected": 2,
+      "relative_error_reduction_pct": 8.3333
+    }
+  },
+  "saturation_gate_note": "The current 234-case fixture suite (taiwan_ambiguous 100, english_mixed 50, taiwan_specific 84) is saturated at 234/234 exact matches with p95 684us for the deterministic reranker. The heldout_generalization fixture (63 cases) provides a held-out generalization signal with 41/63 (65.1%) deterministic accuracy and p95 837us. Any candidate tiny LLM or reranker must maintain 234/234 on the saturated suite AND beat deterministic 41/63 (65.1%) on heldout_generalization before claiming improvement.",
+  "raw_outputs": [
+    "/tmp/heldout_baseline_per_case.jsonl",
+    "/tmp/heldout_deterministic_per_case.jsonl",
+    "/tmp/heldout_suite_dryrun.json",
+    "/tmp/heldout_suite_dryrun_work/slm_heldout_generalization.jsonl"
+  ],
+  "verification": [
+    "python3 JSONL parse validation",
+    "evaluator baseline on heldout_generalization (39/63, p95 4us, 0 missing_readings)",
+    "evaluator deterministic on heldout_generalization (41/63, p95 837us, 0 missing_readings)",
+    "py_compile run_benchmark_suite.py",
+    "run_benchmark_suite.py --self-test",
+    "run_benchmark_suite.py --dry-run-local-wrapper --fixtures heldout_generalization --no-gate (63 requests exported, candidate validation exercised, 0 non-candidate violations)"
+  ]
+}
