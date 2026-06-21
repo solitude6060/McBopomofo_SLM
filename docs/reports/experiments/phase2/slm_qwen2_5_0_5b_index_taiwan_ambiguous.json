@@ -1,0 +1,145 @@
+{
+  "suite": "slm-benchmark-suite",
+  "date": "2026-06-21T14:42:57+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "e5ad59d4054da2ceb94dac357927ce13aeac2562",
+  "fixtures": {
+    "taiwan_ambiguous": 100,
+    "total": 100
+  },
+  "scorer": {
+    "mode": "persistent",
+    "prompt_style": "indices",
+    "real_model_benchmarked": true,
+    "candidate_granularity": "character",
+    "model_manifest": {
+      "model_name": "qwen2.5-0.5b",
+      "provider": "ollama",
+      "parameter_count": 500000000,
+      "quantization": "q4_k_m",
+      "license": "apache-2.0",
+      "redistributable": true,
+      "local_only": true
+    }
+  },
+  "baseline": {
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_accuracy": 81.0,
+        "exact_matches": 81,
+        "errors": 19,
+        "latency_us": {
+          "p50": 1,
+          "p95": 2,
+          "p99": 2
+        },
+        "total_cases": 100
+      }
+    ],
+    "aggregate": {
+      "total_cases": 100,
+      "exact_accuracy": 81.0,
+      "exact_matches": 81,
+      "errors": 19,
+      "latency_us": {
+        "p50": 1,
+        "p95": 2,
+        "p99": 2
+      }
+    }
+  },
+  "deterministic": {
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_accuracy": 93.0,
+        "exact_matches": 93,
+        "errors": 7,
+        "latency_us": {
+          "p50": 214,
+          "p95": 436,
+          "p99": 518
+        },
+        "total_cases": 100
+      }
+    ],
+    "aggregate": {
+      "total_cases": 100,
+      "exact_accuracy": 93.0,
+      "exact_matches": 93,
+      "errors": 7,
+      "latency_us": {
+        "p50": 214,
+        "p95": 436,
+        "p99": 518
+      }
+    }
+  },
+  "slm": {
+    "per_fixture": [
+      {
+        "fixture": "taiwan_ambiguous",
+        "exact_accuracy": 14.0,
+        "exact_matches": 14,
+        "errors": 86,
+        "fallbacks": 81,
+        "latency_us": {
+          "p50": 264404,
+          "p95": 514115,
+          "p99": 572778
+        },
+        "candidate_validation": {
+          "protocol_available": true,
+          "exercised": true,
+          "cases_with_candidates": 19,
+          "non_candidate_violations": 0
+        },
+        "fallback_breakdown": {
+          "indices_length_mismatch": 81
+        },
+        "total_cases": 100
+      }
+    ],
+    "aggregate": {
+      "total_cases": 100,
+      "exact_accuracy": 14.0,
+      "exact_matches": 14,
+      "errors": 86,
+      "fallbacks": 81,
+      "latency_us": {
+        "p50": 264404,
+        "p95": 514115,
+        "p99": 572778
+      },
+      "candidate_validation": {
+        "protocol_available": true,
+        "exercised": true,
+        "cases_with_candidates": 19,
+        "non_candidate_violations": 0
+      },
+      "fallback_breakdown": {
+        "indices_length_mismatch": 81
+      }
+    }
+  },
+  "relative_error_reduction_pct": {
+    "slm_vs_baseline": {
+      "taiwan_ambiguous": -352.6316,
+      "aggregate": -352.6316
+    },
+    "slm_vs_deterministic": {
+      "taiwan_ambiguous": -1128.5714,
+      "aggregate": -1128.5714
+    }
+  },
+  "gate": {
+    "result": "FAIL",
+    "reasons": [
+      "fallbacks 81 > threshold 0",
+      "SLM p95 latency 514115us > target 20000us",
+      "SLM vs deterministic relative error reduction=-1128.5714% (need > 0%)"
+    ]
+  },
+  "real_model_benchmarked": true
+}

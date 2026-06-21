@@ -157,9 +157,9 @@
       "id": "slm-benchmark-suite",
       "name": "SLM Reranker Benchmark Suite Runner",
       "status": "benchmarked",
-      "date": "2026-06-21T14:36:55+08:00",
+      "date": "2026-06-21T14:42:57+08:00",
       "branch": "slm-phase2-learnable",
-      "commit_suite": "96d012372d972ba98e374db8e4ad746334bc7bdf",
+      "commit_suite": "e5ad59d4054da2ceb94dac357927ce13aeac2562",
       "protocol_version": "1.2",
       "model": {
         "model_name": "qwen2.5-0.5b",
@@ -167,33 +167,31 @@
         "parameter_count": 500000000,
         "quantization": "q4_k_m",
         "candidate_granularity": "character",
+        "prompt_style": "indices",
         "manifest": "Models/qwen2_5_0_5b_manifest.json",
         "local_only": true
       },
       "results_dir": "docs/reports/experiments/phase2/",
-      "summary_file": "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_character_benchmark.json",
+      "summary_file": "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_index_taiwan_ambiguous.json",
       "result_files": [
         "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_benchmark.json",
         "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_ollama_http_benchmark.json",
         "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_character_benchmark.json",
-        "docs/reports/experiments/phase2/candidate_ranker_heldout_clean_benchmark.json",
-        "docs/reports/experiments/phase2/candidate_ranker_seed_benchmark.json",
-        "docs/reports/experiments/phase2/candidate_ranker_seed_analysis.json",
-        "docs/reports/experiments/phase2/candidate_ranker_seed_char_benchmark.json",
-        "docs/reports/experiments/phase2/candidate_ranker_seed_char_analysis.json"
+        "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_index_taiwan_ambiguous.json",
+        "docs/reports/experiments/phase2/candidate_ranker_seed_char_benchmark.json"
       ],
-      "description": "Real local qwen2.5:0.5b Ollama HTTP benchmark over character-granularity candidate requests. Character slots did not make the generative tiny LLM viable: aggregate accuracy is 26.0684%, fallbacks are 140/234, p95 latency is 1.801806s, and the promotion gate fails.",
-      "fixtures_count": 234,
+      "description": "Bounded qwen2.5:0.5b Ollama HTTP smoke benchmark using character-granularity requests and candidate-index prompting on taiwan_ambiguous only. Index parsing removes non-candidate text violations, but qwen usually emits the wrong number of indices: 14/100 exact matches, 81 fallbacks, p95 latency 514115us.",
+      "fixtures_count": 100,
       "real_model_benchmarked": true,
       "gate_result": "FAIL",
       "verification": [
-        "ollama list confirmed qwen2.5:0.5b installed",
-        "full 234-case character-granularity qwen2.5:0.5b Ollama HTTP benchmark",
+        "local_llm_scorer --self-test",
+        "bounded taiwan_ambiguous qwen2.5:0.5b index-prompt benchmark",
         "candidate validation exercised"
       ],
       "next_steps": [
-        "Do not pursue unconstrained generative tiny-LLM scoring for real-time typing without a constrained decoder",
-        "Prefer non-generative candidate rankers or a model that emits candidate indices under hard validation",
+        "Do not expand candidate-index prompt-only qwen benchmarking unless the model can produce full-length index arrays reliably",
+        "Prefer non-generative candidate rankers or a true constrained decoder",
         "Gate: SLM must beat deterministic reranker before Phase 3"
       ]
     }
