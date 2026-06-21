@@ -383,6 +383,7 @@ python3 local_llm_scorer.py [options]
 | `--model-manifest` | (none) | Path to model manifest JSON |
 | `--allow-out-of-range-model` | false | Bypass [200M, 500M] parameter check |
 | `--dry-run-baseline` | false | Return `baseline_output` without model invocation |
+| `--prompt-style output\|indices` | `output` | Ask the model to return full candidate text or 1-based candidate indices |
 | `--ollama-format-json` | true | Request structured JSON output from Ollama providers. Use `--no-ollama-format-json` to disable. |
 | `--ollama-keepalive` | `5m` | Keepalive duration for Ollama providers (e.g., `5m`, `10m`, `0`) |
 | `--ollama-url` | `http://127.0.0.1:11434` | Ollama HTTP base URL for `--provider ollama-http` |
@@ -450,6 +451,12 @@ directly. The HTTP provider always receives the Ollama response envelope and
 parses its `response` field. This mode improves
 compatibility with the strict JSON parser but does **not** guarantee output
 accuracy - models may still produce incorrect output.
+
+`--prompt-style indices` is the stricter candidate-index mode. The prompt asks
+for JSON like `{"indices":[1,2,3]}` and the wrapper converts the 1-based
+indices back to candidate text only after range validation. This reduces
+non-candidate string parsing risk, but it does not solve model latency or
+semantic ranking quality by itself.
 
 The `--no-ollama-format-json` flag is provided in case a model or Ollama
 version has compatibility issues with `--format json`.  When disabled, the

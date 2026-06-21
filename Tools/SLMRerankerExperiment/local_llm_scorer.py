@@ -42,6 +42,7 @@ PARAM_MIN = 200_000_000
 PARAM_MAX = 500_000_000
 
 _PROVIDER_CHOICES = ("command", "ollama", "ollama-http")
+_PROMPT_STYLE_CHOICES = ("output", "indices")
 
 def validate_request(request):
     """Return (is_valid, error_reason)."""
@@ -129,7 +130,32 @@ def check_manifest_parameters(manifest, allow_out_of_range):
         )
     return True, "in-range"
 
-def build_prompt(request):
+def candidate_indices_for_output(output, candidates):
+    """Return 1-based candidate indices for *output*, or None if invalid."""
+    if not output or not candidates:
+        return None
+
+    out_pos = 0
+    indices = []
+    for slot in candidates:
+        if not slot:
+            continue
+        matched = None
+        for idx, cand in enumerate(slot, 1):
+            if output[out_pos:out_pos + len(cand)] == cand:
+                matched = idx
+                out_pos += len(cand)
+                break
+        if matched is None:
+            return None
+        indices.append(matched)
+
+    if out_pos != len(output):
+        return None
+    return indices
+
+
+def build_prompt(request, prompt_style="output"):
     """Build a candidate-constrained prompt from request fields.
 
     The prompt is built in memory and never written to disk unless the
@@ -146,25 +172,45 @@ def build_prompt(request):
     if candidates:
         cand_lines = []
         for idx, slot in enumerate(candidates):
-            cand_lines.append(f"  Position {idx + 1}: {', '.join(slot)}")
+            if prompt_style == "indices":
+                indexed = [f"{cand_idx}={cand}" for cand_idx, cand in enumerate(slot, 1)]
+                cand_lines.append(f"  Position {idx + 1}: {', '.join(indexed)}")
+            else:
+                cand_lines.append(f"  Position {idx + 1}: {', '.join(slot)}")
         parts.append("Candidates per position:\n" + "\n".join(cand_lines))
 
         valid_outputs = enumerate_valid_outputs(candidates)
-        if valid_outputs:
+        if valid_outputs and prompt_style == "output":
             valid_lines = [f"  - {out}" for out in valid_outputs]
             parts.append("Valid full outputs (copy exactly one):\n" + "\n".join(valid_lines))
 
+        baseline_indices = candidate_indices_for_output(baseline, candidates)
+        if baseline_indices and prompt_style == "indices":
+            parts.append(f"Baseline candidate indices: {baseline_indices}")
+
     parts.append(f"Engine baseline: {baseline}")
-    parts.append(
-        "Task: Select the correct Traditional Chinese output sequence.\n"
-        "Rules:\n"
-        "- Choose exactly one candidate from each position, in order.\n"
-        "- Candidate text values are the only allowed output tokens.\n"
-        "- Never output readings, Bopomofo symbols, pinyin, English, explanations, markdown, or alternatives.\n"
-        "- Only use the baseline as a fallback if uncertain.\n"
-        "- Return a single JSON object in exactly this format:\n"
-        '  {"output": "<your selection>"}'
-    )
+    if prompt_style == "indices":
+        parts.append(
+            "Task: Select the correct Traditional Chinese output sequence.\n"
+            "Rules:\n"
+            "- Choose exactly one numeric index from each position, in order.\n"
+            "- Use 1-based indices exactly as listed above.\n"
+            "- Never output candidate text, readings, explanations, markdown, or alternatives.\n"
+            "- Only use the baseline indices as a fallback if uncertain.\n"
+            "- Return a single JSON object in exactly this format:\n"
+            '  {"indices": [1, 2, 3]}'
+        )
+    else:
+        parts.append(
+            "Task: Select the correct Traditional Chinese output sequence.\n"
+            "Rules:\n"
+            "- Choose exactly one candidate from each position, in order.\n"
+            "- Candidate text values are the only allowed output tokens.\n"
+            "- Never output readings, Bopomofo symbols, pinyin, English, explanations, markdown, or alternatives.\n"
+            "- Only use the baseline as a fallback if uncertain.\n"
+            "- Return a single JSON object in exactly this format:\n"
+            '  {"output": "<your selection>"}'
+        )
     parts.append("Output:")
     return "\n".join(parts)
 
@@ -409,6 +455,30 @@ def validate_candidates_simple(output, candidates):
 
     return out_pos == len(output)
 
+
+def output_from_indices(indices, candidates):
+    """Convert a list of 1-based candidate indices into output text."""
+    if not candidates:
+        return None, "missing_candidates"
+    if not isinstance(indices, list):
+        return None, "indices_not_array"
+
+    non_empty_slots = [slot for slot in candidates if slot]
+    if len(indices) != len(non_empty_slots):
+        return None, "indices_length_mismatch"
+
+    output = []
+    for raw_idx, slot in zip(indices, non_empty_slots):
+        if isinstance(raw_idx, str) and raw_idx.isdigit():
+            raw_idx = int(raw_idx)
+        if not isinstance(raw_idx, int):
+            return None, "index_not_integer"
+        if raw_idx < 1 or raw_idx > len(slot):
+            return None, "index_out_of_range"
+        output.append(slot[raw_idx - 1])
+    return "".join(output), None
+
+
 def parse_model_output(raw_output, request):
     """Parse and validate raw model *output*.
 
@@ -425,11 +495,19 @@ def parse_model_output(raw_output, request):
     candidates = request.get("candidates")
 
     # 1. Attempt JSON parse (lenient about leading/trailing whitespace).
-    if text.startswith("{") and text.endswith("}"):
+    if (text.startswith("{") and text.endswith("}")) or (
+        text.startswith("[") and text.endswith("]")
+    ):
         try:
             parsed = json.loads(text)
         except json.JSONDecodeError:
             return None, "invalid_json_object"
+
+        if isinstance(parsed, list):
+            output, err = output_from_indices(parsed, candidates)
+            if err:
+                return None, err
+            return output, None
 
         if isinstance(parsed, dict) and "output" in parsed:
             val = parsed["output"]
@@ -440,6 +518,12 @@ def parse_model_output(raw_output, request):
             if isinstance(val, str):
                 return None, "empty_output"
             return None, "output_not_string"
+
+        if isinstance(parsed, dict) and "indices" in parsed:
+            output, err = output_from_indices(parsed["indices"], candidates)
+            if err:
+                return None, err
+            return output, None
 
         if isinstance(parsed, dict):
             return None, "missing_output_field"
@@ -455,7 +539,8 @@ def parse_model_output(raw_output, request):
 def process_request(request, provider, command_template, model_name,
                     manifest, allow_out_of_range, dry_run_baseline,
                     ollama_format_json=True, ollama_keepalive="5m",
-                    ollama_url="http://127.0.0.1:11434"):
+                    ollama_url="http://127.0.0.1:11434",
+                    prompt_style="output"):
     """Process a single request and return a response dict.
 
     When the model cannot produce valid output the response **omits** the
@@ -472,7 +557,7 @@ def process_request(request, provider, command_template, model_name,
             "latency_us": elapsed,
         }
 
-    prompt = build_prompt(request)
+    prompt = build_prompt(request, prompt_style=prompt_style)
 
     raw_output = None
     error = None
@@ -579,6 +664,12 @@ def build_arg_parser():
         help="Dry-run baseline mode: return baseline_output without invoking any model",
     )
     parser.add_argument(
+        "--prompt-style",
+        choices=_PROMPT_STYLE_CHOICES,
+        default="output",
+        help="Prompt and parse style: output text or 1-based candidate indices",
+    )
+    parser.add_argument(
         "--ollama-format-json",
         action="store_true",
         default=True,
@@ -606,12 +697,52 @@ def build_arg_parser():
         metavar="URL",
         help="Ollama HTTP base URL for --provider ollama-http",
     )
+    parser.add_argument("--self-test", action="store_true")
     return parser
+
+
+def run_self_test():
+    request = {
+        "id": "self-test",
+        "readings": ["r1", "r2"],
+        "baseline_output": "AC",
+        "candidates": [["A", "B"], ["C"]],
+    }
+    errors = []
+
+    output, err = parse_model_output('{"indices":[2,1]}', request)
+    if output != "BC" or err is not None:
+        errors.append(f"indices object parse failed: output={output!r} err={err!r}")
+
+    output, err = parse_model_output("[2, 1]", request)
+    if output != "BC" or err is not None:
+        errors.append(f"indices list parse failed: output={output!r} err={err!r}")
+
+    output, err = parse_model_output('{"indices":[3,1]}', request)
+    if output is not None or err != "index_out_of_range":
+        errors.append(f"invalid index accepted: output={output!r} err={err!r}")
+
+    prompt = build_prompt(request, prompt_style="indices")
+    if '{"indices": [1, 2, 3]}' not in prompt:
+        errors.append("indices prompt missing required JSON shape")
+
+    if candidate_indices_for_output("BC", request["candidates"]) != [2, 1]:
+        errors.append("candidate_indices_for_output failed")
+
+    if errors:
+        for error in errors:
+            print(f"SELF-TEST FAIL: {error}", file=sys.stderr)
+        return 1
+    print("SELF-TEST PASSED: local LLM scorer index parsing", file=sys.stderr)
+    return 0
 
 
 def main():
     parser = build_arg_parser()
     args = parser.parse_args()
+
+    if args.self_test:
+        sys.exit(run_self_test())
 
     if (
         args.provider in ("ollama", "ollama-http")
@@ -687,6 +818,7 @@ def main():
             ollama_format_json=args.ollama_format_json,
             ollama_keepalive=args.ollama_keepalive,
             ollama_url=args.ollama_url,
+            prompt_style=args.prompt_style,
         )
 
     if args.persistent:
