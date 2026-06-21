@@ -1,0 +1,46 @@
+{
+  "experiment": "candidate-export-smoke",
+  "date": "2026-06-21T12:35:00+08:00",
+  "branch": "slm-phase2-learnable",
+  "status": "candidate-export-verified",
+  "description": "Smoke verification for the SLM request candidate-export path from the C++ contextual evaluator to the Python SLM reranker experiment runner.",
+  "fixtures": {
+    "taiwan_ambiguous": 100,
+    "english_mixed": 50,
+    "taiwan_specific": 84,
+    "total": 234
+  },
+  "candidate_export": {
+    "cli_flags": ["--slm-request-output", "--slm-candidate-limit"],
+    "default_candidate_limit": 16,
+    "cases_with_candidates": 233,
+    "cases_without_candidates": 1,
+    "cases_without_candidates_detail": "tw-taiwan_specific-011: reading 'ㄎㄧㄤ' not in language model, candidate generation safely omitted",
+    "total_slots": 1040,
+    "avg_candidates_per_slot": 3.42,
+    "max_slot_size": 16,
+    "candidate_slots_empty": 0,
+    "requirement": "Generated request JSONL is content-bearing and must not be committed"
+  },
+  "runner_validation": {
+    "protocol": "run_experiment.py --dry-run",
+    "fallbacks": 0,
+    "candidate_validation_exercised": true,
+    "cases_with_candidates": 233,
+    "non_candidate_violations": 0
+  },
+  "mock_scorer_validation": {
+    "protocol": "run_experiment.py with mock_tiny_llm_scorer.py",
+    "fallbacks": 0,
+    "candidate_validation_exercised": true,
+    "cases_with_candidates": 233,
+    "non_candidate_violations": 0,
+    "per_case_omits_scorer_output": true
+  },
+  "conclusion": "Candidate export path verified. The C++ evaluator generates JSONL requests with per-position candidate slots from the ReadingGrid baseline segmentation. All 234 fixtures produce valid JSONL, 233 include candidate slots (1 excluded due to invalid reading). The Python runner correctly exercises candidate validation when candidates are present.",
+  "next_steps": [
+    "Implement llama.cpp wrapper scorer that conforms to the JSON stdin/stdout protocol",
+    "Benchmark 200M–0.5B quantized models on the three fixture suites with candidate validation",
+    "Gate: any candidate SLM must beat deterministic reranker on held-out Taiwan fixtures before Phase 3"
+  ]
+}

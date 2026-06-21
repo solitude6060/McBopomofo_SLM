@@ -103,7 +103,7 @@ def build_scorer_request(case):
     request = {
         "id": case.get("id", ""),
         "readings": case.get("readings", []),
-        "baseline_output": "",
+        "baseline_output": case.get("baseline_output", ""),
     }
     if "expected" in case:
         request["expected"] = case["expected"]

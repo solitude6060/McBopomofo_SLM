@@ -39,6 +39,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "Engine/DeterministicContextualScorer.h"
@@ -285,6 +286,9 @@ static double nodeTopScore(const Formosa::Gramambular2::ReadingGrid::NodePtr& no
   return best;
 }
 
+// Forward declaration used by Evaluator.
+static std::string escapeJSON(const std::string& s);
+
 class Evaluator {
  public:
    enum class ScorerType {
@@ -317,8 +321,15 @@ class Evaluator {
    }
 
    PerCaseResult evaluate(const TestCase& tc) {
-     return evaluateGeneric(tc);
+     PerCaseResult r = evaluateGeneric(tc);
+     if (slmOutput_) {
+       writeSlmRequest(tc);
+     }
+     return r;
    }
+
+   void setSlmOutput(FILE* f) { slmOutput_ = f; }
+   void setSlmCandidateLimit(size_t limit) { slmCandidateLimit_ = limit; }
 
  private:
    struct OutputSegment {
@@ -616,10 +627,168 @@ class Evaluator {
     return bestRank == 999 ? 0 : bestRank;
   }
 
+  struct SlmSlotResult {
+    std::string text;
+    std::vector<std::vector<std::string>> slots;
+    bool ok = true;
+  };
+
+  SlmSlotResult processBopomofoChunkForSlm(
+      const std::vector<std::string>& readings) {
+    SlmSlotResult result;
+    Formosa::Gramambular2::ReadingGrid grid(
+        std::make_shared<
+            Formosa::Gramambular2::ReadingGrid::ScoreRankedLanguageModel>(
+            lm_));
+    for (const auto& r : readings) {
+      if (!grid.insertReading(r)) {
+        result.ok = false;
+        return result;
+      }
+    }
+    Formosa::Gramambular2::ReadingGrid::WalkResult walkResult = grid.walk();
+    auto values = walkResult.valuesAsStrings();
+    for (const auto& v : values) {
+      result.text += v;
+    }
+
+    size_t readingOffset = 0;
+    for (const auto& node : walkResult.nodes) {
+      size_t length = node->spanningLength();
+      const auto& spanNode = grid.spans()[readingOffset].nodeOf(length);
+      std::vector<std::string> candidates;
+      if (spanNode != nullptr) {
+        std::unordered_set<std::string> seen;
+        for (const auto& u : spanNode->unigrams()) {
+          if (seen.insert(u.value()).second) {
+            candidates.push_back(u.value());
+          }
+        }
+      }
+      // Cap at limit, ensuring baseline value is always included.
+      if (candidates.size() > slmCandidateLimit_) {
+        std::string baselineVal = node->value();
+        auto it = std::find(candidates.begin(),
+                            candidates.begin() + slmCandidateLimit_,
+                            baselineVal);
+        if (it == candidates.begin() + slmCandidateLimit_) {
+          candidates.resize(slmCandidateLimit_);
+          candidates.back() = baselineVal;
+        } else {
+          candidates.resize(slmCandidateLimit_);
+        }
+      }
+      result.slots.push_back(std::move(candidates));
+      readingOffset += length;
+    }
+    return result;
+  }
+
+  void writeSlmRequest(const TestCase& tc) {
+    if (!slmOutput_) return;
+
+    std::vector<std::vector<std::string>> allSlots;
+    std::string baselineOutput;
+    std::vector<std::string> bopomofoChunk;
+    bool allOk = true;
+    bool prevWasProtected = false;
+
+    auto addSlotsWithSpacing =
+        [&](std::vector<std::vector<std::string>>& newSlots,
+            const std::string& text, bool isProtected) {
+          bool needSpace = !baselineOutput.empty();
+          if (needSpace && (isProtected || prevWasProtected)) {
+            allSlots.push_back({" "});
+            baselineOutput += " ";
+          }
+          for (auto& slot : newSlots) {
+            allSlots.push_back(std::move(slot));
+          }
+          baselineOutput += text;
+          prevWasProtected = isProtected;
+        };
+
+    for (size_t i = 0; i < tc.readings.size(); ++i) {
+      if (isBopomofoReading(tc.readings[i])) {
+        bopomofoChunk.push_back(tc.readings[i]);
+        continue;
+      }
+
+      if (!bopomofoChunk.empty()) {
+        auto chunkResult = processBopomofoChunkForSlm(bopomofoChunk);
+        bopomofoChunk.clear();
+        if (chunkResult.ok) {
+          addSlotsWithSpacing(chunkResult.slots, chunkResult.text, false);
+        } else {
+          allOk = false;
+        }
+      }
+
+      std::vector<std::vector<std::string>> tokenSlots = {{tc.readings[i]}};
+      addSlotsWithSpacing(tokenSlots, tc.readings[i], true);
+    }
+
+    if (!bopomofoChunk.empty()) {
+      auto chunkResult = processBopomofoChunkForSlm(bopomofoChunk);
+      bopomofoChunk.clear();
+      if (chunkResult.ok) {
+        addSlotsWithSpacing(chunkResult.slots, chunkResult.text, false);
+      } else {
+        allOk = false;
+      }
+    }
+
+    fprintf(slmOutput_, "{\"id\":\"%s\"", escapeJSON(tc.id).c_str());
+
+    fprintf(slmOutput_, ",\"readings\":[");
+    for (size_t i = 0; i < tc.readings.size(); ++i) {
+      if (i > 0) fprintf(slmOutput_, ",");
+      fprintf(slmOutput_, "\"%s\"", escapeJSON(tc.readings[i]).c_str());
+    }
+    fprintf(slmOutput_, "]");
+
+    fprintf(slmOutput_, ",\"baseline_output\":\"%s\"",
+            escapeJSON(baselineOutput).c_str());
+
+    if (!tc.expected.empty()) {
+      fprintf(slmOutput_, ",\"expected\":\"%s\"",
+              escapeJSON(tc.expected).c_str());
+    }
+
+    if (!tc.protectedEnglishSpans.empty()) {
+      fprintf(slmOutput_, ",\"protected_english_spans\":[");
+      for (size_t i = 0; i < tc.protectedEnglishSpans.size(); ++i) {
+        if (i > 0) fprintf(slmOutput_, ",");
+        fprintf(slmOutput_, "\"%s\"",
+                escapeJSON(tc.protectedEnglishSpans[i]).c_str());
+      }
+      fprintf(slmOutput_, "]");
+    }
+
+    if (!allSlots.empty() && allOk) {
+      fprintf(slmOutput_, ",\"candidates\":[");
+      for (size_t i = 0; i < allSlots.size(); ++i) {
+        if (i > 0) fprintf(slmOutput_, ",");
+        fprintf(slmOutput_, "[");
+        for (size_t j = 0; j < allSlots[i].size(); ++j) {
+          if (j > 0) fprintf(slmOutput_, ",");
+          fprintf(slmOutput_, "\"%s\"",
+                  escapeJSON(allSlots[i][j]).c_str());
+        }
+        fprintf(slmOutput_, "]");
+      }
+      fprintf(slmOutput_, "]");
+    }
+
+    fprintf(slmOutput_, "}\n");
+  }
+
   std::shared_ptr<McBopomofo::McBopomofoLM> lm_;
   Evaluator::ScorerType scorerType_;
   std::string modelPath_;
   std::unique_ptr<McBopomofo::ContextualScorer> scorer_;
+  FILE* slmOutput_ = nullptr;
+  size_t slmCandidateLimit_ = 16;
 };
 
 static std::string escapeJSON(const std::string& s) {
@@ -729,8 +898,10 @@ static void printSummaryJSON(const std::vector<PerCaseResult>& results,
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    fprintf(stderr, "Usage: %s <data.txt> [--scorer baseline|deterministic|bigram] [--model <path>] [--reranker] [test_cases.jsonl]\n", argv[0]);
+    fprintf(stderr, "Usage: %s <data.txt> [--scorer baseline|deterministic|bigram] [--model <path>] [--reranker] [--slm-request-output <path>] [--slm-candidate-limit <N>] [test_cases.jsonl]\n", argv[0]);
     fprintf(stderr, "  If test_cases.jsonl is omitted, reads from stdin.\n");
+    fprintf(stderr, "  --slm-request-output <path>   Write candidate-constrained SLM request JSONL to <path>\n");
+    fprintf(stderr, "  --slm-candidate-limit <N>     Max candidates per slot (default 16, always includes baseline)\n");
     return 1;
   }
 
@@ -743,7 +914,9 @@ int main(int argc, char* argv[]) {
   Evaluator::ScorerType scorerType = Evaluator::ScorerType::Baseline;
   std::string modelPath = "";
   const char* testCasesPath = nullptr;
-  
+  const char* slmRequestOutputPath = nullptr;
+  size_t slmCandidateLimit = 16;
+
   for (int i = 2; i < argc; ++i) {
     if (std::strcmp(argv[i], "--scorer") == 0) {
       if (i + 1 >= argc) {
@@ -775,10 +948,44 @@ int main(int argc, char* argv[]) {
       scorerType = Evaluator::ScorerType::Deterministic;
       continue;
     }
+    if (std::strcmp(argv[i], "--slm-request-output") == 0) {
+      if (i + 1 >= argc) {
+        fprintf(stderr, "FATAL: --slm-request-output requires a path\n");
+        return 1;
+      }
+      slmRequestOutputPath = argv[++i];
+      continue;
+    }
+    if (std::strcmp(argv[i], "--slm-candidate-limit") == 0) {
+      if (i + 1 >= argc) {
+        fprintf(stderr, "FATAL: --slm-candidate-limit requires a value\n");
+        return 1;
+      }
+      int val = std::atoi(argv[++i]);
+      if (val <= 0) {
+        fprintf(stderr, "FATAL: --slm-candidate-limit must be positive, got %d\n", val);
+        return 1;
+      }
+      slmCandidateLimit = static_cast<size_t>(val);
+      continue;
+    }
     testCasesPath = argv[i];
   }
 
   Evaluator evaluator(dataPath, scorerType, modelPath);
+  evaluator.setSlmCandidateLimit(slmCandidateLimit);
+
+  FILE* slmOutput = nullptr;
+  if (slmRequestOutputPath != nullptr) {
+    slmOutput = fopen(slmRequestOutputPath, "w");
+    if (!slmOutput) {
+      fprintf(stderr, "FATAL: cannot open SLM request output %s\n",
+              slmRequestOutputPath);
+      return 1;
+    }
+    fprintf(stderr, "Writing SLM requests to %s\n", slmRequestOutputPath);
+    evaluator.setSlmOutput(slmOutput);
+  }
 
   FILE* input = stdin;
   bool closeInput = false;
@@ -786,6 +993,7 @@ int main(int argc, char* argv[]) {
     input = fopen(testCasesPath, "r");
     if (!input) {
       fprintf(stderr, "FATAL: cannot open %s\n", testCasesPath);
+      if (slmOutput) fclose(slmOutput);
       return 1;
     }
     closeInput = true;
@@ -845,6 +1053,9 @@ int main(int argc, char* argv[]) {
 
   if (closeInput) {
     fclose(input);
+  }
+  if (slmOutput) {
+    fclose(slmOutput);
   }
 
   return 0;

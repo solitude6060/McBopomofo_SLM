@@ -1,6 +1,6 @@
 # SLM Reranker Experiment: External Scorer Protocol
 
-Last updated: 2026-06-21T12:00:00+08:00
+Last updated: 2026-06-21T12:35:00+08:00
 
 ## Purpose
 
@@ -188,6 +188,74 @@ python3 run_experiment.py \
 | `--per-case-output` | (none) | Optional sanitized per-case JSONL output path |
 | `--dry-run` | false | Use built-in mock scorer (no subprocess) |
 | `--self-test` | false | Run self-tests (candidate validation unit tests + pipeline integration) and exit |
+
+## Generating SLM Request Data with Candidates
+
+The C++ contextual evaluator in `Tools/ContextualEvaluation/` can export
+JSONL files with per-position candidate slots. These slots reproduce the
+engine's baseline segmentation and expose the Viterbi-grid candidates,
+enabling end-to-end candidate validation (`candidate_validation.exercised=true`)
+in the runner.
+
+### CLI Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--slm-request-output <path>` | (none) | Write candidate-constrained SLM request JSONL to `<path>` |
+| `--slm-candidate-limit <N>` | 16 | Max candidates per slot; the baseline node value is always included |
+
+### Generating Requests
+
+```bash
+cd Tools/ContextualEvaluation
+./build/evaluator ../../Source/Data/data.txt \
+  --slm-request-output /tmp/slm_requests.jsonl \
+  --slm-candidate-limit 16 \
+  ../../Tests/fixtures/contextual_bopomofo/taiwan_ambiguous.jsonl
+```
+
+Each line written to `/tmp/slm_requests.jsonl` is a scorer request with
+the `candidates` field populated:
+
+```json
+{"id":"tw-amb-001","readings":["ㄗㄞˋ","ㄐㄧㄢˋ"],"baseline_output":"再見","expected":"再見","candidates":[["再見"]]}
+```
+
+### Running the Python Benchmark Against Generated Requests
+
+```bash
+cd Tools/SLMRerankerExperiment
+
+# Dry-run (built-in mock)
+python3 run_experiment.py --dry-run \
+  --fixtures /tmp/slm_requests.jsonl \
+  --timeout-ms 500 \
+  --output /tmp/slm_dry_summary.json
+
+# External mock scorer
+python3 run_experiment.py \
+  --scorer-command "python3 mock_tiny_llm_scorer.py" \
+  --fixtures /tmp/slm_requests.jsonl \
+  --timeout-ms 500 \
+  --output /tmp/slm_mock_summary.json \
+  --per-case-output /tmp/slm_mock_per_case.jsonl
+```
+
+### Privacy
+
+Generated request JSONL files contain content-bearing data (readings,
+candidates, expected text, baseline output). **Do not commit these files
+to the repository.** Generate them into `/tmp` or another ephemeral
+location. The runner's `--per-case-output` and report mechanisms remain
+content-free per the privacy policy above.
+
+### Limitations
+
+- Candidate slots are **baseline-segmentation-constrained**. The walk
+  determines the segmentation; each slot corresponds to one baseline node.
+  The scorer may not propose alternative segmentations.
+- Non-Bopomofo / protected tokens get fixed single-element slots (e.g.,
+  `["Docker"]`). Space boundaries are reproduced as `[" "]` slots.
 
 ## Mock Scorer
 

@@ -50,10 +50,44 @@
         "note": "Candidate validation is implemented but not exercised by current fixtures — none supply a 'candidates' field."
       },
       "next_steps": [
-        "Add 'candidates' field to existing fixtures to exercise candidate validation",
         "Benchmark quantized 200M–0.5B models through the protocol",
         "Compare against deterministic reranker on held-out Taiwan fixtures",
         "Gate: must beat deterministic reranker before promotion to Phase 3"
+      ]
+    },
+    {
+      "id": "candidate-export",
+      "name": "Evaluator-based Candidate Request Export",
+      "status": "verified",
+      "date": "2026-06-21T12:36:40+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit_engine": "2dd5a1e",
+      "commit_runner_fix": "2dd5a1e",
+      "commit_docs": "2dd5a1e",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/candidate_export_smoke.json",
+      "description": "Adds --slm-request-output CLI flag to the C++ contextual evaluator, generating JSONL request files with per-position candidate slots from the ReadingGrid baseline segmentation. The output schema is compatible with the Python SLM reranker experiment runner, enabling candidate-only output validation (candidate_validation.exercised=true). Includes a fix for build_scorer_request to pass baseline_output from fixture instead of empty string.",
+      "candidate_export": {
+        "cli_flags": ["--slm-request-output", "--slm-candidate-limit"],
+        "default_candidate_limit": 16,
+        "cases_with_candidates": 233,
+        "total_fixture_cases": 234,
+        "total_slots": 1040,
+        "avg_candidates_per_slot": 3.42,
+        "max_slot_size": 16,
+        "empty_slots": 0
+      },
+      "runner_validation": {
+        "fallbacks": 0,
+        "candidate_validation_exercised": true,
+        "non_candidate_violations": 0
+      },
+      "verification": "Build + dry-run + mock-scorer + self-test + git-diff-check",
+      "next_steps": [
+        "Implement llama.cpp wrapper scorer for real model evaluation",
+        "Benchmark quantized 200M–0.5B models on the three fixture suites with candidate validation",
+        "Gate: any candidate SLM must beat deterministic reranker on held-out Taiwan fixtures before Phase 3"
       ]
     }
   ]
