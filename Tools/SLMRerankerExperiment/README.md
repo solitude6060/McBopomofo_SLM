@@ -50,6 +50,13 @@ set**. All output values must be drawn from the `readings` + `candidates`
 provided in the request. The runner verifies this constraint and counts
 violations as fallbacks.
 
+**Fixture dependence:** Verification is active only when the fixture case
+includes a `candidates` field (per-position candidate lists). The current
+public fixtures (`taiwan_ambiguous`, `english_mixed`, `taiwan_specific`) do
+**not** include this field, so candidate validation is not exercised in the
+default benchmark run. A `--self-test` flag is provided to verify the
+validation logic works end-to-end.
+
 Rationale: Free-text generation defeats the purpose of constrained reranking,
 introduces hallucination risk, breaks user-override semantics, and adds
 unbounded latency.
@@ -141,16 +148,23 @@ accept CLI flags for model path, device, or verbosity settings.
 
 The runner classifies each invocation into one of these outcomes:
 
-1. **Success**: exit 0, valid JSON stdout, `output` field present, output
-   characters are candidate-constrained (each output position's characters
-   appear in the corresponding candidate set).
+1. **Success**: exit 0, valid JSON stdout, `output` field present, and (if
+   the fixture supplies candidates) each output position's content appears in
+   the corresponding candidate set.
 2. **Timeout**: subprocess exceeds `--timeout-ms` → killed (SIGKILL),
    counted as fallback.
 3. **Non-zero exit**: scorer exited with code != 0 → counted as fallback.
 4. **Invalid output**: stdout is not valid JSON, or JSON lacks `output`
    field → counted as fallback.
-5. **Non-candidate output**: output contains characters not present in any
-   candidate → counted as fallback.
+5. **Non-candidate output**: output content at a position is not present in
+   the corresponding candidate slot — only detected when the fixture
+   provides a `candidates` field. Counted as fallback with reason
+   `non_candidate_output`.
+
+**Note:** Existing public fixtures do not include the `candidates` field, so
+outcomes 1 and 5 currently behave identically to a protocol that lacks
+candidate validation. The protocol supports the constraint; the fixtures have
+not yet been extended to supply the necessary data.
 
 ## Runner CLI
 
@@ -166,12 +180,13 @@ python3 run_experiment.py \
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--fixtures` | (required) | One or more JSONL fixture file paths |
+| `--fixtures` | (required unless `--self-test`) | One or more JSONL fixture file paths |
 | `--scorer-command` | (required unless `--dry-run`) | External scorer command string |
 | `--timeout-ms` | 30 | Per-case timeout in milliseconds |
 | `--output` | stdout | Summary JSON output path |
 | `--per-case-output` | (none) | Optional per-case JSONL output path |
 | `--dry-run` | false | Use built-in mock scorer (no subprocess) |
+| `--self-test` | false | Run self-tests (candidate validation unit tests + pipeline integration) and exit |
 
 ## Mock Scorer
 
@@ -219,7 +234,10 @@ python3 run_experiment.py \
   --timeout-ms 30 \
   --output /tmp/tiny_llm_summary.json
 
-# 6. Verify no whitespace errors
+# 6. Run self-tests (validates candidate validation logic)
+python3 run_experiment.py --self-test
+
+# 7. Verify no whitespace errors
 git diff --check
 ```
 

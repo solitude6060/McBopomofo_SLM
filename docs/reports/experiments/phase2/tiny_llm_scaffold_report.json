@@ -1,10 +1,11 @@
 {
   "experiment": "tiny-llm-scaffold-verification",
-  "date": "2026-06-21T12:12:52+08:00",
+  "date": "2026-06-21T12:18:35+08:00",
   "branch": "slm-phase2-learnable",
-  "commit_scaffold": "ac9c91b",
+  "commit_scaffold": "5586ee3",
+  "commit_docs": "1b8a944",
   "status": "scaffold-verified",
-  "protocol_version": "1.0",
+  "protocol_version": "1.1",
   "description": "Scaffold verification for the SLM Reranker external scorer protocol. This report validates that the benchmark harness functions correctly. No real tiny-LLM model was evaluated.",
   "fixtures": {
     "taiwan_ambiguous": 100,
@@ -53,8 +54,18 @@
     "Per-case JSONL output",
     "Summary JSON with latency percentiles and fallback breakdown",
     "Dry-run mode (built-in mock, no subprocess)",
-    "Privacy: no content-bearing data in report or per-case output beyond fixture IDs"
+    "Privacy: no content-bearing data in report or per-case output beyond fixture IDs",
+    "Candidate-only output validation: scorer output is validated against per-position candidate slots when the fixture supplies candidates",
+    "Candidate validation fallback: non-candidate output correctly triggers fallback_reason 'non_candidate_output'",
+    "Candidate validation no-op: fixtures without candidates pass through without validation (backward-compatible)"
   ],
+  "candidate_validation": {
+    "protocol_available": true,
+    "exercised": false,
+    "cases_with_candidates": 0,
+    "non_candidate_violations": 0,
+    "note": "Candidate validation is implemented in protocol v1.1 but not exercised by the current 234 fixtures — none supply a 'candidates' field. Verification of the validation logic itself is done via --self-test, not by these fixtures."
+  },
   "latency_us": {
     "builtin_mock_p50": 0,
     "builtin_mock_p95": 0,
@@ -66,8 +77,9 @@
   "real_model": null,
   "real_model_benchmarked": false,
   "live_ime_modified": false,
-  "conclusion": "Scaffold verified. The benchmark harness correctly processes 234 fixture cases, invokes external scorer commands, enforces timeouts, counts fallbacks, and produces reproducible reports. No real SLM was evaluated. No changes were made to the macOS live IME or C++ engine.",
+  "conclusion": "Scaffold verified. The benchmark harness correctly processes 234 fixture cases, invokes external scorer commands, enforces timeouts, counts fallbacks, and produces reproducible reports. Candidate-only output validation is implemented but not exercised by current fixtures. No real SLM was evaluated. No changes were made to the macOS live IME or C++ engine.",
   "next_steps": [
+    "Add 'candidates' field to existing fixtures to exercise candidate validation path",
     "Implement llama.cpp wrapper scorer that conforms to the JSON stdin/stdout protocol",
     "Benchmark 200M–0.5B quantized models (e.g., Qwen2.5-0.5B, Gemma-2-2B-it-Q4) on the three fixture suites",
     "Establish per-fixture baseline accuracy with deterministic reranker for comparison",

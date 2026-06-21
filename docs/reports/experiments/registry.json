@@ -32,17 +32,25 @@
       "id": "tiny-llm-scaffold",
       "name": "Tiny-LLM Reranker Scaffold",
       "status": "scaffold-verified",
-      "date": "2026-06-21T12:12:52+08:00",
+      "date": "2026-06-21T12:18:35+08:00",
       "branch": "slm-phase2-learnable",
-      "commit_scaffold": "ac9c91b",
+      "commit_scaffold": "5586ee3",
+      "commit_docs": "1b8a944",
+      "protocol_version": "1.1",
       "model": null,
       "results_dir": "docs/reports/experiments/phase2/",
       "summary_file": "docs/reports/experiments/phase2/tiny_llm_scaffold_report.json",
-      "description": "External scorer protocol and benchmark harness for evaluating 200M–0.5B local tiny LLMs as candidate-constrained rerankers. The scaffold is verified with mock scorers but no real model has been benchmarked yet.",
+      "description": "External scorer protocol and benchmark harness for evaluating 200M–0.5B local tiny LLMs as candidate-constrained rerankers. The scaffold is verified with mock scorers but no real model has been benchmarked yet. Protocol v1.1 adds candidate-only output validation.",
       "protocol": "Tools/SLMRerankerExperiment/README.md",
       "fixtures_count": 234,
       "real_model_benchmarked": false,
+      "candidate_validation": {
+        "protocol_available": true,
+        "exercised": false,
+        "note": "Candidate validation is implemented but not exercised by current fixtures — none supply a 'candidates' field."
+      },
       "next_steps": [
+        "Add 'candidates' field to existing fixtures to exercise candidate validation",
         "Benchmark quantized 200M–0.5B models through the protocol",
         "Compare against deterministic reranker on held-out Taiwan fixtures",
         "Gate: must beat deterministic reranker before promotion to Phase 3"
