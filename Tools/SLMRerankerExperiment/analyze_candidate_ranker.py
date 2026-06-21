@@ -70,7 +70,9 @@ def summarize_case(model, request):
     candidates = request.get("candidates")
     readings = request.get("readings", [])
 
-    ranker_output, ranker_error = scorer.rank_request(model, request)
+    ranker_details = scorer.rank_request_details(model, request)
+    ranker_output = ranker_details["output"]
+    ranker_error = ranker_details["error"]
     expected_tokens = selected_tokens(expected, candidates) if candidates else None
     baseline_tokens = selected_tokens(baseline, candidates) if candidates else None
     ranker_tokens = (
@@ -115,6 +117,17 @@ def summarize_case(model, request):
             if any(len(token) > 1 for token in slot):
                 multi_char_slots += 1
 
+    rejected_by_margin_slots = 0
+    rejected_by_evidence_slots = 0
+    rejected_by_count_slots = 0
+    for decision in ranker_details.get("decisions", []):
+        if decision.get("rejected_by_margin"):
+            rejected_by_margin_slots += 1
+        if decision.get("rejected_by_evidence"):
+            rejected_by_evidence_slots += 1
+        if decision.get("rejected_by_count"):
+            rejected_by_count_slots += 1
+
     return {
         "baseline_correct": baseline_correct,
         "ranker_correct": ranker_correct,
@@ -130,6 +143,12 @@ def summarize_case(model, request):
         "candidate_count": candidate_count,
         "multi_char_slots": multi_char_slots,
         "max_slot_size": max_slot_size,
+        "rejected_by_margin_slots": rejected_by_margin_slots,
+        "rejected_by_evidence_slots": rejected_by_evidence_slots,
+        "rejected_by_count_slots": rejected_by_count_slots,
+        "rejected_by_margin": rejected_by_margin_slots > 0,
+        "rejected_by_evidence": rejected_by_evidence_slots > 0,
+        "rejected_by_count": rejected_by_count_slots > 0,
         "evidence": evidence,
         "non_baseline_evidence": non_baseline_evidence,
     }
@@ -152,6 +171,12 @@ def empty_bucket():
         "total_candidates": 0,
         "multi_char_slots": 0,
         "max_slot_size": 0,
+        "rejected_by_margin_cases": 0,
+        "rejected_by_evidence_cases": 0,
+        "rejected_by_count_cases": 0,
+        "rejected_by_margin_slots": 0,
+        "rejected_by_evidence_slots": 0,
+        "rejected_by_count_slots": 0,
         "non_baseline_evidence_cases": 0,
         "feature_coverage_cases": {
             "reading_candidate": 0,
@@ -194,6 +219,17 @@ def add_case(bucket, case_summary):
     bucket["max_slot_size"] = max(
         bucket["max_slot_size"], case_summary["max_slot_size"]
     )
+    if case_summary["rejected_by_margin"]:
+        bucket["rejected_by_margin_cases"] += 1
+    if case_summary["rejected_by_evidence"]:
+        bucket["rejected_by_evidence_cases"] += 1
+    if case_summary["rejected_by_count"]:
+        bucket["rejected_by_count_cases"] += 1
+    bucket["rejected_by_margin_slots"] += case_summary["rejected_by_margin_slots"]
+    bucket["rejected_by_evidence_slots"] += case_summary[
+        "rejected_by_evidence_slots"
+    ]
+    bucket["rejected_by_count_slots"] += case_summary["rejected_by_count_slots"]
     if case_summary["non_baseline_evidence"]:
         bucket["non_baseline_evidence_cases"] += 1
     for name, present in case_summary["evidence"].items():

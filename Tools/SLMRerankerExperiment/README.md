@@ -500,11 +500,20 @@ left/right context windows. Unknown contexts keep a baseline bonus, so seed
 training should only override baseline when the exported candidate context has
 supporting examples.
 
+Newly trained models enable conservative override gates by default. A
+non-baseline candidate must clear the configured score margin, feature-hit
+count, and reading/candidate observation count before it can replace the
+baseline token. This prevents one-off seed examples from broadly changing
+already-correct baseline output.
+
 ```bash
 python3 train_candidate_ranker.py \
   --input /tmp/slm_taiwan_ambiguous.jsonl /tmp/slm_english_mixed.jsonl \
   --exclude-fixture taiwan_ambiguous \
   --exclude-fixture english_mixed \
+  --override-margin 0.1 \
+  --min-non-baseline-feature-hits 2 \
+  --min-reading-candidate-count-for-override 2 \
   --output /tmp/candidate_ranker.json
 
 python3 candidate_ranker_scorer.py \

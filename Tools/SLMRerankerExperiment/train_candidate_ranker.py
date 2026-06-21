@@ -157,9 +157,17 @@ def train(paths, excluded_prefixes):
     return counts, stats
 
 
-def make_model(counts, stats, excluded_prefixes, source_paths):
+def make_model(counts, stats, excluded_prefixes, source_paths,
+               selection_controls=None):
     total_candidate_observations = sum(counts["candidate"].values())
     vocabulary = len(counts["candidate"])
+    if selection_controls is None:
+        selection_controls = {
+            "override_margin": 0.1,
+            "min_non_baseline_feature_hits": 2,
+            "min_reading_candidate_count_for_override": 2,
+            "prefer_baseline_on_weak_override": True,
+        }
     return {
         "model_type": "candidate-ranker-v1",
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%S+08:00", time.localtime()),
@@ -182,6 +190,7 @@ def make_model(counts, stats, excluded_prefixes, source_paths):
             "baseline_next_candidate_weight": 1.5,
             "baseline_window_candidate_weight": 2.5,
         },
+        "selection": selection_controls,
         "defaults": {
             "unknown_score": 0.0,
             "total_candidate_observations": total_candidate_observations,
@@ -264,6 +273,29 @@ def build_arg_parser():
         default=[],
         help="Exclude cases whose id starts with this prefix",
     )
+    parser.add_argument(
+        "--override-margin",
+        type=float,
+        default=0.1,
+        help="Required score margin over baseline for non-baseline overrides",
+    )
+    parser.add_argument(
+        "--min-non-baseline-feature-hits",
+        type=int,
+        default=2,
+        help="Required non-baseline evidence features before overriding baseline",
+    )
+    parser.add_argument(
+        "--min-reading-candidate-count-for-override",
+        type=int,
+        default=2,
+        help="Required reading/candidate observations before overriding baseline",
+    )
+    parser.add_argument(
+        "--disable-conservative-overrides",
+        action="store_true",
+        help="Use raw highest-score candidate selection without baseline gates",
+    )
     parser.add_argument("--self-test", action="store_true")
     return parser
 
@@ -283,7 +315,19 @@ def main():
         print(f"FATAL: {exc}", file=sys.stderr)
         sys.exit(2)
 
-    model = make_model(counts, stats, excluded, args.input)
+    selection_controls = {
+        "override_margin": args.override_margin,
+        "min_non_baseline_feature_hits": args.min_non_baseline_feature_hits,
+        "min_reading_candidate_count_for_override": (
+            args.min_reading_candidate_count_for_override
+        ),
+        "prefer_baseline_on_weak_override": (
+            not args.disable_conservative_overrides
+        ),
+    }
+    model = make_model(
+        counts, stats, excluded, args.input, selection_controls
+    )
     with open(args.output, "w", encoding="utf-8") as handle:
         json.dump(model, handle, ensure_ascii=False, indent=2, sort_keys=True)
         handle.write("\n")
