@@ -892,6 +892,40 @@
         "Add content-free runtime counters before any model path",
         "Create the macOS dogfood runbook"
       ]
+    },
+    {
+      "id": "phase3-macos-dogfood-readiness",
+      "name": "Phase 3 macOS Dogfood Readiness Artifacts",
+      "status": "partial",
+      "date": "2026-06-22T02:11:21+08:00",
+      "branch": "slm-phase2-learnable",
+      "protocol_version": "1.0",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase3/",
+      "summary_file": "docs/reports/experiments/phase3/macos_dogfood_readiness.json",
+      "result_files": [
+        "docs/reports/experiments/phase3/macos_dogfood_readiness.json"
+      ],
+      "description": "Adds content-free Phase 3 dogfood and privacy artifacts for the macOS experimental reranker. The runbook defines toggle, latency, fallback, candidate UI, user phrase, rapid typing, and privacy checks. The privacy statement explicitly forbids collecting raw typed content, readings, candidate strings, committed text, screenshots with private text, or user phrase files.",
+      "artifacts": [
+        "docs/runbooks/macos_experimental_reranker_dogfood.md",
+        "docs/privacy/local_reranker_privacy_statement.md"
+      ],
+      "gate_result": "PARTIAL",
+      "verification": [
+        "json.tool phase3 runtime preference report",
+        "json.tool registry",
+        "git diff --check"
+      ],
+      "not_tested": [
+        "manual macOS dogfood",
+        "xcodebuild because it is unavailable in Linux"
+      ],
+      "next_steps": [
+        "Run macOS build and PreferencesTests",
+        "Use the dogfood runbook for manual menu and privacy validation",
+        "Wire deterministic scorer after the preference surface is validated on macOS"
+      ]
     }
   ]
 }

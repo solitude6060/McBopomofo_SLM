@@ -1,0 +1,44 @@
+{
+  "report": "macos_dogfood_readiness",
+  "date": "2026-06-22T02:11:21+08:00",
+  "branch": "slm-phase2-learnable",
+  "content_policy": {
+    "raw_typed_content_in_report": false,
+    "raw_fixture_content_in_report": false
+  },
+  "phase": "Phase 3 macOS experimental runtime",
+  "artifacts": {
+    "dogfood_runbook": "docs/runbooks/macos_experimental_reranker_dogfood.md",
+    "privacy_statement": "docs/privacy/local_reranker_privacy_statement.md",
+    "runtime_preference_report": "docs/reports/experiments/phase3/contextual_reranker_runtime_preference.json"
+  },
+  "readiness": {
+    "runtime_preference_exists": true,
+    "default_mode": "Off",
+    "typing_behavior_changed": false,
+    "dogfood_checklist_exists": true,
+    "privacy_statement_exists": true,
+    "content_free_issue_template_exists": true
+  },
+  "blocked_for_full_phase3": [
+    "macOS build and PreferencesTests target execution",
+    "manual IMK input menu validation",
+    "deterministic scorer wiring behind the runtime preference",
+    "content-free runtime latency and fallback counters"
+  ],
+  "verification": [
+    "python3 -m json.tool docs/reports/experiments/phase3/contextual_reranker_runtime_preference.json",
+    "python3 -m json.tool docs/reports/experiments/registry.json",
+    "git diff --check"
+  ],
+  "not_tested": [
+    "xcodebuild because it is unavailable in this Linux environment",
+    "manual dogfood because this environment is not macOS IMK"
+  ],
+  "gate_result": "PARTIAL",
+  "next_steps": [
+    "Run macOS build and PreferencesTests",
+    "Use the dogfood runbook for manual menu and privacy validation",
+    "Wire deterministic scorer only after macOS validation of the preference surface"
+  ]
+}
