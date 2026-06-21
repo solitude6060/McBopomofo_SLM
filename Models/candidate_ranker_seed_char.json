@@ -628,7 +628,7 @@
       "開\t會": 1
     }
   },
-  "created_at": "2026-06-21T14:19:28+08:00",
+  "created_at": "2026-06-21T14:28:45+08:00",
   "defaults": {
     "total_candidate_observations": 123,
     "unknown_score": 0.0,
@@ -636,6 +636,12 @@
   },
   "description": "Non-generative candidate ranker. Scores only existing candidate tokens and emits one candidate-constrained output string.",
   "model_type": "candidate-ranker-v1",
+  "selection": {
+    "min_non_baseline_feature_hits": 2,
+    "min_reading_candidate_count_for_override": 2,
+    "override_margin": 0.1,
+    "prefer_baseline_on_weak_override": true
+  },
   "training": {
     "contamination_guard": "excluded cases are not counted",
     "excluded_cases": 0,
@@ -645,7 +651,7 @@
     "skipped_without_candidates": 0,
     "skipped_without_expected": 0,
     "source_files": [
-      "ranker_training_seed_char_requests.jsonl"
+      "ranker_training_seed_char_requests_after_guard.jsonl"
     ],
     "usable_cases": 21
   },

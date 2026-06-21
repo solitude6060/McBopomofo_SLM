@@ -1,8 +1,8 @@
 {
   "suite": "slm-benchmark-suite",
-  "date": "2026-06-21T14:19:34+08:00",
+  "date": "2026-06-21T14:28:51+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "67e37c3f2976ae957ce0600c392c4884618004c5",
+  "commit": "43e7211513b11a4e1330fa5378953cd526fea654",
   "fixtures": {
     "taiwan_ambiguous": 100,
     "english_mixed": 50,
@@ -19,6 +19,12 @@
       "excluded_cases": 0,
       "source_file": "Tests/fixtures/contextual_bopomofo/ranker_training_seed.jsonl",
       "candidate_granularity": "character",
+      "selection": {
+        "override_margin": 0.1,
+        "min_non_baseline_feature_hits": 2,
+        "min_reading_candidate_count_for_override": 2,
+        "prefer_baseline_on_weak_override": true
+      },
       "contamination_guard": "ranker-train ids are outside canonical benchmark fixture prefixes"
     },
     "real_model_benchmarked": false,
@@ -35,7 +41,7 @@
         "latency_us": {
           "p50": 2,
           "p95": 3,
-          "p99": 4
+          "p99": 3
         },
         "total_cases": 100
       },
@@ -45,8 +51,8 @@
         "exact_matches": 19,
         "errors": 31,
         "latency_us": {
-          "p50": 2,
-          "p95": 3,
+          "p50": 1,
+          "p95": 2,
           "p99": 4
         },
         "total_cases": 50
@@ -84,9 +90,9 @@
         "exact_matches": 93,
         "errors": 7,
         "latency_us": {
-          "p50": 217,
-          "p95": 436,
-          "p99": 527
+          "p50": 211,
+          "p95": 430,
+          "p99": 526
         },
         "total_cases": 100
       },
@@ -96,9 +102,9 @@
         "exact_matches": 24,
         "errors": 26,
         "latency_us": {
-          "p50": 163,
-          "p95": 414,
-          "p99": 646
+          "p50": 147,
+          "p95": 375,
+          "p99": 476
         },
         "total_cases": 50
       },
@@ -108,9 +114,9 @@
         "exact_matches": 53,
         "errors": 31,
         "latency_us": {
-          "p50": 209,
-          "p95": 336,
-          "p99": 412
+          "p50": 207,
+          "p95": 347,
+          "p99": 490
         },
         "total_cases": 84
       }
@@ -121,9 +127,9 @@
       "exact_matches": 170,
       "errors": 64,
       "latency_us": {
-        "p50": 203,
-        "p95": 412,
-        "p99": 527
+        "p50": 191,
+        "p95": 399,
+        "p99": 490
       }
     }
   },
@@ -131,14 +137,14 @@
     "per_fixture": [
       {
         "fixture": "taiwan_ambiguous",
-        "exact_accuracy": 80.0,
-        "exact_matches": 80,
-        "errors": 20,
+        "exact_accuracy": 82.0,
+        "exact_matches": 82,
+        "errors": 18,
         "fallbacks": 0,
         "latency_us": {
-          "p50": 42,
-          "p95": 90,
-          "p99": 154
+          "p50": 54,
+          "p95": 103,
+          "p99": 163
         },
         "candidate_validation": {
           "protocol_available": true,
@@ -156,9 +162,9 @@
         "errors": 31,
         "fallbacks": 0,
         "latency_us": {
-          "p50": 41,
-          "p95": 99,
-          "p99": 15609
+          "p50": 54,
+          "p95": 137,
+          "p99": 18067
         },
         "candidate_validation": {
           "protocol_available": true,
@@ -171,14 +177,14 @@
       },
       {
         "fixture": "taiwan_specific",
-        "exact_accuracy": 64.2857,
-        "exact_matches": 54,
-        "errors": 30,
+        "exact_accuracy": 63.0952,
+        "exact_matches": 53,
+        "errors": 31,
         "fallbacks": 0,
         "latency_us": {
-          "p50": 107,
-          "p95": 172,
-          "p99": 15434
+          "p50": 69,
+          "p95": 118,
+          "p99": 14707
         },
         "candidate_validation": {
           "protocol_available": true,
@@ -192,14 +198,14 @@
     ],
     "aggregate": {
       "total_cases": 234,
-      "exact_accuracy": 65.3846,
-      "exact_matches": 153,
-      "errors": 81,
+      "exact_accuracy": 65.812,
+      "exact_matches": 154,
+      "errors": 80,
       "fallbacks": 0,
       "latency_us": {
-        "p50": 57,
-        "p95": 158,
-        "p99": 13001
+        "p50": 58,
+        "p95": 124,
+        "p99": 13543
       },
       "candidate_validation": {
         "protocol_available": true,
@@ -212,22 +218,22 @@
   },
   "relative_error_reduction_pct": {
     "slm_vs_baseline": {
-      "taiwan_ambiguous": -5.2632,
+      "taiwan_ambiguous": 5.2632,
       "english_mixed": 0.0,
-      "taiwan_specific": 3.2258,
-      "aggregate": 0.0
+      "taiwan_specific": 0.0,
+      "aggregate": 1.2346
     },
     "slm_vs_deterministic": {
-      "taiwan_ambiguous": -185.7143,
+      "taiwan_ambiguous": -157.1429,
       "english_mixed": -19.2308,
-      "taiwan_specific": 3.2258,
-      "aggregate": -26.5625
+      "taiwan_specific": 0.0,
+      "aggregate": -25.0
     }
   },
   "gate": {
     "result": "FAIL",
     "reasons": [
-      "SLM vs deterministic relative error reduction=-26.5625% (need > 0%)"
+      "SLM vs deterministic relative error reduction=-25.0% (need > 0%)"
     ]
   },
   "real_model_benchmarked": false
