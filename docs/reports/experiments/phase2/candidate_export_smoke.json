@@ -15,7 +15,7 @@
     "default_candidate_limit": 16,
     "cases_with_candidates": 233,
     "cases_without_candidates": 1,
-    "cases_without_candidates_detail": "tw-taiwan_specific-011: reading 'ㄎㄧㄤ' not in language model, candidate generation safely omitted",
+    "cases_without_candidates_detail": "tw-taiwan_specific-011: one fixture reading is not in the language model; candidate generation safely omitted",
     "total_slots": 1040,
     "avg_candidates_per_slot": 3.42,
     "max_slot_size": 16,
