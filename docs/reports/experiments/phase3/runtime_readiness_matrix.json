@@ -2,7 +2,7 @@
   "id": "phase3-runtime-readiness-matrix",
   "name": "Phase 3 Runtime Readiness Matrix",
   "status": "partial",
-  "date": "2026-06-22T23:02:40+08:00",
+  "date": "2026-06-22T23:14:47+08:00",
   "branch": "slm-phase2-learnable",
   "protocol_version": "1.0",
   "privacy": {
@@ -52,6 +52,11 @@
       "area": "macOS build and IMK validation",
       "state": "ci_verified_pending_manual_dogfood",
       "evidence": "docs/reports/experiments/phase3/macos_ci_runtime_build_gate.json"
+    },
+    {
+      "area": "runtime gate health dashboard",
+      "state": "ci_verified_content_free_summary",
+      "evidence": "docs/reports/experiments/phase3/runtime_gate_health_static_gate.json"
     }
   ],
   "ci_verification_path": {
@@ -113,6 +118,7 @@
     "python3 -m json.tool docs/reports/experiments/phase3/heldout_fixture_hygiene_repair_gate.json",
     "python3 -m json.tool docs/reports/experiments/phase3/candidate_ranker_e2e_ci_gate.json",
     "python3 -m json.tool docs/reports/experiments/phase3/linux_engine_gtest_ci_gate.json",
+    "python3 -m json.tool docs/reports/experiments/phase3/runtime_gate_health_static_gate.json",
     "python3 -m json.tool docs/reports/experiments/registry.json",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --heldout",
@@ -125,7 +131,8 @@
     "python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --report docs/reports/experiments/phase2/slm_qwen2_5_0_5b_index_taiwan_ambiguous.json --required-fixture heldout_generalization_clean --expect-fail",
     "python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --report docs/reports/experiments/phase2/slm_qwen2_5_0_5b_indices_repair_clean_gate_benchmark.json --required-fixture heldout_generalization_clean --expect-fail",
     "python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py --self-test",
-    "python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py",
+    "python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py --summary-output /tmp/runtime_gate_health.json",
+    "python3 -m json.tool /tmp/runtime_gate_health.json",
     "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --export-clean heldout_generalization",
     "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --fixtures all",
     "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character --output /tmp/slm_ci_smoke_character_report.json",
@@ -144,6 +151,7 @@
     "gh run watch 27949662127 --exit-status",
     "gh run watch 27957371891 --exit-status",
     "gh run watch 27959649945 --exit-status",
+    "gh run watch 27963083488 --exit-status",
     "git diff --check"
   ],
   "next_steps": [

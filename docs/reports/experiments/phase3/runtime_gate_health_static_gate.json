@@ -1,0 +1,76 @@
+{
+  "id": "phase3-runtime-gate-health-static-gate",
+  "name": "Phase 3 Runtime Gate Health Static Gate",
+  "status": "verified",
+  "date": "2026-06-22T23:14:47+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "ba4b97e",
+  "protocol_version": "1.0",
+  "results_dir": "docs/reports/experiments/phase3/",
+  "summary_file": "docs/reports/experiments/phase3/runtime_gate_health_static_gate.json",
+  "result_files": [
+    "docs/reports/experiments/phase3/runtime_gate_health_static_gate.json"
+  ],
+  "artifacts": [
+    "Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py",
+    ".github/workflows/experiment-reports.yml",
+    "docs/reports/experiments/phase3/runtime_readiness_matrix.json"
+  ],
+  "ci_workflow": ".github/workflows/experiment-reports.yml",
+  "github_run_id": "27963083488",
+  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27963083488",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false,
+    "screenshots_with_private_text": false,
+    "user_phrase_files_recorded": false
+  },
+  "gate_result": "PASS",
+  "generated_summary": {
+    "id": "phase3-runtime-gate-health",
+    "source_matrix_id": "phase3-runtime-readiness-matrix",
+    "source_matrix_status": "partial",
+    "gate_counts": {
+      "pass": 3,
+      "ready": 1,
+      "open": 2,
+      "other": 0,
+      "invalid": 0
+    },
+    "open_gates": [
+      {
+        "gate": "manual IMK dogfood",
+        "status": "missing",
+        "classification": "open",
+        "required_evidence": "Off and Deterministic modes pass the content-free dogfood checklist"
+      },
+      {
+        "gate": "SLM runtime",
+        "status": "not_ready_promotion_validator_pass_github_run_27962209549",
+        "classification": "open",
+        "required_evidence": "local-only model path with timeout, fallback, constrained output, and a benchmark win over deterministic"
+      }
+    ]
+  },
+  "verification": [
+    "python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py --self-test",
+    "python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py --summary-output /tmp/runtime_gate_health.json",
+    "python3 -m json.tool /tmp/runtime_gate_health.json",
+    "python3 Tools/SLMRerankerExperiment/validate_experiment_reports.py",
+    "git diff --check",
+    "gh run watch 27963083488 --exit-status",
+    "GitHub experiment-reports.yml run 27963083488 passed Validate runtime readiness matrix"
+  ],
+  "not_tested": [
+    "manual IMK dogfood",
+    "a real SLM report passing promotion"
+  ],
+  "next_steps": [
+    "Keep generating runtime_gate_health.json in Experiment reports CI.",
+    "Close manual IMK dogfood with validator-approved content-free evidence.",
+    "Keep SLM Prototype unwired until a local-only constrained model path passes the promotion gate."
+  ]
+}
