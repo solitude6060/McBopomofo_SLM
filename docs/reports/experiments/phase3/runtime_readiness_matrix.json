@@ -2,7 +2,7 @@
   "id": "phase3-runtime-readiness-matrix",
   "name": "Phase 3 Runtime Readiness Matrix",
   "status": "partial",
-  "date": "2026-06-22T22:22:41+08:00",
+  "date": "2026-06-22T23:02:40+08:00",
   "branch": "slm-phase2-learnable",
   "protocol_version": "1.0",
   "privacy": {
@@ -101,7 +101,7 @@
     {
       "gate": "SLM runtime",
       "required_evidence": "local-only model path with timeout, fallback, constrained output, and a benchmark win over deterministic",
-      "status": "not_ready_promotion_validator_pass_github_run_27953106360"
+      "status": "not_ready_promotion_validator_pass_github_run_27962209549"
     }
   ],
   "verification": [
@@ -123,6 +123,7 @@
     "python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --dogfood /tmp/test_det.json",
     "python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --self-test",
     "python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --report docs/reports/experiments/phase2/slm_qwen2_5_0_5b_index_taiwan_ambiguous.json --required-fixture heldout_generalization_clean --expect-fail",
+    "python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --report docs/reports/experiments/phase2/slm_qwen2_5_0_5b_indices_repair_clean_gate_benchmark.json --required-fixture heldout_generalization_clean --expect-fail",
     "python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py --self-test",
     "python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py",
     "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --export-clean heldout_generalization",
@@ -136,7 +137,7 @@
     "ctest --test-dir /tmp/mcbopomofo_engine_linux_gtests --output-on-failure",
     "gh run watch 27955971624 --exit-status",
     "gh run watch 27955071423 --exit-status",
-    "gh run watch 27953106360 --exit-status",
+    "gh run watch 27962209549 --exit-status",
     "gh run watch 27951356566 --exit-status",
     "gh run watch 27952280884 --exit-status",
     "gh run watch 27950784933 --exit-status",
