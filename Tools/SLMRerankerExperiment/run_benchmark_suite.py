@@ -15,6 +15,14 @@ Usage:
         --work-dir /tmp/slm_suite_smoke \\
         --output /tmp/slm_suite_smoke_report.json
 
+    # Include the in-tree bigram scorer as an opt-in comparison lane
+    python3 run_benchmark_suite.py \\
+        --dry-run-local-wrapper \\
+        --run-bigram \\
+        --bigram-model Models/bigram_model.bin \\
+        --work-dir /tmp/slm_suite_smoke \\
+        --output /tmp/slm_suite_smoke_report.json
+
     # Persistent real model
     python3 run_benchmark_suite.py \\
         --persistent-scorer-command "python3 your_scorer.py --persistent" \\
@@ -50,6 +58,7 @@ EVALUATOR_BIN = os.path.join(
     PROJECT_ROOT, "Tools", "ContextualEvaluation", "build", "evaluator"
 )
 DATA_TXT = os.path.join(PROJECT_ROOT, "Source", "Data", "data.txt")
+DEFAULT_BIGRAM_MODEL = os.path.join(PROJECT_ROOT, "Models", "bigram_model.bin")
 FIXTURES_DIR = os.path.join(
     PROJECT_ROOT, "Tests", "fixtures", "contextual_bopomofo"
 )
@@ -125,7 +134,8 @@ def parse_evaluator_output(stdout_text):
     return per_case, summary
 
 
-def run_evaluator(fixture_path, scorer=None, slm_request_output=None,
+def run_evaluator(fixture_path, scorer=None, model_path=None,
+                  slm_request_output=None,
                   candidate_limit=16, slm_candidate_granularity="node",
                   timeout=120):
     """Run the C++ evaluator subprocess.
@@ -136,6 +146,8 @@ def run_evaluator(fixture_path, scorer=None, slm_request_output=None,
     cmd = [EVALUATOR_BIN, DATA_TXT]
     if scorer:
         cmd.extend(["--scorer", scorer])
+    if model_path:
+        cmd.extend(["--model", model_path])
     if slm_request_output:
         cmd.extend([
             "--slm-request-output", slm_request_output,
@@ -429,6 +441,20 @@ def _extract_eval_metrics(per_case, summary):
     }
 
 
+def _aggregate_eval_fixtures(eval_fixtures, latencies, total_cases):
+    """Aggregate evaluator-style per-fixture metrics."""
+    exact = sum(m["exact_matches"] for m in eval_fixtures)
+    errors = sum(m["errors"] for m in eval_fixtures)
+    return {
+        "total_cases": total_cases,
+        "exact_accuracy": round(exact / total_cases * 100, 4)
+        if total_cases > 0 else 0.0,
+        "exact_matches": exact,
+        "errors": errors,
+        "latency_us": compute_percentiles(latencies),
+    }
+
+
 def _extract_slm_metrics(slm_summary, total_cases):
     """Extract metrics dict from run_experiment.py summary."""
     exact_matches = slm_summary.get("exact_match_count", 0)
@@ -490,7 +516,8 @@ def _aggregate_slm_metrics(slm_fixtures, latencies):
 def build_report(baseline_data, deterministic_data, slm_data,
                  fixture_names, fixture_paths, scorer_mode,
                  model_manifest, real_model_benchmarked,
-                 gate_thresholds, slm_candidate_granularity):
+                 gate_thresholds, slm_candidate_granularity,
+                 bigram_data=None, bigram_model_path=None):
     """Assemble the comprehensive suite report dict.
 
     *slm_data* is a list of [{"name": ..., "summary": ...}, ...] per fixture.
@@ -506,9 +533,11 @@ def build_report(baseline_data, deterministic_data, slm_data,
     # -- Build per-fixture + aggregate metrics --
     base_fixtures = []
     det_fixtures = []
+    bigram_fixtures = []
     slm_fixtures = []
     base_all_lat = []
     det_all_lat = []
+    bigram_all_lat = []
     slm_all_lat = []
 
     for i, name in enumerate(fixture_names):
@@ -528,32 +557,35 @@ def build_report(baseline_data, deterministic_data, slm_data,
         det_all_lat.extend(dl)
         det_fixtures.append({"fixture": name, **dm})
 
+        if bigram_data:
+            gl = [c["elapsed_us"] for c in bigram_data[i]["per_case"]]
+            gm = _extract_eval_metrics(bigram_data[i]["per_case"],
+                                       bigram_data[i]["summary"])
+            gm["total_cases"] = tc
+            bigram_all_lat.extend(gl)
+            bigram_fixtures.append({"fixture": name, **gm})
+
         sm = _extract_slm_metrics(slm_data[i]["summary"], tc)
         sm["total_cases"] = tc
         slm_all_lat.extend(sm.pop("_latencies", []))
         slm_fixtures.append({"fixture": name, **sm})
 
     # Aggregate baseline
-    base_agg = {
-        "total_cases": total_cases_all,
-        "exact_accuracy": round(
-            sum(bm["exact_matches"] for bm in base_fixtures) / total_cases_all * 100, 4
-        ),
-        "exact_matches": sum(bm["exact_matches"] for bm in base_fixtures),
-        "errors": sum(bm["errors"] for bm in base_fixtures),
-        "latency_us": compute_percentiles(base_all_lat),
-    }
+    base_agg = _aggregate_eval_fixtures(
+        base_fixtures, base_all_lat, total_cases_all
+    )
 
     # Aggregate deterministic
-    det_agg = {
-        "total_cases": total_cases_all,
-        "exact_accuracy": round(
-            sum(dm["exact_matches"] for dm in det_fixtures) / total_cases_all * 100, 4
-        ),
-        "exact_matches": sum(dm["exact_matches"] for dm in det_fixtures),
-        "errors": sum(dm["errors"] for dm in det_fixtures),
-        "latency_us": compute_percentiles(det_all_lat),
-    }
+    det_agg = _aggregate_eval_fixtures(
+        det_fixtures, det_all_lat, total_cases_all
+    )
+
+    # Aggregate optional bigram scorer
+    bigram_agg = None
+    if bigram_data:
+        bigram_agg = _aggregate_eval_fixtures(
+            bigram_fixtures, bigram_all_lat, total_cases_all
+        )
 
     # Aggregate SLM
     slm_agg = _aggregate_slm_metrics(slm_fixtures, slm_all_lat)
@@ -561,6 +593,8 @@ def build_report(baseline_data, deterministic_data, slm_data,
     # -- Relative error reduction --
     rer_slm_vs_baseline = {}
     rer_slm_vs_deterministic = {}
+    rer_bigram_vs_baseline = {}
+    rer_bigram_vs_deterministic = {}
 
     for sf in slm_fixtures:
         name = sf["fixture"]
@@ -572,6 +606,14 @@ def build_report(baseline_data, deterministic_data, slm_data,
         rer_slm_vs_deterministic[name] = relative_error_reduction_pct(
             df["errors"], sf["errors"]
         )
+        if bigram_data:
+            gf = next(f for f in bigram_fixtures if f["fixture"] == name)
+            rer_bigram_vs_baseline[name] = relative_error_reduction_pct(
+                bf["errors"], gf["errors"]
+            )
+            rer_bigram_vs_deterministic[name] = relative_error_reduction_pct(
+                df["errors"], gf["errors"]
+            )
 
     agg_rer_vs_base = relative_error_reduction_pct(
         base_agg["errors"], slm_agg["errors"]
@@ -582,6 +624,14 @@ def build_report(baseline_data, deterministic_data, slm_data,
 
     rer_slm_vs_baseline["aggregate"] = agg_rer_vs_base
     rer_slm_vs_deterministic["aggregate"] = agg_rer_vs_det
+
+    if bigram_data:
+        rer_bigram_vs_baseline["aggregate"] = relative_error_reduction_pct(
+            base_agg["errors"], bigram_agg["errors"]
+        )
+        rer_bigram_vs_deterministic["aggregate"] = relative_error_reduction_pct(
+            det_agg["errors"], bigram_agg["errors"]
+        )
 
     # -- Gate --
     gate_result, gate_reasons = _evaluate_gate(
@@ -605,6 +655,8 @@ def build_report(baseline_data, deterministic_data, slm_data,
         scorer_info["model_manifest"] = sanitized
     else:
         scorer_info["model_manifest"] = None
+    if bigram_data:
+        scorer_info["bigram_model"] = _project_relpath(bigram_model_path)
 
     # -- Date/branch/commit --
     date_str = time.strftime("%Y-%m-%dT%H:%M:%S+08:00", time.localtime())
@@ -640,6 +692,18 @@ def build_report(baseline_data, deterministic_data, slm_data,
         },
         "real_model_benchmarked": real_model_benchmarked,
     }
+
+    if bigram_data:
+        report["bigram"] = {
+            "per_fixture": bigram_fixtures,
+            "aggregate": bigram_agg,
+        }
+        report["relative_error_reduction_pct"]["bigram_vs_baseline"] = (
+            rer_bigram_vs_baseline
+        )
+        report["relative_error_reduction_pct"]["bigram_vs_deterministic"] = (
+            rer_bigram_vs_deterministic
+        )
 
     return report
 
@@ -726,6 +790,20 @@ def _git_cmd(*args):
     return ""
 
 
+def _project_relpath(path):
+    """Return a stable project-relative path when possible."""
+    if not path:
+        return None
+    abs_path = os.path.abspath(path)
+    try:
+        rel = os.path.relpath(abs_path, PROJECT_ROOT)
+    except ValueError:
+        return abs_path
+    if rel == "." or rel.startswith(".."):
+        return abs_path
+    return rel
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -782,6 +860,17 @@ def build_arg_parser():
         "--dry-run-local-wrapper",
         action="store_true",
         help="Use local_llm_scorer.py --dry-run-baseline --persistent",
+    )
+    parser.add_argument(
+        "--run-bigram",
+        action="store_true",
+        help="Also run the in-process BigramContextualScorer comparison lane",
+    )
+    parser.add_argument(
+        "--bigram-model",
+        type=str,
+        default=DEFAULT_BIGRAM_MODEL,
+        help="BIGR model path for --run-bigram (default: Models/bigram_model.bin)",
     )
     parser.add_argument(
         "--model-manifest",
@@ -1021,10 +1110,62 @@ def run_self_test():
     if metrics["latency_us"]["p50"] != 100:
         errors.append("extract eval: latency p50 mismatch")
 
+    # -- 9. build_report: optional bigram lane --
+    baseline_sample = [{"per_case": per_case, "summary": summary}]
+    deterministic_sample = [{
+        "per_case": [{"id": "a", "elapsed_us": 110},
+                     {"id": "b", "elapsed_us": 210}],
+        "summary": {"total_cases": 2, "exact_match_count": 2,
+                    "exact_sentence_accuracy": 100.0},
+    }]
+    bigram_sample = [{
+        "per_case": [{"id": "a", "elapsed_us": 120},
+                     {"id": "b", "elapsed_us": 240}],
+        "summary": {"total_cases": 2, "exact_match_count": 1,
+                    "exact_sentence_accuracy": 50.0},
+    }]
+    slm_sample = [{
+        "name": "sample_fixture",
+        "summary": {
+            "exact_match_count": 1,
+            "exact_sentence_accuracy_pct": 50.0,
+            "fallbacks": 0,
+            "latency_us": {"p50": 10, "p95": 20, "p99": 20},
+            "candidate_validation": {
+                "protocol_available": True,
+                "exercised": True,
+                "cases_with_candidates": 2,
+                "non_candidate_violations": 0,
+            },
+            "_per_case_latencies": [10, 20],
+        },
+    }]
+    report = build_report(
+        baseline_sample, deterministic_sample, slm_sample,
+        ["sample_fixture"], ["/tmp/sample_fixture.jsonl"],
+        "dry-run-local-wrapper", None, False,
+        {"fallback_threshold": 0, "slm_latency_target_us": 20000},
+        "node", bigram_data=bigram_sample,
+        bigram_model_path=DEFAULT_BIGRAM_MODEL,
+    )
+    if "bigram" not in report:
+        errors.append("build report bigram: missing bigram section")
+    elif report["bigram"]["aggregate"]["exact_matches"] != 1:
+        errors.append("build report bigram: aggregate matches mismatch")
+    rer_block = report.get("relative_error_reduction_pct", {})
+    if "bigram_vs_baseline" not in rer_block:
+        errors.append("build report bigram: missing bigram_vs_baseline RER")
+    if "bigram_vs_deterministic" not in rer_block:
+        errors.append(
+            "build report bigram: missing bigram_vs_deterministic RER"
+        )
+    if report.get("scorer", {}).get("bigram_model") != "Models/bigram_model.bin":
+        errors.append("build report bigram: expected project-relative model path")
+
     if fixture_name_from_path("/tmp/slm_taiwan_ambiguous.jsonl") != "taiwan_ambiguous":
         errors.append("fixture name: expected generated SLM request prefix stripped")
 
-    # -- 9. fixture_name_from_path: dynamic fixture path --
+    # -- 10. fixture_name_from_path: dynamic fixture path --
     clean_path = "/tmp/heldout_generalization_clean.jsonl"
     if fixture_name_from_path(clean_path) != "heldout_generalization_clean":
         errors.append(
@@ -1032,7 +1173,7 @@ def run_self_test():
             f"got {fixture_name_from_path(clean_path)!r}"
         )
 
-    # -- 10. _parse_export_clean_stdout: valid parse --
+    # -- 11. _parse_export_clean_stdout: valid parse --
     valid_stdout = json.dumps({
         "audit": "fixture_hygiene_audit",
         "total_cases": 63,
@@ -1244,6 +1385,14 @@ def main():
         )
         sys.exit(1)
 
+    bigram_model_path = os.path.abspath(args.bigram_model)
+    if args.run_bigram and not os.path.isfile(bigram_model_path):
+        print(
+            f"FATAL: --bigram-model not found: {bigram_model_path}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     # Determine mode
     if args.dry_run_local_wrapper:
         scorer_mode = "dry-run-local-wrapper"
@@ -1313,6 +1462,25 @@ def main():
             file=sys.stderr,
         )
 
+    # -- Optional Phase 2.5: Bigram model evaluation --
+    bigram_data = None
+    if args.run_bigram:
+        print("Phase 2.5/4: Running bigram reranker evaluation...",
+              file=sys.stderr)
+        bigram_data = []
+        for fpath in fixture_paths:
+            name = fixture_name_from_path(fpath)
+            print(f"  Bigram: {name}...", file=sys.stderr)
+            pc, summary = run_evaluator(
+                fpath, scorer="bigram", model_path=bigram_model_path
+            )
+            bigram_data.append({"per_case": pc, "summary": summary})
+            print(
+                f"    accuracy={summary['exact_sentence_accuracy']}%, "
+                f"matches={summary['exact_match_count']}/{summary['total_cases']}",
+                file=sys.stderr,
+            )
+
     # -- Phase 3: Export SLM request files --
     print("Phase 3/4: Exporting SLM candidate request files...",
           file=sys.stderr)
@@ -1378,6 +1546,8 @@ def main():
         fixture_names, fixture_paths, scorer_mode,
         model_manifest, real_model_benchmarked,
         gate_thresholds, args.slm_candidate_granularity,
+        bigram_data=bigram_data,
+        bigram_model_path=bigram_model_path if args.run_bigram else None,
     )
 
     # -- Output --
