@@ -15,6 +15,9 @@ Usage:
         --work-dir /tmp/slm_suite_smoke \\
         --output /tmp/slm_suite_smoke_report.json
 
+    # CI smoke (full pipeline with persistent mock scorer; writes only to /tmp)
+    python3 run_benchmark_suite.py --ci-smoke
+
     # Include the in-tree bigram scorer as an opt-in comparison lane
     python3 run_benchmark_suite.py \\
         --dry-run-local-wrapper \\
@@ -67,6 +70,9 @@ EXPERIMENT_RUNNER = os.path.join(
 )
 LOCAL_LLM_SCORER = os.path.join(
     SCRIPT_DIR, "local_llm_scorer.py"
+)
+MOCK_TINY_LLM_SCORER = os.path.join(
+    SCRIPT_DIR, "mock_tiny_llm_scorer.py"
 )
 SMOKE_REPORT_PATH = os.path.join(
     PROJECT_ROOT,
@@ -804,6 +810,67 @@ def _project_relpath(path):
     return rel
 
 
+def _is_under_tmp(path):
+    if not path:
+        return False
+    tmp_dir = os.path.abspath(tempfile.gettempdir())
+    abs_path = os.path.abspath(path)
+    return abs_path == tmp_dir or abs_path.startswith(tmp_dir + os.sep)
+
+
+def validate_ci_smoke_report(report, output_path, work_dir):
+    """Return list of CI-smoke validation errors for a full pipeline report."""
+    errors = []
+    fixtures = report.get("fixtures", {})
+    if fixtures.get("total") != 234:
+        errors.append(f"fixtures.total expected 234, got {fixtures.get('total')}")
+
+    deterministic = report.get("deterministic", {}).get("aggregate", {})
+    if deterministic.get("total_cases") != 234:
+        errors.append(
+            "deterministic.total_cases expected 234, "
+            f"got {deterministic.get('total_cases')}"
+        )
+    if deterministic.get("exact_matches") != 234:
+        errors.append(
+            "deterministic.exact_matches expected 234, "
+            f"got {deterministic.get('exact_matches')}"
+        )
+
+    slm = report.get("slm", {}).get("aggregate", {})
+    if slm.get("total_cases") != 234:
+        errors.append(f"slm.total_cases expected 234, got {slm.get('total_cases')}")
+    if slm.get("fallbacks") != 0:
+        errors.append(f"slm.fallbacks expected 0, got {slm.get('fallbacks')}")
+    cv = slm.get("candidate_validation", {})
+    if cv.get("exercised") is not True:
+        errors.append("slm.candidate_validation.exercised expected true")
+    if cv.get("cases_with_candidates") != 234:
+        errors.append(
+            "slm.candidate_validation.cases_with_candidates expected 234, "
+            f"got {cv.get('cases_with_candidates')}"
+        )
+    if cv.get("non_candidate_violations") != 0:
+        errors.append(
+            "slm.candidate_validation.non_candidate_violations expected 0, "
+            f"got {cv.get('non_candidate_violations')}"
+        )
+
+    gate = report.get("gate", {})
+    if gate.get("result") != "FAIL":
+        errors.append(f"gate.result expected FAIL, got {gate.get('result')}")
+    gate_reasons = gate.get("reasons", [])
+    if not any("relative error reduction" in reason for reason in gate_reasons):
+        errors.append("gate.reasons missing expected RER failure")
+
+    if not _is_under_tmp(output_path):
+        errors.append(f"output path must be under /tmp, got {output_path}")
+    if not _is_under_tmp(work_dir):
+        errors.append(f"work-dir must be under /tmp, got {work_dir}")
+
+    return errors
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -860,6 +927,11 @@ def build_arg_parser():
         "--dry-run-local-wrapper",
         action="store_true",
         help="Use local_llm_scorer.py --dry-run-baseline --persistent",
+    )
+    parser.add_argument(
+        "--ci-smoke",
+        action="store_true",
+        help="Run full pipeline CI smoke with persistent mock scorer and /tmp outputs",
     )
     parser.add_argument(
         "--run-bigram",
@@ -1162,10 +1234,48 @@ def run_self_test():
     if report.get("scorer", {}).get("bigram_model") != "Models/bigram_model.bin":
         errors.append("build report bigram: expected project-relative model path")
 
+    # -- 10. validate_ci_smoke_report --
+    smoke_report = {
+        "fixtures": {"total": 234},
+        "deterministic": {
+            "aggregate": {"total_cases": 234, "exact_matches": 234}
+        },
+        "slm": {
+            "aggregate": {
+                "total_cases": 234,
+                "fallbacks": 0,
+                "candidate_validation": {
+                    "exercised": True,
+                    "cases_with_candidates": 234,
+                    "non_candidate_violations": 0,
+                },
+            }
+        },
+        "gate": {
+            "result": "FAIL",
+            "reasons": ["SLM vs deterministic relative error reduction=0.0%"],
+        },
+    }
+    smoke_errors = validate_ci_smoke_report(
+        smoke_report,
+        os.path.join(tempfile.gettempdir(), "smoke.json"),
+        os.path.join(tempfile.gettempdir(), "smoke-work"),
+    )
+    if smoke_errors:
+        errors.append(f"ci smoke valid report: unexpected {smoke_errors}")
+    invalid_smoke = dict(smoke_report)
+    invalid_smoke["gate"] = {"result": "PASS", "reasons": []}
+    if not validate_ci_smoke_report(
+        invalid_smoke,
+        os.path.join(tempfile.gettempdir(), "smoke.json"),
+        os.path.join(tempfile.gettempdir(), "smoke-work"),
+    ):
+        errors.append("ci smoke invalid report: expected gate result error")
+
     if fixture_name_from_path("/tmp/slm_taiwan_ambiguous.jsonl") != "taiwan_ambiguous":
         errors.append("fixture name: expected generated SLM request prefix stripped")
 
-    # -- 10. fixture_name_from_path: dynamic fixture path --
+    # -- 11. fixture_name_from_path: dynamic fixture path --
     clean_path = "/tmp/heldout_generalization_clean.jsonl"
     if fixture_name_from_path(clean_path) != "heldout_generalization_clean":
         errors.append(
@@ -1173,7 +1283,7 @@ def run_self_test():
             f"got {fixture_name_from_path(clean_path)!r}"
         )
 
-    # -- 11. _parse_export_clean_stdout: valid parse --
+    # -- 12. _parse_export_clean_stdout: valid parse --
     valid_stdout = json.dumps({
         "audit": "fixture_hygiene_audit",
         "total_cases": 63,
@@ -1369,18 +1479,20 @@ def main():
         1 if args.scorer_command else 0,
         1 if args.persistent_scorer_command else 0,
         1 if args.dry_run_local_wrapper else 0,
+        1 if args.ci_smoke else 0,
     ])
     if mode_count == 0:
         print(
             "FATAL: one of --scorer-command, --persistent-scorer-command, "
-            "or --dry-run-local-wrapper is required (unless --self-test)",
+            "--dry-run-local-wrapper, or --ci-smoke is required "
+            "(unless --self-test)",
             file=sys.stderr,
         )
         sys.exit(1)
     if mode_count > 1:
         print(
             "FATAL: --scorer-command, --persistent-scorer-command, and "
-            "--dry-run-local-wrapper are mutually exclusive",
+            "--dry-run-local-wrapper, and --ci-smoke are mutually exclusive",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -1394,7 +1506,10 @@ def main():
         sys.exit(1)
 
     # Determine mode
-    if args.dry_run_local_wrapper:
+    if args.ci_smoke:
+        scorer_mode = "ci-smoke-persistent-mock"
+        real_model_benchmarked = False
+    elif args.dry_run_local_wrapper:
         scorer_mode = "dry-run-local-wrapper"
         real_model_benchmarked = False
     elif args.persistent_scorer_command:
@@ -1425,13 +1540,29 @@ def main():
     )
 
     # Work directory
-    if args.work_dir:
+    if args.ci_smoke and not args.work_dir:
+        work_dir = tempfile.mkdtemp(prefix="slm_ci_smoke_")
+    elif args.work_dir:
         work_dir = args.work_dir
         os.makedirs(work_dir, exist_ok=True)
     else:
         work_dir = tempfile.mkdtemp(prefix="slm_benchmark_suite_")
 
     print(f"Work directory: {work_dir}", file=sys.stderr)
+
+    if args.ci_smoke:
+        if args.output and not _is_under_tmp(args.output):
+            print(
+                f"FATAL: --ci-smoke output must be under /tmp: {args.output}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        if not _is_under_tmp(work_dir):
+            print(
+                f"FATAL: --ci-smoke work-dir must be under /tmp: {work_dir}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
 
     # -- Phase 1: Baseline evaluation --
     print("Phase 1/4: Running baseline evaluation...", file=sys.stderr)
@@ -1508,7 +1639,10 @@ def main():
     # -- Phase 4: SLM experiment (per fixture) --
     print("Phase 4/4: Running SLM experiment per fixture...", file=sys.stderr)
 
-    if args.dry_run_local_wrapper:
+    if args.ci_smoke:
+        slm_mode = "persistent"
+        command = f"{sys.executable} {MOCK_TINY_LLM_SCORER} --persistent"
+    elif args.dry_run_local_wrapper:
         slm_mode = "dry-run-local-wrapper"
         command = None
     elif args.persistent_scorer_command:
@@ -1553,6 +1687,11 @@ def main():
     # -- Output --
     report_json = json.dumps(report, ensure_ascii=False, indent=2)
 
+    if args.ci_smoke and not args.output:
+        args.output = os.path.join(
+            tempfile.gettempdir(), "slm_ci_smoke_report.json"
+        )
+
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:
             f.write(report_json + "\n")
@@ -1561,6 +1700,15 @@ def main():
         print(report_json)
 
     # -- Smoke report for dry-run --
+    if args.ci_smoke:
+        errors = validate_ci_smoke_report(report, args.output, work_dir)
+        if errors:
+            for error in errors:
+                print(f"CI-SMOKE FAIL: {error}", file=sys.stderr)
+            sys.exit(1)
+        print("CI-SMOKE PASSED: full benchmark suite pipeline", file=sys.stderr)
+        return
+
     if args.dry_run_local_wrapper and not args.no_gate:
         os.makedirs(os.path.dirname(SMOKE_REPORT_PATH), exist_ok=True)
         # Add explicit note about no real model
