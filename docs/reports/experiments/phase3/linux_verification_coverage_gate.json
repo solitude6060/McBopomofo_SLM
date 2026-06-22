@@ -1,10 +1,10 @@
 {
   "id": "phase3-linux-verification-coverage-gate",
   "name": "Phase 3 Linux Verification Coverage Gate",
-  "status": "verified",
-  "date": "2026-06-22T21:10:13+08:00",
+  "status": "local_verified_pending_ci",
+  "date": "2026-06-22T21:57:02+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "5e27db5",
+  "commit": "pending",
   "protocol_version": "1.0",
   "model": null,
   "results_dir": "docs/reports/experiments/phase3/",
@@ -16,13 +16,14 @@
     ".github/workflows/experiment-reports.yml",
     "Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py",
     "Tools/ContextualEvaluation/fixture_hygiene_audit.py",
-    "Tools/SLMRerankerExperiment/run_benchmark_suite.py"
+    "Tools/SLMRerankerExperiment/run_benchmark_suite.py",
+    "Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py"
   ],
   "ci_workflow": ".github/workflows/experiment-reports.yml",
-  "github_run_id": "27955071423",
-  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27955071423",
-  "gate_result": "PASS",
-  "scope": "Linux-verifiable coverage for heldout clean export, character-granularity candidate export, and runtime readiness evidence links",
+  "github_run_id": null,
+  "github_run_url": null,
+  "gate_result": "PENDING_CI",
+  "scope": "Linux-verifiable coverage for heldout clean export, character-granularity candidate export, candidate-ranker E2E contract validation, and runtime readiness evidence links",
   "privacy": {
     "content_free": true,
     "raw_text_recorded": false,
@@ -35,6 +36,7 @@
   "coverage_added": [
     "fixture_hygiene_audit.py --export-clean heldout_generalization is exercised in CI and must produce a non-empty clean JSONL whose line count matches the clean count",
     "run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character is exercised in CI so the character candidate export path remains covered",
+    "validate_candidate_ranker_e2e.py exercises the C++ request export, persistent candidate-ranker scorer protocol, model schema loading, candidate validation, and content-free aggregate analysis",
     "validate_runtime_readiness_matrix.py checks runtime_readiness_matrix.json evidence links, JSON validity, privacy flag, and the expected open gates"
   ],
   "verification": [
@@ -43,12 +45,14 @@
     "python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py",
     "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --export-clean heldout_generalization > /tmp/heldout_export.json and verified 57 exported clean rows",
     "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character --output /tmp/slm_ci_smoke_character_report.json",
+    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --self-test",
+    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e_gate --suite-report /tmp/candidate_ranker_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_e2e_gate_analysis.json",
     "python3 Tools/SLMRerankerExperiment/validate_experiment_reports.py",
     "git diff --check",
-    "gh run watch 27955071423 --exit-status",
-    "GitHub experiment-reports.yml run 27955071423 passed Validate heldout clean export, CI smoke character candidate pipeline, and Validate runtime readiness matrix"
+    "GitHub-hosted Experiment reports workflow for candidate-ranker E2E is pending until the next push"
   ],
   "not_tested": [
+    "GitHub-hosted Experiment reports workflow for candidate-ranker E2E is pending until the next push",
     "manual IMK dogfood",
     "a real SLM model passing the promotion gate"
   ],

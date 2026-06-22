@@ -112,6 +112,10 @@ jobs:
         run: python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke
       - name: CI smoke character candidate pipeline
         run: python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character --output /tmp/slm_ci_smoke_character_report.json
+      - name: Validate candidate ranker E2E contract
+        run: |
+          python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --self-test
+          python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e --suite-report /tmp/candidate_ranker_e2e_report.json --analysis-report /tmp/candidate_ranker_e2e_analysis.json
       - name: Validate runtime readiness matrix
         run: |
           python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py --self-test

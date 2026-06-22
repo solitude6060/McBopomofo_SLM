@@ -40,8 +40,8 @@
     },
     {
       "area": "linux verification coverage",
-      "state": "heldout_export_character_smoke_readiness_and_63_case_hygiene_ci_verified",
-      "evidence": "docs/reports/experiments/phase3/linux_verification_coverage_gate.json; docs/reports/experiments/phase3/heldout_fixture_hygiene_repair_gate.json"
+      "state": "heldout_export_character_smoke_readiness_63_case_hygiene_and_candidate_ranker_e2e_pending_ci",
+      "evidence": "docs/reports/experiments/phase3/linux_verification_coverage_gate.json; docs/reports/experiments/phase3/heldout_fixture_hygiene_repair_gate.json; docs/reports/experiments/phase3/candidate_ranker_e2e_ci_gate.json"
     },
     {
       "area": "linux engine gtest coverage",
@@ -111,6 +111,7 @@
     "python3 -m json.tool docs/reports/experiments/phase3/macos_ci_runtime_build_gate.json",
     "python3 -m json.tool docs/reports/experiments/phase3/deterministic_linux_ci_gate.json",
     "python3 -m json.tool docs/reports/experiments/phase3/heldout_fixture_hygiene_repair_gate.json",
+    "python3 -m json.tool docs/reports/experiments/phase3/candidate_ranker_e2e_ci_gate.json",
     "python3 -m json.tool docs/reports/experiments/phase3/linux_engine_gtest_ci_gate.json",
     "python3 -m json.tool docs/reports/experiments/registry.json",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py",
@@ -127,6 +128,8 @@
     "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --export-clean heldout_generalization",
     "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --fixtures all",
     "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character --output /tmp/slm_ci_smoke_character_report.json",
+    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --self-test",
+    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e_gate --suite-report /tmp/candidate_ranker_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_e2e_gate_analysis.json",
     "cmake -DENABLE_TEST=ON -DCMAKE_BUILD_TYPE=Release -S Source/Engine -B /tmp/mcbopomofo_engine_linux_gtests",
     "cmake --build /tmp/mcbopomofo_engine_linux_gtests --target runMcBopomofoLMLibTest runMandarinTest runGramambular2Test",
     "ctest --test-dir /tmp/mcbopomofo_engine_linux_gtests --output-on-failure",
