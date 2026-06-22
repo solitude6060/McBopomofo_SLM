@@ -1138,6 +1138,57 @@
       ]
     },
     {
+      "id": "phase3-slm-promotion-gate-static-gate",
+      "name": "Phase 3 SLM Promotion Gate Static Gate",
+      "status": "partial",
+      "date": "2026-06-22T20:34:16+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit": "PENDING",
+      "protocol_version": "1.0",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase3/",
+      "summary_file": "docs/reports/experiments/phase3/slm_promotion_gate_static_gate.json",
+      "result_files": [
+        "docs/reports/experiments/phase3/slm_promotion_gate_static_gate.json"
+      ],
+      "artifacts": [
+        "Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py",
+        "Tools/SLMRerankerExperiment/run_benchmark_suite.py",
+        ".github/workflows/experiment-reports.yml"
+      ],
+      "description": "Adds a reusable promotion validator for SLM benchmark reports. The validator requires a real local model manifest, candidate validation with zero non-candidate violations, no excess fallbacks, p95 latency under budget, fewer aggregate errors than deterministic, positive relative error reduction versus deterministic, and requested heldout fixtures before any SLM runtime promotion claim.",
+      "runtime_default": "Off",
+      "typing_behavior_changed_by_default": false,
+      "gate_result": "PENDING_CI",
+      "privacy": {
+        "content_free": true,
+        "raw_text_recorded": false,
+        "readings_recorded": false,
+        "candidate_text_recorded": false,
+        "committed_text_recorded": false,
+        "screenshots_with_private_text": false,
+        "user_phrase_files_recorded": false
+      },
+      "verification": [
+        "python3 -m py_compile Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py",
+        "validate_slm_promotion_gate.py --self-test",
+        "validate_slm_promotion_gate.py --report slm_qwen2_5_0_5b_index_taiwan_ambiguous.json --required-fixture heldout_generalization_clean --expect-fail",
+        "validate_experiment_reports.py",
+        "git diff --check"
+      ],
+      "not_tested": [
+        "a real SLM model passing the promotion gate",
+        "SLM Prototype runtime wiring",
+        "manual IMK dogfood",
+        "GitHub-hosted promotion gate"
+      ],
+      "next_steps": [
+        "Push and verify experiment-reports.yml runs the promotion validator",
+        "Keep SLM Prototype unwired until a real model report passes this validator",
+        "Run future real-model reports through this validator with heldout_generalization_clean required"
+      ]
+    },
+    {
       "id": "phase3-deterministic-runtime-hook-static-gate",
       "name": "Phase 3 Deterministic Runtime Hook Static Gate",
       "status": "partial",
@@ -1339,7 +1390,7 @@
             "id": "phase3-runtime-readiness-matrix",
             "name": "Phase 3 Runtime Readiness Matrix",
             "status": "partial",
-            "date": "2026-06-22T20:23:15+08:00",
+            "date": "2026-06-22T20:34:16+08:00",
       "branch": "slm-phase2-learnable",
       "protocol_version": "1.0",
       "model": null,
@@ -1348,7 +1399,7 @@
       "result_files": [
         "docs/reports/experiments/phase3/runtime_readiness_matrix.json"
       ],
-            "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local validator and generator, Linux deterministic canonical and heldout clean regression gates, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path beats deterministic under the latency budget.",
+            "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local validator and generator, Linux deterministic canonical and heldout clean regression gates, SLM promotion validation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
       "gate_result": "PARTIAL",
       "verification": [
         "gh run watch 27949662127 --exit-status",
@@ -1358,10 +1409,13 @@
         "json.tool runtime readiness matrix",
         "json.tool dogfood evidence validator report",
         "json.tool dogfood evidence generator report",
+        "json.tool SLM promotion gate report",
         "json.tool heldout clean CI gate report",
         "json.tool macOS CI runtime build gate report",
         "generate_dogfood_evidence.py --self-test",
         "generated Deterministic session_complete evidence validated",
+        "validate_slm_promotion_gate.py --self-test",
+        "qwen2.5:0.5b report remains expected-fail under promotion gate",
         "json.tool registry",
         "git diff --check"
       ],
@@ -1371,7 +1425,7 @@
       "next_steps": [
                 "Execute content-free dogfood for Off and Deterministic modes with the interactive generator",
                 "Record content-free aggregate runtime counters from dogfood",
-                "Keep SLM Prototype unwired until model accuracy and latency gates pass"
+                "Keep SLM Prototype unwired until a real model report passes the SLM promotion gate"
       ]
     }
   ]

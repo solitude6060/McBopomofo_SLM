@@ -1,0 +1,63 @@
+{
+  "id": "phase3-slm-promotion-gate-static-gate",
+  "name": "Phase 3 SLM Promotion Gate Static Gate",
+  "status": "partial",
+  "date": "2026-06-22T20:34:16+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "PENDING",
+  "protocol_version": "1.0",
+  "model": null,
+  "results_dir": "docs/reports/experiments/phase3/",
+  "summary_file": "docs/reports/experiments/phase3/slm_promotion_gate_static_gate.json",
+  "result_files": [
+    "docs/reports/experiments/phase3/slm_promotion_gate_static_gate.json"
+  ],
+  "artifacts": [
+    "Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py",
+    "Tools/SLMRerankerExperiment/run_benchmark_suite.py",
+    ".github/workflows/experiment-reports.yml"
+  ],
+  "ci_workflow": ".github/workflows/experiment-reports.yml",
+  "github_run_id": "PENDING",
+  "github_run_url": "PENDING",
+  "gate_script": "Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py",
+  "scope": "Reusable validator for deciding whether an SLM benchmark report is promotable to runtime",
+  "gate_result": "PENDING_CI",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false,
+    "screenshots_with_private_text": false,
+    "user_phrase_files_recorded": false
+  },
+  "promotion_requirements": [
+    "benchmark report declares suite=slm-benchmark-suite",
+    "real_model_benchmarked is true",
+    "sanitized model manifest is present, local_only, redistributable, and has a positive parameter_count",
+    "candidate validation is exercised with zero non-candidate violations",
+    "fallbacks are at or below the configured threshold",
+    "SLM p95 latency is at or below the configured target",
+    "SLM has fewer aggregate errors than deterministic",
+    "SLM relative error reduction versus deterministic is above the configured minimum",
+    "required promotion fixtures such as heldout_generalization_clean are present when requested"
+  ],
+  "verification": [
+    "python3 -m py_compile Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py",
+    "python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --self-test",
+    "validate_slm_promotion_gate.py --report slm_qwen2_5_0_5b_index_taiwan_ambiguous.json --required-fixture heldout_generalization_clean --expect-fail",
+    "python3 Tools/SLMRerankerExperiment/validate_experiment_reports.py",
+    "git diff --check"
+  ],
+  "not_tested": [
+    "a real SLM model passing the promotion gate",
+    "SLM Prototype runtime wiring",
+    "manual IMK dogfood"
+  ],
+  "next_steps": [
+    "Keep SLM Prototype unwired until a real model report passes this promotion gate.",
+    "Run future real-model reports through this validator with heldout_generalization_clean required.",
+    "Retain qwen2.5:0.5b as expected-fail evidence until a better local model exists."
+  ]
+}
