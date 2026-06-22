@@ -93,10 +93,101 @@ def validate_candidate_safety(slm_aggregate, errors):
         )
 
 
+def normalize_curated_clean_gate_report(report):
+    """Map content-free clean-gate summaries to slm-benchmark-suite shape."""
+    if report.get("suite") == "slm-benchmark-suite":
+        return report
+    if not (
+        isinstance(report.get("fixture"), dict)
+        and isinstance(report.get("reference"), dict)
+        and isinstance(report.get("slm"), dict)
+        and "gate_result" in report
+    ):
+        return report
+
+    fixture = report.get("fixture", {})
+    fixture_name = fixture.get("name")
+    total_cases = fixture.get("total_cases")
+    scorer = report.get("scorer", {})
+    reference = report.get("reference", {})
+    deterministic = reference.get("deterministic", {})
+    slm = report.get("slm", {})
+
+    det_total = deterministic.get("total_cases", total_cases)
+    det_matches = deterministic.get("exact_matches")
+    det_errors = deterministic.get("errors")
+    if det_errors is None and isinstance(det_total, int) and isinstance(det_matches, int):
+        det_errors = det_total - det_matches
+
+    slm_total = slm.get("total_cases", total_cases)
+    slm_matches = slm.get("exact_matches")
+    slm_errors = slm.get("errors")
+    if slm_errors is None and isinstance(slm_total, int) and isinstance(slm_matches, int):
+        slm_errors = slm_total - slm_matches
+
+    slm_latency = slm.get("latency_us", slm.get("latency_microseconds"))
+    slm_rer = slm.get("relative_error_reduction_pct", {})
+    if isinstance(slm_rer, dict):
+        rer_vs_deterministic = slm_rer.get("vs_deterministic")
+    else:
+        rer_vs_deterministic = None
+
+    return {
+        "suite": "slm-benchmark-suite",
+        "real_model_benchmarked": scorer.get(
+            "real_model_benchmarked",
+            report.get("real_model_benchmarked"),
+        ),
+        "fixtures": {
+            fixture_name: total_cases,
+            "total": total_cases,
+        },
+        "scorer": {
+            "model_manifest": scorer.get("model_manifest"),
+        },
+        "deterministic": {
+            "aggregate": {
+                "total_cases": det_total,
+                "exact_matches": det_matches,
+                "errors": det_errors,
+            },
+        },
+        "slm": {
+            "per_fixture": [
+                {
+                    "fixture": fixture_name,
+                    "total_cases": slm_total,
+                    "exact_matches": slm_matches,
+                    "errors": slm_errors,
+                },
+            ],
+            "aggregate": {
+                "total_cases": slm_total,
+                "exact_matches": slm_matches,
+                "errors": slm_errors,
+                "fallbacks": slm.get("fallbacks"),
+                "latency_us": slm_latency,
+                "candidate_validation": slm.get("candidate_validation"),
+            },
+        },
+        "relative_error_reduction_pct": {
+            "slm_vs_deterministic": {
+                fixture_name: rer_vs_deterministic,
+                "aggregate": rer_vs_deterministic,
+            },
+        },
+        "gate": {
+            "result": report.get("gate_result"),
+            "reasons": report.get("gate_reasons", []),
+        },
+    }
+
+
 def validate_report(report, args):
     errors = []
     if not isinstance(report, dict):
         return ["$: expected object"]
+    report = normalize_curated_clean_gate_report(report)
     if report.get("suite") != "slm-benchmark-suite":
         errors.append(".suite: expected 'slm-benchmark-suite'")
 
@@ -235,6 +326,54 @@ def make_pass_report():
     }
 
 
+def make_curated_pass_report():
+    return {
+        "suite": "slm-qwen2.5-0.5b-clean-gate-summary",
+        "fixture": {
+            "name": "heldout_generalization_clean",
+            "total_cases": 63,
+        },
+        "scorer": {
+            "real_model_benchmarked": True,
+            "model_manifest": {
+                "model_name": "synthetic-promotable",
+                "provider": "local-test",
+                "parameter_count": 250000000,
+                "quantization": "q4",
+                "redistributable": True,
+                "local_only": True,
+            },
+        },
+        "reference": {
+            "deterministic": {
+                "total_cases": 63,
+                "exact_matches": 60,
+                "exact_accuracy": 95.2381,
+            },
+        },
+        "slm": {
+            "total_cases": 63,
+            "exact_matches": 62,
+            "exact_accuracy": 98.4127,
+            "errors": 1,
+            "fallbacks": 0,
+            "latency_microseconds": {"p50": 2000, "p95": 10000, "p99": 12000},
+            "candidate_validation": {
+                "protocol_available": True,
+                "exercised": True,
+                "cases_with_candidates": 63,
+                "non_candidate_violations": 0,
+            },
+            "relative_error_reduction_pct": {
+                "vs_baseline": 80.0,
+                "vs_deterministic": 66.6667,
+            },
+        },
+        "gate_result": "PASS",
+        "gate_reasons": [],
+    }
+
+
 def self_test_args():
     return argparse.Namespace(
         fallback_threshold=DEFAULT_FALLBACK_THRESHOLD,
@@ -251,6 +390,15 @@ def run_self_test():
     if errors:
         for error in errors:
             print(f"SELF-TEST FAIL: valid report rejected: {error}", file=sys.stderr)
+        return 1
+    curated_good = make_curated_pass_report()
+    errors = validate_report(curated_good, args)
+    if errors:
+        for error in errors:
+            print(
+                f"SELF-TEST FAIL: valid curated report rejected: {error}",
+                file=sys.stderr,
+            )
         return 1
 
     cases = []
@@ -280,6 +428,10 @@ def run_self_test():
     missing_fixture["fixtures"] = {"taiwan_ambiguous": 100, "total": 100}
     missing_fixture["slm"]["per_fixture"][0]["fixture"] = "taiwan_ambiguous"
     cases.append((missing_fixture, "missing required fixture"))
+
+    curated_gate_fail = copy.deepcopy(curated_good)
+    curated_gate_fail["gate_result"] = "FAIL"
+    cases.append((curated_gate_fail, ".gate.result"))
 
     for report, expected in cases:
         errors = validate_report(report, args)
