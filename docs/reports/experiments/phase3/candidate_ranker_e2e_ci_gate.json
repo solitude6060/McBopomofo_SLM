@@ -1,10 +1,10 @@
 {
   "id": "phase3-candidate-ranker-e2e-ci-gate",
   "name": "Phase 3 Candidate Ranker E2E CI Gate",
-  "status": "local_verified_pending_ci",
-  "date": "2026-06-22T21:57:02+08:00",
+  "status": "verified",
+  "date": "2026-06-22T22:05:32+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "pending",
+  "commit": "ec96974",
   "protocol_version": "1.0",
   "model": "candidate-ranker-v1-seed-char",
   "results_dir": "docs/reports/experiments/phase3/",
@@ -22,9 +22,9 @@
     ".github/workflows/experiment-reports.yml"
   ],
   "ci_workflow": ".github/workflows/experiment-reports.yml",
-  "github_run_id": null,
-  "github_run_url": null,
-  "gate_result": "PENDING_CI",
+  "github_run_id": 27958551143,
+  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27958551143",
+  "gate_result": "PASS",
   "scope": "Protect the non-generative learned candidate-ranker path end to end: C++ evaluator request export, persistent Python scorer protocol, model schema loading, candidate validation, and content-free aggregate analysis.",
   "privacy": {
     "content_free": true,
@@ -69,15 +69,14 @@
   "verification": [
     "python3 -m py_compile Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py",
     "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --self-test",
-    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e_gate --suite-report /tmp/candidate_ranker_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_e2e_gate_analysis.json"
+    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e_gate --suite-report /tmp/candidate_ranker_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_e2e_gate_analysis.json",
+    "gh run watch 27958551143 --exit-status: Experiment reports passed, including Validate candidate ranker E2E contract"
   ],
   "not_tested": [
-    "GitHub-hosted Experiment reports workflow for this new gate is pending until the next push",
     "manual IMK dogfood",
     "a real SLM model passing the promotion gate"
   ],
   "next_steps": [
-    "Push the candidate-ranker E2E gate and verify Experiment reports passes.",
     "Use this gate as the regression baseline before improving the learned candidate ranker.",
     "Keep generated request and analysis artifacts under /tmp unless explicitly publishing a content-free aggregate report."
   ]

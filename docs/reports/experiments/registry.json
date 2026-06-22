@@ -1195,10 +1195,10 @@
     {
       "id": "phase3-linux-verification-coverage-gate",
       "name": "Phase 3 Linux Verification Coverage Gate",
-      "status": "local_verified_pending_ci",
-      "date": "2026-06-22T21:57:02+08:00",
+      "status": "verified",
+      "date": "2026-06-22T22:05:32+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "pending",
+      "commit": "ec96974",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1216,10 +1216,10 @@
       "description": "Adds Linux CI coverage for previously indirect verification paths: dynamic heldout clean export, character-granularity candidate export, candidate-ranker E2E contract validation, and runtime readiness evidence-link validation. This keeps the promotion pipeline's generated heldout fixture path, learned candidate-ranker protocol path, character candidate path, and evidence chain protected even when manual macOS dogfood and real-model promotion remain open gates.",
       "runtime_default": "Off",
       "typing_behavior_changed_by_default": false,
-      "gate_result": "PENDING_CI",
+      "gate_result": "PASS",
       "ci_workflow": ".github/workflows/experiment-reports.yml",
-      "github_run_id": null,
-      "github_run_url": null,
+      "github_run_id": "27958551143",
+      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27958551143",
       "privacy": {
         "content_free": true,
         "raw_text_recorded": false,
@@ -1239,10 +1239,10 @@
         "validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e_gate --suite-report /tmp/candidate_ranker_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_e2e_gate_analysis.json",
         "validate_experiment_reports.py",
         "git diff --check",
-        "GitHub-hosted Experiment reports workflow for candidate-ranker E2E is pending until the next push"
+        "gh run watch 27958551143 --exit-status",
+        "GitHub experiment-reports.yml run 27958551143 passed Validate candidate ranker E2E contract and Validate runtime readiness matrix"
       ],
       "not_tested": [
-        "GitHub-hosted Experiment reports workflow for candidate-ranker E2E is pending until the next push",
         "manual IMK dogfood",
         "a real SLM model passing the promotion gate"
       ],
@@ -1254,10 +1254,10 @@
     {
       "id": "phase3-candidate-ranker-e2e-ci-gate",
       "name": "Phase 3 Candidate Ranker E2E CI Gate",
-      "status": "local_verified_pending_ci",
-      "date": "2026-06-22T21:57:02+08:00",
+      "status": "verified",
+      "date": "2026-06-22T22:05:32+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "pending",
+      "commit": "ec96974",
       "protocol_version": "1.0",
       "model": "candidate-ranker-v1-seed-char",
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1268,10 +1268,10 @@
       "description": "Protects the non-generative learned candidate-ranker path end to end: C++ evaluator request export, persistent Python scorer protocol, model schema loading, candidate validation, and content-free aggregate analysis. Local verification covered 234 canonical requests, zero fallbacks, zero non-candidate violations, and at least one learned non-baseline evidence case.",
       "runtime_default": "Off",
       "typing_behavior_changed_by_default": false,
-      "gate_result": "PENDING_CI",
+      "gate_result": "PASS",
       "ci_workflow": ".github/workflows/experiment-reports.yml",
-      "github_run_id": null,
-      "github_run_url": null,
+      "github_run_id": "27958551143",
+      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27958551143",
       "privacy": {
         "content_free": true,
         "raw_text_recorded": false,
@@ -1284,15 +1284,14 @@
       "verification": [
         "python3 -m py_compile Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py",
         "validate_candidate_ranker_e2e.py --self-test",
-        "validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e_gate --suite-report /tmp/candidate_ranker_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_e2e_gate_analysis.json"
+        "validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e_gate --suite-report /tmp/candidate_ranker_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_e2e_gate_analysis.json",
+        "gh run watch 27958551143 --exit-status"
       ],
       "not_tested": [
-        "GitHub-hosted Experiment reports workflow for this new gate is pending until the next push",
         "manual IMK dogfood",
         "a real SLM model passing the promotion gate"
       ],
       "next_steps": [
-        "Push the candidate-ranker E2E gate and verify Experiment reports passes",
         "Use this gate as the regression baseline before improving the learned candidate ranker",
         "Keep generated request and analysis artifacts under /tmp unless explicitly publishing a content-free aggregate report"
       ]
@@ -1578,7 +1577,7 @@
             "id": "phase3-runtime-readiness-matrix",
             "name": "Phase 3 Runtime Readiness Matrix",
             "status": "partial",
-            "date": "2026-06-22T21:57:02+08:00",
+            "date": "2026-06-22T22:05:32+08:00",
       "branch": "slm-phase2-learnable",
       "protocol_version": "1.0",
       "model": null,
@@ -1587,7 +1586,7 @@
       "result_files": [
         "docs/reports/experiments/phase3/runtime_readiness_matrix.json"
       ],
-            "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local validator and generator, Linux deterministic canonical and 63-case heldout clean regression gates, SLM promotion validation, dynamic heldout export coverage, character candidate smoke coverage, candidate-ranker E2E contract validation pending CI, Linux engine GTest CI coverage, readiness evidence validation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
+            "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local validator and generator, Linux deterministic canonical and 63-case heldout clean regression gates, SLM promotion validation, dynamic heldout export coverage, character candidate smoke coverage, candidate-ranker E2E contract validation, Linux engine GTest CI coverage, readiness evidence validation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
       "gate_result": "PARTIAL",
       "verification": [
         "gh run watch 27949662127 --exit-status",
