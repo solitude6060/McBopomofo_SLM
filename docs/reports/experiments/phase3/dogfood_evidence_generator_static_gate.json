@@ -1,10 +1,10 @@
 {
   "id": "phase3-dogfood-evidence-generator-static-gate",
   "name": "Phase 3 Dogfood Evidence Generator Static Gate",
-  "status": "partial",
-  "date": "2026-06-22T20:15:24+08:00",
+  "status": "verified",
+  "date": "2026-06-22T20:23:15+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "PENDING",
+  "commit": "28f259a",
   "protocol_version": "1.0",
   "model": null,
   "results_dir": "docs/reports/experiments/phase3/",
@@ -18,12 +18,12 @@
     "docs/runbooks/macos_experimental_reranker_dogfood.md"
   ],
   "ci_workflow": ".github/workflows/experiment-reports.yml",
-  "github_run_id": "PENDING",
-  "github_run_url": "PENDING",
+  "github_run_id": "27952280884",
+  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27952280884",
   "gate_script": "Tools/ContextualEvaluation/generate_dogfood_evidence.py",
   "validator_script": "Tools/ContextualEvaluation/validate_dogfood_evidence.py",
   "scope": "Content-free generator for manual macOS IMK dogfood evidence",
-  "gate_result": "PENDING_CI",
+  "gate_result": "PASS",
   "privacy": {
     "content_free": true,
     "raw_text_recorded": false,
@@ -41,15 +41,15 @@
     "generate_dogfood_evidence.py --mode Deterministic --status session_complete --output /tmp/test_det.json",
     "validate_dogfood_evidence.py --dogfood /tmp/test_det.json",
     "negative generation: --mode 'SLM Prototype' rejected by argparse",
-    "negative validation: session_complete with checklist not_run rejected"
+    "negative validation: session_complete with checklist not_run rejected",
+    "gh run watch 27952280884 --exit-status",
+    "GitHub experiment-reports.yml run 27952280884 passed Validate dogfood evidence generator"
   ],
   "not_tested": [
     "manual IMK dogfood",
-    "filled dogfood session evidence from a real operator",
-    "GitHub-hosted generator gate"
+    "filled dogfood session evidence from a real operator"
   ],
   "next_steps": [
-    "Push and verify experiment-reports.yml runs the generator gate",
     "Use the interactive generator for actual Off and Deterministic dogfood sessions",
     "Commit only validator-approved content-free dogfood evidence"
   ]

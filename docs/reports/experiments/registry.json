@@ -1085,10 +1085,10 @@
     {
       "id": "phase3-dogfood-evidence-generator-static-gate",
       "name": "Phase 3 Dogfood Evidence Generator Static Gate",
-      "status": "partial",
-      "date": "2026-06-22T20:15:24+08:00",
+      "status": "verified",
+      "date": "2026-06-22T20:23:15+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "PENDING",
+      "commit": "28f259a",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1104,7 +1104,10 @@
       "description": "Adds a content-free dogfood evidence generator so manual macOS IMK operators can create validator-backed template or session-complete evidence without hand-editing JSON. The generator can run noninteractively for CI and interactively for real dogfood sessions, then validates generated output through validate_dogfood_evidence.py.",
       "runtime_default": "Off",
       "typing_behavior_changed_by_default": false,
-      "gate_result": "PENDING_CI",
+      "gate_result": "PASS",
+      "ci_workflow": ".github/workflows/experiment-reports.yml",
+      "github_run_id": "27952280884",
+      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27952280884",
       "privacy": {
         "content_free": true,
         "raw_text_recorded": false,
@@ -1122,15 +1125,14 @@
         "generate_dogfood_evidence.py --mode Deterministic --status session_complete --output /tmp/test_det.json",
         "validate_dogfood_evidence.py --dogfood /tmp/test_det.json",
         "negative generation rejects unsupported SLM Prototype mode",
-        "negative validation rejects session_complete checklist not_run"
+        "negative validation rejects session_complete checklist not_run",
+        "gh run watch 27952280884 --exit-status"
       ],
       "not_tested": [
         "manual IMK dogfood",
-        "filled dogfood session evidence from a real operator",
-        "GitHub-hosted generator gate"
+        "filled dogfood session evidence from a real operator"
       ],
       "next_steps": [
-        "Push and verify experiment-reports.yml runs the generator gate",
         "Use the interactive generator for actual Off and Deterministic dogfood sessions",
         "Commit only validator-approved content-free dogfood evidence"
       ]
@@ -1337,7 +1339,7 @@
             "id": "phase3-runtime-readiness-matrix",
             "name": "Phase 3 Runtime Readiness Matrix",
             "status": "partial",
-            "date": "2026-06-22T20:15:24+08:00",
+            "date": "2026-06-22T20:23:15+08:00",
       "branch": "slm-phase2-learnable",
       "protocol_version": "1.0",
       "model": null,
@@ -1351,6 +1353,7 @@
       "verification": [
         "gh run watch 27949662127 --exit-status",
         "gh run watch 27951356566 --exit-status",
+        "gh run watch 27952280884 --exit-status",
         "gh run watch 27950784933 --exit-status",
         "json.tool runtime readiness matrix",
         "json.tool dogfood evidence validator report",
