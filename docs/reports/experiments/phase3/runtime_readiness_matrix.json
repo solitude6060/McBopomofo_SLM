@@ -45,7 +45,7 @@
     },
     {
       "area": "linux engine gtest coverage",
-      "state": "local_verified_pending_ci",
+      "state": "ci_verified",
       "evidence": "docs/reports/experiments/phase3/linux_engine_gtest_ci_gate.json"
     },
     {
@@ -128,6 +128,7 @@
     "cmake -DENABLE_TEST=ON -DCMAKE_BUILD_TYPE=Release -S Source/Engine -B /tmp/mcbopomofo_engine_linux_gtests",
     "cmake --build /tmp/mcbopomofo_engine_linux_gtests --target runMcBopomofoLMLibTest runMandarinTest runGramambular2Test",
     "ctest --test-dir /tmp/mcbopomofo_engine_linux_gtests --output-on-failure",
+    "gh run watch 27955971624 --exit-status",
     "gh run watch 27955071423 --exit-status",
     "gh run watch 27953106360 --exit-status",
     "gh run watch 27951356566 --exit-status",

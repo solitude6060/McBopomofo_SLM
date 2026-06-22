@@ -1,10 +1,10 @@
 {
   "id": "phase3-linux-engine-gtest-ci-gate",
   "name": "Phase 3 Linux Engine GTest CI Gate",
-  "status": "ci_pending",
-  "date": "2026-06-22T21:19:44+08:00",
+  "status": "verified",
+  "date": "2026-06-22T21:25:23+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "pending",
+  "commit": "3db2dfd",
   "protocol_version": "1.0",
   "model": null,
   "results_dir": "docs/reports/experiments/phase3/",
@@ -19,9 +19,9 @@
     "Source/Engine/gramambular2/CMakeLists.txt"
   ],
   "ci_workflow": ".github/workflows/experiment-reports.yml",
-  "github_run_id": null,
-  "github_run_url": null,
-  "gate_result": "PENDING_CI",
+  "github_run_id": "27955971624",
+  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27955971624",
+  "gate_result": "PASS",
   "scope": "Linux C++ engine unit-test coverage inside the experiment report workflow",
   "privacy": {
     "content_free": true,
@@ -54,16 +54,16 @@
   "verification": [
     "cmake -DENABLE_TEST=ON -DCMAKE_BUILD_TYPE=Release -S Source/Engine -B /tmp/mcbopomofo_engine_linux_gtests",
     "cmake --build /tmp/mcbopomofo_engine_linux_gtests --target runMcBopomofoLMLibTest runMandarinTest runGramambular2Test",
-    "ctest --test-dir /tmp/mcbopomofo_engine_linux_gtests --output-on-failure"
+    "ctest --test-dir /tmp/mcbopomofo_engine_linux_gtests --output-on-failure",
+    "gh run watch 27955971624 --exit-status",
+    "GitHub experiment-reports.yml run 27955971624 passed Configure engine libraries and tests, Build engine libraries and tests, and Run engine GTests"
   ],
   "not_tested": [
-    "GitHub-hosted Linux CI for this new gate is pending until the next push",
     "manual IMK dogfood",
     "a real SLM model passing the promotion gate"
   ],
   "next_steps": [
-    "Push the workflow update and verify the Experiment reports workflow passes.",
-    "Update this report with the GitHub run id after CI passes.",
+    "Keep Run engine GTests in the Experiment reports workflow as Linux C++ coverage.",
     "Keep manual dogfood and real SLM promotion as separate gates."
   ]
 }
