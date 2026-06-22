@@ -1,0 +1,60 @@
+{
+  "id": "phase3-deterministic-linux-ci-gate",
+  "name": "Phase 3 Deterministic Linux CI Gate",
+  "status": "verified",
+  "date": "2026-06-22T19:03:51+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "bb7cf05",
+  "protocol_version": "1.0",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false,
+    "persistent_runtime_log": false
+  },
+  "ci_workflow": ".github/workflows/experiment-reports.yml",
+  "gate_script": "Tools/ContextualEvaluation/validate_deterministic_gate.py",
+  "scope": "Linux build and evaluator regression gate for the deterministic contextual reranker",
+  "fixtures": {
+    "taiwan_ambiguous": 100,
+    "english_mixed": 50,
+    "taiwan_specific": 84,
+    "total": 234
+  },
+  "requirements": {
+    "exact_match_count": 234,
+    "total_cases": 234,
+    "max_latency_p95_us": 2000,
+    "candidate_diagnostics_failing_cases": 0
+  },
+  "observed": {
+    "exact_match_count": 234,
+    "total_cases": 234,
+    "max_latency_p95_us": 1146,
+    "candidate_diagnostics_failing_cases": 0
+  },
+  "gate_result": "PASS",
+  "verification": [
+    "python3 -m py_compile Tools/SLMRerankerExperiment/*.py Tools/ContextualEvaluation/*.py",
+    "cmake -DENABLE_TEST=OFF -S . -B build in Source/Engine",
+    "cmake --build build --target McBopomofoLMLib in Source/Engine",
+    "cmake -S . -B build in Tools/ContextualEvaluation",
+    "cmake --build build --target evaluator in Tools/ContextualEvaluation",
+    "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --self-test",
+    "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py",
+    "python3 Tools/SLMRerankerExperiment/validate_experiment_reports.py",
+    "git diff --check"
+  ],
+  "not_tested": [
+    "GitHub-hosted workflow execution",
+    "macOS xcodebuild",
+    "manual IMK dogfood"
+  ],
+  "next_steps": [
+    "Keep this Linux gate as the production deterministic reranker regression check.",
+    "Use macOS xcodebuild and manual IMK dogfood for runtime integration evidence.",
+    "Use heldout clean gates for future learned scorer promotion."
+  ]
+}

@@ -2,7 +2,7 @@
   "id": "phase3-runtime-readiness-matrix",
   "name": "Phase 3 Runtime Readiness Matrix",
   "status": "partial",
-  "date": "2026-06-22T18:35:53+08:00",
+  "date": "2026-06-22T19:03:51+08:00",
   "branch": "slm-phase2-learnable",
   "protocol_version": "1.0",
   "privacy": {
@@ -20,8 +20,8 @@
     },
     {
       "area": "deterministic runtime hook",
-      "state": "implemented_static_gate",
-      "evidence": "docs/reports/experiments/phase3/deterministic_runtime_hook_static_gate.json"
+      "state": "implemented_with_linux_regression_gate",
+      "evidence": "docs/reports/experiments/phase3/deterministic_runtime_hook_static_gate.json; docs/reports/experiments/phase3/deterministic_linux_ci_gate.json"
     },
     {
       "area": "content-free runtime counters",
@@ -83,6 +83,11 @@
       "status": "ready_for_dogfood"
     },
     {
+      "gate": "deterministic Linux regression",
+      "required_evidence": "experiment-reports.yml builds the evaluator and validate_deterministic_gate.py passes canonical 234/234 with p95 under 2000us",
+      "status": "pass_local_pending_github_run"
+    },
+    {
       "gate": "SLM runtime",
       "required_evidence": "local-only model path with timeout, fallback, constrained output, and a benchmark win over deterministic",
       "status": "not_ready"
@@ -90,11 +95,14 @@
   ],
   "verification": [
     "python3 -m json.tool docs/reports/experiments/phase3/runtime_readiness_matrix.json",
+    "python3 -m json.tool docs/reports/experiments/phase3/deterministic_linux_ci_gate.json",
     "python3 -m json.tool docs/reports/experiments/registry.json",
+    "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py",
     "git diff --check"
   ],
   "next_steps": [
     "Get a passing continuous-integration-workflow-xcode-latest.yml run for this branch.",
+    "Get a passing experiment-reports.yml run for the Linux deterministic gate.",
     "Execute the macOS dogfood runbook for Off and Deterministic modes.",
     "Keep SLM Prototype unwired until a local-only constrained model path beats deterministic under the latency budget."
   ]

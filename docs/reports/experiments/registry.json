@@ -1036,6 +1036,42 @@
       ]
     },
     {
+      "id": "phase3-deterministic-linux-ci-gate",
+      "name": "Phase 3 Deterministic Linux CI Gate",
+      "status": "verified",
+      "date": "2026-06-22T19:03:51+08:00",
+      "branch": "slm-phase2-learnable",
+      "protocol_version": "1.0",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase3/",
+      "summary_file": "docs/reports/experiments/phase3/deterministic_linux_ci_gate.json",
+      "result_files": [
+        "docs/reports/experiments/phase3/deterministic_linux_ci_gate.json"
+      ],
+      "description": "Adds a Linux CI regression gate for the deterministic contextual reranker. The experiment-reports workflow builds the Engine library and contextual evaluator, then validate_deterministic_gate.py fails if canonical deterministic accuracy drops below 234/234 or p95 latency exceeds 2000us.",
+      "runtime_default": "Off",
+      "typing_behavior_changed_by_default": false,
+      "gate_result": "PASS",
+      "verification": [
+        "cmake engine library build",
+        "cmake contextual evaluator build",
+        "validate_deterministic_gate.py --self-test",
+        "validate_deterministic_gate.py: 234/234, max_p95=1146us",
+        "validate_experiment_reports.py",
+        "git diff --check"
+      ],
+      "not_tested": [
+        "GitHub-hosted workflow execution",
+        "macOS xcodebuild",
+        "manual IMK dogfood"
+      ],
+      "next_steps": [
+        "Keep Linux deterministic gate as production-reranker regression coverage",
+        "Run macOS xcodebuild and manual IMK dogfood for runtime integration evidence",
+        "Use heldout clean gates for future learned scorer promotion"
+      ]
+    },
+    {
       "id": "phase3-content-free-runtime-counters-static-gate",
       "name": "Phase 3 Content-Free Runtime Counters Static Gate",
       "status": "partial",
@@ -1076,7 +1112,7 @@
             "id": "phase3-runtime-readiness-matrix",
             "name": "Phase 3 Runtime Readiness Matrix",
             "status": "partial",
-            "date": "2026-06-22T18:35:53+08:00",
+            "date": "2026-06-22T19:03:51+08:00",
       "branch": "slm-phase2-learnable",
       "protocol_version": "1.0",
       "model": null,
@@ -1085,7 +1121,7 @@
       "result_files": [
         "docs/reports/experiments/phase3/runtime_readiness_matrix.json"
       ],
-            "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, and dogfood/privacy artifacts are present at static-gate level. The existing GitHub Actions macOS workflow is the authoritative build/test evidence path, but this branch still needs a passing run plus manual IMK dogfood. SLM Prototype remains intentionally unwired until a local-only constrained model path beats deterministic under the latency budget.",
+            "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts, and a Linux deterministic regression gate are present. The existing GitHub Actions macOS workflow remains the authoritative build/test evidence path for runtime integration, but this branch still needs a passing macOS run plus manual IMK dogfood. SLM Prototype remains intentionally unwired until a local-only constrained model path beats deterministic under the latency budget.",
       "gate_result": "PARTIAL",
       "verification": [
         "json.tool runtime readiness matrix",
@@ -1099,6 +1135,7 @@
       ],
       "next_steps": [
                 "Get a passing continuous-integration-workflow-xcode-latest.yml run for this branch",
+                "Get a passing experiment-reports.yml run for the Linux deterministic gate",
                 "Execute content-free dogfood for Off and Deterministic modes",
                 "Keep SLM Prototype unwired until model accuracy and latency gates pass"
       ]
