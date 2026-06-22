@@ -1,6 +1,6 @@
 # SLM Reranker Experiment: External Scorer Protocol
 
-Last updated: 2026-06-22T01:52:05+08:00
+Last updated: 2026-06-22T18:55:00+08:00
 
 ## Purpose
 
@@ -167,6 +167,24 @@ The runner generates sanitized per-case output only when `--per-case-output`
 is explicitly passed. Per-case JSONL omits scorer output, expected text,
 baseline text, candidate text, and readings; reports aggregate metrics by
 fixture file and reference fixture IDs only.
+
+## Report Registry Validation
+
+Use the registry validator before committing benchmark evidence:
+
+```bash
+python3 Tools/SLMRerankerExperiment/validate_experiment_reports.py
+```
+
+The validator checks that every registry `summary_file` and `result_files`
+entry exists and is parseable. `summary_file` must be a single JSON document;
+`result_files` may be JSON or JSONL to support older evaluator outputs.
+
+Reports that explicitly declare `privacy.content_free: true` or
+`content_policy.raw_case_strings_in_report: false` receive stricter hygiene
+checks: raw text/readings/candidate/committed-text flags must be false, raw
+content-bearing fields must be absent, and raw artifact locations must point
+under `/tmp`.
 
 ## External Scoring Protocol
 
