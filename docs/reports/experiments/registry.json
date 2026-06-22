@@ -830,9 +830,9 @@
       "id": "candidate-ranker-clean-gate",
       "name": "Candidate Ranker Clean Gate Benchmark",
       "status": "benchmarked",
-      "date": "2026-06-22T01:54:37+08:00",
+      "date": "2026-06-22T22:50:49+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "30146b03ff1bb7d357c46cc8fd46f6849209559b",
+      "commit": "a00ff33",
       "protocol_version": "1.2",
       "model": [
         "Models/candidate_ranker_seed_char.json",
@@ -843,21 +843,21 @@
       "result_files": [
         "docs/reports/experiments/phase2/candidate_ranker_clean_gate_benchmark.json"
       ],
-      "description": "Content-free clean gate benchmark for two non-generative candidate-ranker-v1 models. Both models score 39/57 on heldout_generalization_clean, matching baseline and failing to challenge deterministic 57/57. Candidate validation is exercised on all 57 cases with 0 non-candidate violations.",
+      "description": "Content-free clean gate benchmark for two non-generative candidate-ranker-v1 models on the current 63-case heldout_generalization_clean fixture. Both models score 44/63, matching baseline and failing to challenge deterministic 63/63. Candidate validation is exercised on all 63 cases with 0 non-candidate violations.",
       "fixture": "heldout_generalization_clean",
-      "total_cases": 57,
-      "baseline_exact": "39/57",
-      "deterministic_exact": "57/57",
-      "candidate_ranker_seed_char_exact": "39/57",
-      "candidate_ranker_synthetic_exact": "39/57",
+      "total_cases": 63,
+      "baseline_exact": "44/63",
+      "deterministic_exact": "63/63",
+      "candidate_ranker_seed_char_exact": "44/63",
+      "candidate_ranker_synthetic_exact": "44/63",
       "gate_result": "FAIL",
       "verification": [
         "candidate_ranker_scorer.py --self-test",
         "train_candidate_ranker.py --self-test",
-        "run_benchmark_suite.py candidate_ranker_seed_char on heldout_generalization_clean",
-        "run_benchmark_suite.py candidate_ranker_synthetic on heldout_generalization_clean",
-        "json.tool /tmp/slm_clean_seed_char.json",
-        "json.tool /tmp/slm_clean_synthetic.json"
+        "run_benchmark_suite.py candidate_ranker_seed_char on heldout_generalization_clean 63-case clean gate",
+        "run_benchmark_suite.py candidate_ranker_synthetic on heldout_generalization_clean 63-case clean gate",
+        "json.tool /tmp/slm_clean_seed_char_63.json",
+        "json.tool /tmp/slm_clean_synthetic_63.json"
       ],
       "next_steps": [
         "Do not promote count-based candidate-ranker-v1 for the clean heldout gate",

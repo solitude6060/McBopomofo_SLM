@@ -182,8 +182,8 @@ def make_pass_report():
         "suite": "slm-benchmark-suite",
         "real_model_benchmarked": True,
         "fixtures": {
-            "heldout_generalization_clean": 57,
-            "total": 57,
+            "heldout_generalization_clean": 63,
+            "total": 63,
         },
         "scorer": {
             "model_manifest": {
@@ -197,8 +197,8 @@ def make_pass_report():
         },
         "deterministic": {
             "aggregate": {
-                "total_cases": 57,
-                "exact_matches": 54,
+                "total_cases": 63,
+                "exact_matches": 60,
                 "errors": 3,
             },
         },
@@ -206,21 +206,21 @@ def make_pass_report():
             "per_fixture": [
                 {
                     "fixture": "heldout_generalization_clean",
-                    "total_cases": 57,
-                    "exact_matches": 56,
+                    "total_cases": 63,
+                    "exact_matches": 62,
                     "errors": 1,
                 },
             ],
             "aggregate": {
-                "total_cases": 57,
-                "exact_matches": 56,
+                "total_cases": 63,
+                "exact_matches": 62,
                 "errors": 1,
                 "fallbacks": 0,
                 "latency_us": {"p50": 2000, "p95": 10000, "p99": 12000},
                 "candidate_validation": {
                     "protocol_available": True,
                     "exercised": True,
-                    "cases_with_candidates": 57,
+                    "cases_with_candidates": 63,
                     "non_candidate_violations": 0,
                 },
             },
