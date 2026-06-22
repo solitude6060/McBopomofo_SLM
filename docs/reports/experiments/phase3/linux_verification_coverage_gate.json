@@ -1,0 +1,59 @@
+{
+  "id": "phase3-linux-verification-coverage-gate",
+  "name": "Phase 3 Linux Verification Coverage Gate",
+  "status": "partial",
+  "date": "2026-06-22T21:07:23+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "PENDING",
+  "protocol_version": "1.0",
+  "model": null,
+  "results_dir": "docs/reports/experiments/phase3/",
+  "summary_file": "docs/reports/experiments/phase3/linux_verification_coverage_gate.json",
+  "result_files": [
+    "docs/reports/experiments/phase3/linux_verification_coverage_gate.json"
+  ],
+  "artifacts": [
+    ".github/workflows/experiment-reports.yml",
+    "Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py",
+    "Tools/ContextualEvaluation/fixture_hygiene_audit.py",
+    "Tools/SLMRerankerExperiment/run_benchmark_suite.py"
+  ],
+  "ci_workflow": ".github/workflows/experiment-reports.yml",
+  "github_run_id": "PENDING",
+  "github_run_url": "PENDING",
+  "gate_result": "PENDING_CI",
+  "scope": "Linux-verifiable coverage for heldout clean export, character-granularity candidate export, and runtime readiness evidence links",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false,
+    "screenshots_with_private_text": false,
+    "user_phrase_files_recorded": false
+  },
+  "coverage_added": [
+    "fixture_hygiene_audit.py --export-clean heldout_generalization is exercised in CI and must produce a non-empty clean JSONL whose line count matches the clean count",
+    "run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character is exercised in CI so the character candidate export path remains covered",
+    "validate_runtime_readiness_matrix.py checks runtime_readiness_matrix.json evidence links, JSON validity, privacy flag, and the expected open gates"
+  ],
+  "verification": [
+    "python3 -m py_compile Tools/SLMRerankerExperiment/*.py Tools/ContextualEvaluation/*.py",
+    "python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py --self-test",
+    "python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py",
+    "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --export-clean heldout_generalization > /tmp/heldout_export.json and verified 57 exported clean rows",
+    "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character --output /tmp/slm_ci_smoke_character_report.json",
+    "python3 Tools/SLMRerankerExperiment/validate_experiment_reports.py",
+    "git diff --check"
+  ],
+  "not_tested": [
+    "manual IMK dogfood",
+    "a real SLM model passing the promotion gate",
+    "GitHub-hosted coverage gate"
+  ],
+  "next_steps": [
+    "Push and verify experiment-reports.yml runs the new Linux coverage gates.",
+    "Keep manual dogfood and real SLM promotion as separate gates.",
+    "Use validate_runtime_readiness_matrix.py when editing Phase 3 readiness evidence."
+  ]
+}

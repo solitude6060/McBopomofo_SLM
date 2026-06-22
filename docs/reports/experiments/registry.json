@@ -1191,6 +1191,59 @@
       ]
     },
     {
+      "id": "phase3-linux-verification-coverage-gate",
+      "name": "Phase 3 Linux Verification Coverage Gate",
+      "status": "partial",
+      "date": "2026-06-22T21:07:23+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit": "PENDING",
+      "protocol_version": "1.0",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase3/",
+      "summary_file": "docs/reports/experiments/phase3/linux_verification_coverage_gate.json",
+      "result_files": [
+        "docs/reports/experiments/phase3/linux_verification_coverage_gate.json"
+      ],
+      "artifacts": [
+        ".github/workflows/experiment-reports.yml",
+        "Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py",
+        "Tools/ContextualEvaluation/fixture_hygiene_audit.py",
+        "Tools/SLMRerankerExperiment/run_benchmark_suite.py"
+      ],
+      "description": "Adds Linux CI coverage for three previously indirect verification paths: dynamic heldout clean export, character-granularity candidate export, and runtime readiness evidence-link validation. This keeps the promotion pipeline's generated heldout fixture path, character candidate path, and evidence chain protected even when manual macOS dogfood and real-model promotion remain open gates.",
+      "runtime_default": "Off",
+      "typing_behavior_changed_by_default": false,
+      "gate_result": "PENDING_CI",
+      "privacy": {
+        "content_free": true,
+        "raw_text_recorded": false,
+        "readings_recorded": false,
+        "candidate_text_recorded": false,
+        "committed_text_recorded": false,
+        "screenshots_with_private_text": false,
+        "user_phrase_files_recorded": false
+      },
+      "verification": [
+        "python3 -m py_compile Tools/SLMRerankerExperiment/*.py Tools/ContextualEvaluation/*.py",
+        "validate_runtime_readiness_matrix.py --self-test",
+        "validate_runtime_readiness_matrix.py",
+        "fixture_hygiene_audit.py --export-clean heldout_generalization produced 57 clean rows",
+        "run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character --output /tmp/slm_ci_smoke_character_report.json",
+        "validate_experiment_reports.py",
+        "git diff --check"
+      ],
+      "not_tested": [
+        "manual IMK dogfood",
+        "a real SLM model passing the promotion gate",
+        "GitHub-hosted coverage gate"
+      ],
+      "next_steps": [
+        "Push and verify experiment-reports.yml runs the new Linux coverage gates",
+        "Keep manual dogfood and real SLM promotion as separate gates",
+        "Use validate_runtime_readiness_matrix.py when editing Phase 3 readiness evidence"
+      ]
+    },
+    {
       "id": "phase3-deterministic-runtime-hook-static-gate",
       "name": "Phase 3 Deterministic Runtime Hook Static Gate",
       "status": "partial",
@@ -1392,7 +1445,7 @@
             "id": "phase3-runtime-readiness-matrix",
             "name": "Phase 3 Runtime Readiness Matrix",
             "status": "partial",
-            "date": "2026-06-22T20:37:24+08:00",
+            "date": "2026-06-22T21:07:23+08:00",
       "branch": "slm-phase2-learnable",
       "protocol_version": "1.0",
       "model": null,
@@ -1401,7 +1454,7 @@
       "result_files": [
         "docs/reports/experiments/phase3/runtime_readiness_matrix.json"
       ],
-            "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local validator and generator, Linux deterministic canonical and heldout clean regression gates, SLM promotion validation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
+            "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local validator and generator, Linux deterministic canonical and heldout clean regression gates, SLM promotion validation, dynamic heldout export coverage, character candidate smoke coverage, readiness evidence validation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
       "gate_result": "PARTIAL",
       "verification": [
         "gh run watch 27949662127 --exit-status",
@@ -1413,12 +1466,17 @@
         "json.tool dogfood evidence validator report",
         "json.tool dogfood evidence generator report",
         "json.tool SLM promotion gate report",
+        "json.tool Linux verification coverage report",
         "json.tool heldout clean CI gate report",
         "json.tool macOS CI runtime build gate report",
         "generate_dogfood_evidence.py --self-test",
         "generated Deterministic session_complete evidence validated",
         "validate_slm_promotion_gate.py --self-test",
         "qwen2.5:0.5b report remains expected-fail under promotion gate",
+        "validate_runtime_readiness_matrix.py --self-test",
+        "validate_runtime_readiness_matrix.py",
+        "fixture_hygiene_audit.py --export-clean heldout_generalization",
+        "run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character",
         "json.tool registry",
         "git diff --check"
       ],

@@ -57,6 +57,24 @@ jobs:
           python3 Tools/SLMRerankerExperiment/analyze_candidate_ranker.py --self-test
       - name: Self-test fixture hygiene audit
         run: python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --self-test
+      - name: Validate heldout clean export
+        run: |
+          python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --export-clean heldout_generalization > /tmp/heldout_export.json
+          python3 - <<'PY'
+          import json
+          import pathlib
+
+          report = json.load(open("/tmp/heldout_export.json", encoding="utf-8"))
+          exports = report.get("clean_exports", [])
+          assert exports, "missing clean_exports"
+          export = exports[0]
+          path = pathlib.Path(export["path"])
+          assert path.is_file(), f"missing export file: {path}"
+          rows = [line for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+          assert len(rows) == export["clean"], (len(rows), export["clean"])
+          assert len(rows) > 0, "empty clean export"
+          print(f"heldout clean export rows={len(rows)}")
+          PY
       - name: Validate dogfood evidence template
         run: |
           python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --self-test
@@ -89,3 +107,9 @@ jobs:
         run: python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --heldout
       - name: CI smoke full benchmark suite pipeline
         run: python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke
+      - name: CI smoke character candidate pipeline
+        run: python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character --output /tmp/slm_ci_smoke_character_report.json
+      - name: Validate runtime readiness matrix
+        run: |
+          python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py --self-test
+          python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py
