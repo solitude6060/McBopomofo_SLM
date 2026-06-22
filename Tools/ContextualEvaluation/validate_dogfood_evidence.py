@@ -105,6 +105,28 @@ KNOWN_TOP_LEVEL = REQUIRED_TOP_LEVEL | {
     "runtime_counters_report_path",
     "notes",
 }
+KNOWN_PRIVACY_FIELDS = {"content_free"} | PRIVACY_FALSE_KEYS
+KNOWN_SESSION_FIELDS = {
+    "mode_under_test",
+    "build_identifier",
+    "session_duration_bucket",
+    "os_version_bucket",
+    "hardware_class",
+    "keyboard_layout",
+}
+KNOWN_MODE_SWITCHING_FIELDS = {
+    "off_to_deterministic",
+    "deterministic_to_off",
+    "required_switches",
+}
+KNOWN_METRICS_FIELDS = METRIC_COUNTERS | {"latency_buckets_us"}
+KNOWN_LATENCY_BUCKET_FIELDS = LATENCY_BUCKETS
+KNOWN_ISSUE_FIELDS = {
+    "category",
+    "severity",
+    "summary",
+    "latency_bucket",
+}
 
 
 def load_json(path):
@@ -243,10 +265,41 @@ def validate_raw_content_keys(report, errors):
                     errors.append(f"{path}.{key}: raw content field is not allowed")
 
 
+def check_known_keys(value, known_keys, path, errors):
+    if not isinstance(value, dict):
+        return
+    for key in sorted(set(value) - known_keys):
+        errors.append(f"{path}.{key}: unknown field")
+
+
 def validate_strict(report, errors):
     unknown = sorted(set(report) - KNOWN_TOP_LEVEL)
     for key in unknown:
         errors.append(f".{key}: unknown top-level field")
+    check_known_keys(report.get("privacy"), KNOWN_PRIVACY_FIELDS, ".privacy", errors)
+    check_known_keys(report.get("session"), KNOWN_SESSION_FIELDS, ".session", errors)
+    check_known_keys(
+        report.get("mode_switching"),
+        KNOWN_MODE_SWITCHING_FIELDS,
+        ".mode_switching",
+        errors,
+    )
+    check_known_keys(report.get("checklist"), CHECKLIST_FIELDS, ".checklist", errors)
+
+    metrics = report.get("metrics")
+    check_known_keys(metrics, KNOWN_METRICS_FIELDS, ".metrics", errors)
+    if isinstance(metrics, dict):
+        check_known_keys(
+            metrics.get("latency_buckets_us"),
+            KNOWN_LATENCY_BUCKET_FIELDS,
+            ".metrics.latency_buckets_us",
+            errors,
+        )
+
+    issues = report.get("issues")
+    if isinstance(issues, list):
+        for idx, issue in enumerate(issues):
+            check_known_keys(issue, KNOWN_ISSUE_FIELDS, f".issues[{idx}]", errors)
 
 
 def validate_report(report, strict=False):
@@ -313,6 +366,50 @@ def run_self_test():
         if not any(expected in error for error in errors):
             print(
                 "SELF-TEST FAIL: expected error containing "
+                f"{expected!r}, got {errors}",
+                file=sys.stderr,
+            )
+            return 1
+
+    strict_cases = []
+    strict_privacy = copy.deepcopy(good)
+    strict_privacy["privacy"]["raw_text_recored"] = False
+    strict_cases.append((strict_privacy, ".privacy.raw_text_recored"))
+
+    strict_session = copy.deepcopy(good)
+    strict_session["session"]["extra_param"] = "test"
+    strict_cases.append((strict_session, ".session.extra_param"))
+
+    strict_mode_switching = copy.deepcopy(good)
+    strict_mode_switching["mode_switching"]["manual_toggle_count"] = 0
+    strict_cases.append((strict_mode_switching, ".mode_switching.manual_toggle_count"))
+
+    strict_checklist = copy.deepcopy(good)
+    strict_checklist["checklist"]["non_existent_item"] = "pass"
+    strict_cases.append((strict_checklist, ".checklist.non_existent_item"))
+
+    strict_metrics = copy.deepcopy(good)
+    strict_metrics["metrics"]["extra_counter"] = 0
+    strict_cases.append((strict_metrics, ".metrics.extra_counter"))
+
+    strict_latency = copy.deepcopy(good)
+    strict_latency["metrics"]["latency_buckets_us"]["too_slow"] = 0
+    strict_cases.append((strict_latency, ".metrics.latency_buckets_us.too_slow"))
+
+    strict_issue = copy.deepcopy(good)
+    strict_issue["issues"].append({
+        "category": "other",
+        "severity": "low",
+        "summary": "content-free issue summary",
+        "unexpected": "x",
+    })
+    strict_cases.append((strict_issue, ".issues[0].unexpected"))
+
+    for report, expected in strict_cases:
+        errors = validate_report(report, strict=True)
+        if not any(expected in error for error in errors):
+            print(
+                "SELF-TEST FAIL: strict mode expected error containing "
                 f"{expected!r}, got {errors}",
                 file=sys.stderr,
             )

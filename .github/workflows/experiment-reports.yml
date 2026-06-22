@@ -82,11 +82,13 @@ jobs:
         run: |
           python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --self-test
           python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --dogfood docs/reports/experiments/phase3/dogfood_evidence_template.json
+          python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --strict --dogfood docs/reports/experiments/phase3/dogfood_evidence_template.json
       - name: Validate dogfood evidence generator
         run: |
           python3 Tools/ContextualEvaluation/generate_dogfood_evidence.py --self-test
           python3 Tools/ContextualEvaluation/generate_dogfood_evidence.py --mode Deterministic --status session_complete --output /tmp/dogfood_generated.json
           python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --dogfood /tmp/dogfood_generated.json
+          python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --strict --dogfood /tmp/dogfood_generated.json
       - name: Configure engine libraries and tests
         run: cmake -DENABLE_TEST=ON -DCMAKE_BUILD_TYPE=Release -S . -B build
         working-directory: Source/Engine
