@@ -1,0 +1,108 @@
+{
+  "id": "bigram-benchmark-suite-canonical",
+  "name": "Bigram Benchmark Suite Canonical Fixtures",
+  "status": "benchmarked",
+  "date": "2026-06-22T18:49:57+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "f078703",
+  "protocol_version": "1.2",
+  "model": {
+    "model_name": "dictionary-bigram",
+    "provider": "in-process BIGR",
+    "model_path": "Models/bigram_model.bin",
+    "local_only": true
+  },
+  "results_dir": "docs/reports/experiments/phase2/",
+  "summary_file": "docs/reports/experiments/phase2/bigram_benchmark_suite_canonical.json",
+  "raw_artifacts_location": "/tmp/slm_suite_bigram_canonical*",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false
+  },
+  "fixtures": {
+    "taiwan_ambiguous": 100,
+    "english_mixed": 50,
+    "taiwan_specific": 84,
+    "total": 234
+  },
+  "baseline": {
+    "exact_matches": 182,
+    "total_cases": 234,
+    "exact_accuracy": 77.7778,
+    "latency_p95_us": 3
+  },
+  "deterministic": {
+    "exact_matches": 234,
+    "total_cases": 234,
+    "exact_accuracy": 100.0,
+    "latency_p95_us": 768
+  },
+  "bigram": {
+    "exact_matches": 182,
+    "total_cases": 234,
+    "exact_accuracy": 77.7778,
+    "latency_p95_us": 121,
+    "relative_error_reduction_vs_baseline_pct": 0.0,
+    "relative_error_reduction_vs_deterministic_pct": 0.0
+  },
+  "slm_dry_run_control": {
+    "exact_matches": 181,
+    "total_cases": 234,
+    "exact_accuracy": 77.3504,
+    "fallbacks": 0,
+    "candidate_validation_cases": 234,
+    "non_candidate_violations": 0,
+    "relative_error_reduction_vs_baseline_pct": -1.9231,
+    "relative_error_reduction_vs_deterministic_pct": 0.0
+  },
+  "per_fixture_summary": [
+    {
+      "fixture": "taiwan_ambiguous",
+      "baseline_exact_matches": 81,
+      "deterministic_exact_matches": 100,
+      "bigram_exact_matches": 81,
+      "slm_dry_run_exact_matches": 81,
+      "total_cases": 100,
+      "bigram_latency_p95_us": 138
+    },
+    {
+      "fixture": "english_mixed",
+      "baseline_exact_matches": 41,
+      "deterministic_exact_matches": 50,
+      "bigram_exact_matches": 41,
+      "slm_dry_run_exact_matches": 41,
+      "total_cases": 50,
+      "bigram_latency_p95_us": 96
+    },
+    {
+      "fixture": "taiwan_specific",
+      "baseline_exact_matches": 60,
+      "deterministic_exact_matches": 84,
+      "bigram_exact_matches": 60,
+      "slm_dry_run_exact_matches": 59,
+      "total_cases": 84,
+      "bigram_latency_p95_us": 101
+    }
+  ],
+  "gate_result": "MODEL_FAIL",
+  "gate_reasons": [
+    "canonical deterministic lane is saturated at 234/234",
+    "dictionary bigram is equal to baseline at 182/234",
+    "bigram relative error reduction is 0.0% against baseline and deterministic"
+  ],
+  "verification": [
+    "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --dry-run-local-wrapper --run-bigram --bigram-model Models/bigram_model.bin --work-dir /tmp/slm_suite_bigram_canonical --output /tmp/slm_suite_bigram_canonical_report.json --no-gate",
+    "python3 -m json.tool /tmp/slm_suite_bigram_canonical_report.json",
+    "python3 -m json.tool docs/reports/experiments/phase2/bigram_benchmark_suite_canonical.json",
+    "python3 -m json.tool docs/reports/experiments/registry.json",
+    "git diff --check"
+  ],
+  "next_steps": [
+    "Use canonical --run-bigram output as a stable comparison lane for future learned scorers.",
+    "Keep the clean heldout gate as the promotion gate because canonical deterministic is saturated.",
+    "Do not promote dictionary bigram as a runtime candidate."
+  ]
+}

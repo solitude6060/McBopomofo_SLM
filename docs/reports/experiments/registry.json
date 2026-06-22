@@ -233,6 +233,41 @@
       ]
     },
     {
+      "id": "bigram-benchmark-suite-canonical",
+      "name": "Bigram Benchmark Suite Canonical Fixtures",
+      "status": "benchmarked",
+      "date": "2026-06-22T18:49:57+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit": "f078703",
+      "protocol_version": "1.2",
+      "model": {
+        "model_name": "dictionary-bigram",
+        "provider": "in-process BIGR",
+        "model_path": "Models/bigram_model.bin",
+        "local_only": true
+      },
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/bigram_benchmark_suite_canonical.json",
+      "result_files": [
+        "docs/reports/experiments/phase2/bigram_benchmark_suite_canonical.json"
+      ],
+      "description": "Runs the opt-in --run-bigram lane across the three canonical fixtures. The lane is fully measurable in the benchmark suite, but dictionary bigram remains equal to baseline while deterministic is saturated at 234/234.",
+      "fixtures_count": 234,
+      "real_model_benchmarked": false,
+      "gate_result": "MODEL_FAIL",
+      "verification": [
+        "run_benchmark_suite.py --dry-run-local-wrapper --run-bigram --bigram-model Models/bigram_model.bin across canonical fixtures",
+        "json.tool /tmp/slm_suite_bigram_canonical_report.json",
+        "json.tool docs/reports/experiments/phase2/bigram_benchmark_suite_canonical.json",
+        "json.tool docs/reports/experiments/registry.json"
+      ],
+      "next_steps": [
+        "Use canonical --run-bigram output as a stable comparison lane for future learned scorers",
+        "Keep the clean heldout gate as the promotion gate because canonical deterministic is saturated",
+        "Do not promote dictionary bigram as a runtime candidate"
+      ]
+    },
+    {
       "id": "deterministic-context-rules",
       "name": "Phase 2 Deterministic Context Rule Improvement",
       "status": "benchmarked",
