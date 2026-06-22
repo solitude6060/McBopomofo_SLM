@@ -1,10 +1,10 @@
 {
   "id": "phase3-linux-verification-coverage-gate",
   "name": "Phase 3 Linux Verification Coverage Gate",
-  "status": "partial",
-  "date": "2026-06-22T21:07:23+08:00",
+  "status": "verified",
+  "date": "2026-06-22T21:10:13+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "PENDING",
+  "commit": "5e27db5",
   "protocol_version": "1.0",
   "model": null,
   "results_dir": "docs/reports/experiments/phase3/",
@@ -19,9 +19,9 @@
     "Tools/SLMRerankerExperiment/run_benchmark_suite.py"
   ],
   "ci_workflow": ".github/workflows/experiment-reports.yml",
-  "github_run_id": "PENDING",
-  "github_run_url": "PENDING",
-  "gate_result": "PENDING_CI",
+  "github_run_id": "27955071423",
+  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27955071423",
+  "gate_result": "PASS",
   "scope": "Linux-verifiable coverage for heldout clean export, character-granularity candidate export, and runtime readiness evidence links",
   "privacy": {
     "content_free": true,
@@ -44,15 +44,15 @@
     "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --export-clean heldout_generalization > /tmp/heldout_export.json and verified 57 exported clean rows",
     "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character --output /tmp/slm_ci_smoke_character_report.json",
     "python3 Tools/SLMRerankerExperiment/validate_experiment_reports.py",
-    "git diff --check"
+    "git diff --check",
+    "gh run watch 27955071423 --exit-status",
+    "GitHub experiment-reports.yml run 27955071423 passed Validate heldout clean export, CI smoke character candidate pipeline, and Validate runtime readiness matrix"
   ],
   "not_tested": [
     "manual IMK dogfood",
-    "a real SLM model passing the promotion gate",
-    "GitHub-hosted coverage gate"
+    "a real SLM model passing the promotion gate"
   ],
   "next_steps": [
-    "Push and verify experiment-reports.yml runs the new Linux coverage gates.",
     "Keep manual dogfood and real SLM promotion as separate gates.",
     "Use validate_runtime_readiness_matrix.py when editing Phase 3 readiness evidence."
   ]

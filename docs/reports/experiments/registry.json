@@ -1193,10 +1193,10 @@
     {
       "id": "phase3-linux-verification-coverage-gate",
       "name": "Phase 3 Linux Verification Coverage Gate",
-      "status": "partial",
-      "date": "2026-06-22T21:07:23+08:00",
+      "status": "verified",
+      "date": "2026-06-22T21:10:13+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "PENDING",
+      "commit": "5e27db5",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1213,7 +1213,10 @@
       "description": "Adds Linux CI coverage for three previously indirect verification paths: dynamic heldout clean export, character-granularity candidate export, and runtime readiness evidence-link validation. This keeps the promotion pipeline's generated heldout fixture path, character candidate path, and evidence chain protected even when manual macOS dogfood and real-model promotion remain open gates.",
       "runtime_default": "Off",
       "typing_behavior_changed_by_default": false,
-      "gate_result": "PENDING_CI",
+      "gate_result": "PASS",
+      "ci_workflow": ".github/workflows/experiment-reports.yml",
+      "github_run_id": "27955071423",
+      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27955071423",
       "privacy": {
         "content_free": true,
         "raw_text_recorded": false,
@@ -1230,15 +1233,14 @@
         "fixture_hygiene_audit.py --export-clean heldout_generalization produced 57 clean rows",
         "run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character --output /tmp/slm_ci_smoke_character_report.json",
         "validate_experiment_reports.py",
-        "git diff --check"
+        "git diff --check",
+        "gh run watch 27955071423 --exit-status"
       ],
       "not_tested": [
         "manual IMK dogfood",
-        "a real SLM model passing the promotion gate",
-        "GitHub-hosted coverage gate"
+        "a real SLM model passing the promotion gate"
       ],
       "next_steps": [
-        "Push and verify experiment-reports.yml runs the new Linux coverage gates",
         "Keep manual dogfood and real SLM promotion as separate gates",
         "Use validate_runtime_readiness_matrix.py when editing Phase 3 readiness evidence"
       ]
@@ -1445,7 +1447,7 @@
             "id": "phase3-runtime-readiness-matrix",
             "name": "Phase 3 Runtime Readiness Matrix",
             "status": "partial",
-            "date": "2026-06-22T21:07:23+08:00",
+            "date": "2026-06-22T21:10:13+08:00",
       "branch": "slm-phase2-learnable",
       "protocol_version": "1.0",
       "model": null,
@@ -1458,6 +1460,7 @@
       "gate_result": "PARTIAL",
       "verification": [
         "gh run watch 27949662127 --exit-status",
+        "gh run watch 27955071423 --exit-status",
         "gh run watch 27953106360 --exit-status",
         "gh run watch 27951356566 --exit-status",
         "gh run watch 27952280884 --exit-status",

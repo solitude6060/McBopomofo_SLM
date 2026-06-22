@@ -2,7 +2,7 @@
   "id": "phase3-runtime-readiness-matrix",
   "name": "Phase 3 Runtime Readiness Matrix",
   "status": "partial",
-  "date": "2026-06-22T21:07:23+08:00",
+  "date": "2026-06-22T21:10:13+08:00",
   "branch": "slm-phase2-learnable",
   "protocol_version": "1.0",
   "privacy": {
@@ -40,7 +40,7 @@
     },
     {
       "area": "linux verification coverage",
-      "state": "heldout_export_character_smoke_and_readiness_evidence_pending_ci",
+      "state": "heldout_export_character_smoke_and_readiness_evidence_ci_verified",
       "evidence": "docs/reports/experiments/phase3/linux_verification_coverage_gate.json"
     },
     {
@@ -119,6 +119,7 @@
     "python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py",
     "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --export-clean heldout_generalization",
     "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character --output /tmp/slm_ci_smoke_character_report.json",
+    "gh run watch 27955071423 --exit-status",
     "gh run watch 27953106360 --exit-status",
     "gh run watch 27951356566 --exit-status",
     "gh run watch 27952280884 --exit-status",
