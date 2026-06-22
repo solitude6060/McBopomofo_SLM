@@ -1,0 +1,79 @@
+{
+  "id": "slm-benchmark-suite-ci-smoke",
+  "name": "SLM Benchmark Suite CI Smoke",
+  "status": "verified",
+  "date": "2026-06-22T19:14:19+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "e27275a",
+  "protocol_version": "1.2",
+  "model": {
+    "model_name": "mock-tiny-llm-scorer",
+    "provider": "persistent local process",
+    "real_model_benchmarked": false,
+    "local_only": true
+  },
+  "results_dir": "docs/reports/experiments/phase2/",
+  "summary_file": "docs/reports/experiments/phase2/slm_benchmark_suite_ci_smoke.json",
+  "raw_artifacts_location": "/tmp/slm_ci_smoke*",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false
+  },
+  "ci_workflow": ".github/workflows/experiment-reports.yml",
+  "cli": "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke",
+  "pipeline_coverage": [
+    "baseline evaluator",
+    "deterministic evaluator",
+    "SLM candidate request export",
+    "persistent mock scorer protocol",
+    "candidate validation",
+    "report assembly",
+    "gate evaluation"
+  ],
+  "fixtures": {
+    "taiwan_ambiguous": 100,
+    "english_mixed": 50,
+    "taiwan_specific": 84,
+    "total": 234
+  },
+  "baseline": {
+    "exact_matches": 182,
+    "total_cases": 234,
+    "exact_accuracy": 77.7778
+  },
+  "deterministic": {
+    "exact_matches": 234,
+    "total_cases": 234,
+    "exact_accuracy": 100.0
+  },
+  "slm_mock": {
+    "exact_matches": 181,
+    "total_cases": 234,
+    "exact_accuracy": 77.3504,
+    "fallbacks": 0,
+    "candidate_validation_cases": 234,
+    "non_candidate_violations": 0,
+    "relative_error_reduction_vs_deterministic_pct": 0.0
+  },
+  "gate_result": "EXPECTED_FAIL",
+  "gate_reasons": [
+    "Persistent mock scorer is a no-op protocol verifier and does not improve over deterministic"
+  ],
+  "verification": [
+    "python3 -m py_compile Tools/SLMRerankerExperiment/*.py Tools/ContextualEvaluation/*.py",
+    "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --self-test",
+    "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py",
+    "python3 Tools/SLMRerankerExperiment/validate_experiment_reports.py",
+    "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke",
+    "python3 -m json.tool /tmp/slm_ci_smoke_report.json",
+    "git diff --check"
+  ],
+  "next_steps": [
+    "Keep --ci-smoke in Linux CI as the full benchmark-pipeline integration check.",
+    "Use real-model clean gates, not this mock smoke, for learned scorer promotion.",
+    "Keep raw smoke request and per-case artifacts under /tmp."
+  ]
+}

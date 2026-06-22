@@ -196,6 +196,41 @@
       ]
     },
     {
+      "id": "slm-benchmark-suite-ci-smoke",
+      "name": "SLM Benchmark Suite CI Smoke",
+      "status": "verified",
+      "date": "2026-06-22T19:14:19+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit": "e27275a",
+      "protocol_version": "1.2",
+      "model": {
+        "model_name": "mock-tiny-llm-scorer",
+        "provider": "persistent local process",
+        "real_model_benchmarked": false,
+        "local_only": true
+      },
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/slm_benchmark_suite_ci_smoke.json",
+      "result_files": [
+        "docs/reports/experiments/phase2/slm_benchmark_suite_ci_smoke.json"
+      ],
+      "description": "Runs the full SLM benchmark suite pipeline in CI with a persistent local mock scorer. The smoke covers baseline evaluation, deterministic evaluation, candidate export, persistent scorer protocol, candidate validation, report assembly, and gate evaluation without writing docs or registry output during CI.",
+      "fixtures_count": 234,
+      "real_model_benchmarked": false,
+      "gate_result": "EXPECTED_FAIL",
+      "verification": [
+        "run_benchmark_suite.py --ci-smoke",
+        "json.tool /tmp/slm_ci_smoke_report.json",
+        "validate_experiment_reports.py",
+        "git diff --check"
+      ],
+      "next_steps": [
+        "Keep --ci-smoke as the CI integration check for the SLM benchmark pipeline",
+        "Use real-model clean gates for learned scorer promotion",
+        "Keep raw smoke request and per-case artifacts under /tmp"
+      ]
+    },
+    {
       "id": "bigram-benchmark-suite-lane-smoke",
       "name": "Bigram Benchmark Suite Lane Smoke",
       "status": "verified",
