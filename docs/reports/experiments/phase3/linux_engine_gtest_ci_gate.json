@@ -1,0 +1,69 @@
+{
+  "id": "phase3-linux-engine-gtest-ci-gate",
+  "name": "Phase 3 Linux Engine GTest CI Gate",
+  "status": "ci_pending",
+  "date": "2026-06-22T21:19:44+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "pending",
+  "protocol_version": "1.0",
+  "model": null,
+  "results_dir": "docs/reports/experiments/phase3/",
+  "summary_file": "docs/reports/experiments/phase3/linux_engine_gtest_ci_gate.json",
+  "result_files": [
+    "docs/reports/experiments/phase3/linux_engine_gtest_ci_gate.json"
+  ],
+  "artifacts": [
+    ".github/workflows/experiment-reports.yml",
+    "Source/Engine/CMakeLists.txt",
+    "Source/Engine/Mandarin/CMakeLists.txt",
+    "Source/Engine/gramambular2/CMakeLists.txt"
+  ],
+  "ci_workflow": ".github/workflows/experiment-reports.yml",
+  "github_run_id": null,
+  "github_run_url": null,
+  "gate_result": "PENDING_CI",
+  "scope": "Linux C++ engine unit-test coverage inside the experiment report workflow",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false,
+    "screenshots_with_private_text": false,
+    "user_phrase_files_recorded": false
+  },
+  "coverage_added": [
+    "experiment-reports.yml configures Source/Engine with -DENABLE_TEST=ON",
+    "experiment-reports.yml builds McBopomofoLMLibTest, MandarinTest, and gramambular2_test on Linux",
+    "experiment-reports.yml runs ctest --test-dir build --output-on-failure before contextual evaluator and benchmark gates"
+  ],
+  "local_verification": {
+    "configure": "cmake -DENABLE_TEST=ON -DCMAKE_BUILD_TYPE=Release -S Source/Engine -B /tmp/mcbopomofo_engine_linux_gtests",
+    "build": "cmake --build /tmp/mcbopomofo_engine_linux_gtests --target runMcBopomofoLMLibTest runMandarinTest runGramambular2Test",
+    "ctest": "ctest --test-dir /tmp/mcbopomofo_engine_linux_gtests --output-on-failure",
+    "result": "PASS",
+    "ctest_total": 150,
+    "ctest_failed": 0,
+    "ctest_skipped": 4,
+    "target_results": [
+      "McBopomofoLMLibTest: 117 passed, 4 skipped, 0 failed",
+      "MandarinTest: 8 passed, 0 failed",
+      "gramambular2_test: 21 passed, 0 failed"
+    ]
+  },
+  "verification": [
+    "cmake -DENABLE_TEST=ON -DCMAKE_BUILD_TYPE=Release -S Source/Engine -B /tmp/mcbopomofo_engine_linux_gtests",
+    "cmake --build /tmp/mcbopomofo_engine_linux_gtests --target runMcBopomofoLMLibTest runMandarinTest runGramambular2Test",
+    "ctest --test-dir /tmp/mcbopomofo_engine_linux_gtests --output-on-failure"
+  ],
+  "not_tested": [
+    "GitHub-hosted Linux CI for this new gate is pending until the next push",
+    "manual IMK dogfood",
+    "a real SLM model passing the promotion gate"
+  ],
+  "next_steps": [
+    "Push the workflow update and verify the Experiment reports workflow passes.",
+    "Update this report with the GitHub run id after CI passes.",
+    "Keep manual dogfood and real SLM promotion as separate gates."
+  ]
+}

@@ -1444,6 +1444,46 @@
       ]
     },
     {
+      "id": "phase3-linux-engine-gtest-ci-gate",
+      "name": "Phase 3 Linux Engine GTest CI Gate",
+      "status": "ci_pending",
+      "date": "2026-06-22T21:19:44+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit": "pending",
+      "protocol_version": "1.0",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase3/",
+      "summary_file": "docs/reports/experiments/phase3/linux_engine_gtest_ci_gate.json",
+      "result_files": [
+        "docs/reports/experiments/phase3/linux_engine_gtest_ci_gate.json"
+      ],
+      "description": "Adds Linux-hosted C++ engine GTest coverage to the Experiment reports workflow. The workflow now configures Source/Engine with -DENABLE_TEST=ON, builds McBopomofoLMLibTest, MandarinTest, and gramambular2_test, and runs ctest before contextual evaluator and benchmark gates. Local Linux verification passed 150 discovered CTest cases with 0 failures and 4 expected skips; GitHub-hosted CI evidence is pending the next push.",
+      "privacy": {
+        "content_free": true,
+        "raw_text_recorded": false,
+        "readings_recorded": false,
+        "candidate_text_recorded": false,
+        "committed_text_recorded": false
+      },
+      "gate_result": "PENDING_CI",
+      "verification": [
+        "cmake -DENABLE_TEST=ON -DCMAKE_BUILD_TYPE=Release -S Source/Engine -B /tmp/mcbopomofo_engine_linux_gtests",
+        "cmake --build /tmp/mcbopomofo_engine_linux_gtests --target runMcBopomofoLMLibTest runMandarinTest runGramambular2Test",
+        "ctest --test-dir /tmp/mcbopomofo_engine_linux_gtests --output-on-failure",
+        "json.tool Linux engine GTest CI gate report"
+      ],
+      "not_tested": [
+        "GitHub-hosted Linux CI for this new gate is pending until the next push",
+        "manual IMK dogfood",
+        "a real SLM model passing the promotion gate"
+      ],
+      "next_steps": [
+        "Push the workflow update and verify the Experiment reports workflow passes",
+        "Update this report with the GitHub run id after CI passes",
+        "Keep manual dogfood and real SLM promotion as separate gates"
+      ]
+    },
+    {
             "id": "phase3-runtime-readiness-matrix",
             "name": "Phase 3 Runtime Readiness Matrix",
             "status": "partial",
@@ -1456,7 +1496,7 @@
       "result_files": [
         "docs/reports/experiments/phase3/runtime_readiness_matrix.json"
       ],
-            "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local validator and generator, Linux deterministic canonical and heldout clean regression gates, SLM promotion validation, dynamic heldout export coverage, character candidate smoke coverage, readiness evidence validation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
+            "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local validator and generator, Linux deterministic canonical and heldout clean regression gates, SLM promotion validation, dynamic heldout export coverage, character candidate smoke coverage, Linux engine GTest coverage pending CI, readiness evidence validation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
       "gate_result": "PARTIAL",
       "verification": [
         "gh run watch 27949662127 --exit-status",
@@ -1470,6 +1510,7 @@
         "json.tool dogfood evidence generator report",
         "json.tool SLM promotion gate report",
         "json.tool Linux verification coverage report",
+        "json.tool Linux engine GTest CI gate report",
         "json.tool heldout clean CI gate report",
         "json.tool macOS CI runtime build gate report",
         "generate_dogfood_evidence.py --self-test",

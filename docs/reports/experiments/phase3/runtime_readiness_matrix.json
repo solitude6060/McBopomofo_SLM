@@ -44,6 +44,11 @@
       "evidence": "docs/reports/experiments/phase3/linux_verification_coverage_gate.json"
     },
     {
+      "area": "linux engine gtest coverage",
+      "state": "local_verified_pending_ci",
+      "evidence": "docs/reports/experiments/phase3/linux_engine_gtest_ci_gate.json"
+    },
+    {
       "area": "macOS build and IMK validation",
       "state": "ci_verified_pending_manual_dogfood",
       "evidence": "docs/reports/experiments/phase3/macos_ci_runtime_build_gate.json"
@@ -105,6 +110,7 @@
     "python3 -m json.tool docs/reports/experiments/phase3/heldout_generalization_clean_ci_gate.json",
     "python3 -m json.tool docs/reports/experiments/phase3/macos_ci_runtime_build_gate.json",
     "python3 -m json.tool docs/reports/experiments/phase3/deterministic_linux_ci_gate.json",
+    "python3 -m json.tool docs/reports/experiments/phase3/linux_engine_gtest_ci_gate.json",
     "python3 -m json.tool docs/reports/experiments/registry.json",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --heldout",
@@ -119,6 +125,9 @@
     "python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py",
     "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --export-clean heldout_generalization",
     "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character --output /tmp/slm_ci_smoke_character_report.json",
+    "cmake -DENABLE_TEST=ON -DCMAKE_BUILD_TYPE=Release -S Source/Engine -B /tmp/mcbopomofo_engine_linux_gtests",
+    "cmake --build /tmp/mcbopomofo_engine_linux_gtests --target runMcBopomofoLMLibTest runMandarinTest runGramambular2Test",
+    "ctest --test-dir /tmp/mcbopomofo_engine_linux_gtests --output-on-failure",
     "gh run watch 27955071423 --exit-status",
     "gh run watch 27953106360 --exit-status",
     "gh run watch 27951356566 --exit-status",
