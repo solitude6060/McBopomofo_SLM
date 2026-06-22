@@ -45,6 +45,8 @@ jobs:
       - name: Validate SLM promotion gate
         run: |
           python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --self-test
+          python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --write-synthetic-pass-report /tmp/slm_synthetic_pass_report.json
+          python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --report /tmp/slm_synthetic_pass_report.json --required-fixture heldout_generalization_clean
           python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --report docs/reports/experiments/phase2/slm_qwen2_5_0_5b_index_taiwan_ambiguous.json --required-fixture heldout_generalization_clean --expect-fail
           python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --report docs/reports/experiments/phase2/slm_qwen2_5_0_5b_indices_repair_clean_gate_benchmark.json --required-fixture heldout_generalization_clean --expect-fail
       - name: Self-test experiment runner

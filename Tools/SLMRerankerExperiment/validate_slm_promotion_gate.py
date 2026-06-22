@@ -454,6 +454,13 @@ def build_parser():
     parser.add_argument("--report", help="SLM benchmark suite JSON report")
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument(
+        "--write-synthetic-pass-report",
+        help=(
+            "Write a content-free synthetic PASS report for CI regression tests. "
+            "This is not real benchmark evidence."
+        ),
+    )
+    parser.add_argument(
         "--expect-fail",
         action="store_true",
         help="Return success only when the report fails promotion validation",
@@ -486,6 +493,16 @@ def main():
     args = build_parser().parse_args()
     if args.self_test:
         return run_self_test()
+    if args.write_synthetic_pass_report:
+        with open(args.write_synthetic_pass_report, "w", encoding="utf-8") as handle:
+            json.dump(make_pass_report(), handle, ensure_ascii=False, indent=2)
+            handle.write("\n")
+        print(
+            "WROTE SYNTHETIC PASS REPORT: "
+            f"{args.write_synthetic_pass_report}",
+            file=sys.stderr,
+        )
+        return 0
     if not args.report:
         print("VALIDATION FAIL: --report is required", file=sys.stderr)
         return 1
