@@ -1,0 +1,89 @@
+{
+  "id": "phase3-runtime-readiness-matrix",
+  "name": "Phase 3 Runtime Readiness Matrix",
+  "status": "partial",
+  "date": "2026-06-22T18:31:21+08:00",
+  "branch": "slm-phase2-learnable",
+  "protocol_version": "1.0",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false
+  },
+  "current_state": [
+    {
+      "area": "runtime preference",
+      "state": "implemented",
+      "evidence": "docs/reports/experiments/phase3/contextual_reranker_runtime_preference.json"
+    },
+    {
+      "area": "deterministic runtime hook",
+      "state": "implemented_static_gate",
+      "evidence": "docs/reports/experiments/phase3/deterministic_runtime_hook_static_gate.json"
+    },
+    {
+      "area": "content-free runtime counters",
+      "state": "implemented_static_gate",
+      "evidence": "docs/reports/experiments/phase3/content_free_runtime_counters_static_gate.json"
+    },
+    {
+      "area": "dogfood privacy boundary",
+      "state": "documented",
+      "evidence": "docs/reports/experiments/phase3/macos_dogfood_readiness.json"
+    },
+    {
+      "area": "tiny LLM runtime",
+      "state": "intentionally_unwired",
+      "evidence": "qwen2.5:0.5b prompt-only clean gate failed accuracy, fallback, and latency targets"
+    },
+    {
+      "area": "macOS build and IMK validation",
+      "state": "not_verified_in_linux",
+      "evidence": "xcodebuild and swift are unavailable in this environment"
+    }
+  ],
+  "promotion_gates": [
+    {
+      "gate": "macOS compile",
+      "required_evidence": "xcodebuild succeeds for app and test targets",
+      "status": "missing"
+    },
+    {
+      "gate": "PreferencesTests",
+      "required_evidence": "ContextualRerankerMode and diagnostics report tests pass on macOS",
+      "status": "missing"
+    },
+    {
+      "gate": "manual IMK dogfood",
+      "required_evidence": "Off and Deterministic modes pass the content-free dogfood checklist",
+      "status": "missing"
+    },
+    {
+      "gate": "runtime privacy",
+      "required_evidence": "dogfood artifacts contain only aggregate counters and categories",
+      "status": "ready_for_dogfood"
+    },
+    {
+      "gate": "SLM runtime",
+      "required_evidence": "local-only model path with timeout, fallback, constrained output, and a benchmark win over deterministic",
+      "status": "not_ready"
+    }
+  ],
+  "opencode_status": {
+    "ordinary_sandbox": "fails because opencode's SQLite DB and lock directory are readonly",
+    "escalated": "starts successfully, but the latest read-only ultrawork audit was interrupted after noisy internal event logging produced no concise findings",
+    "next_prompt_guidance": "use ultrawork prefix, avoid --print-logs, and keep prompts narrowly bounded"
+  },
+  "verification": [
+    "python3 -m json.tool docs/reports/experiments/phase3/runtime_readiness_matrix.json",
+    "python3 -m json.tool docs/reports/experiments/registry.json",
+    "git diff --check"
+  ],
+  "next_steps": [
+    "Run macOS xcodebuild and PreferencesTests.",
+    "Execute the macOS dogfood runbook for Off and Deterministic modes.",
+    "Keep SLM Prototype unwired until a local-only constrained model path beats deterministic under the latency budget."
+  ]
+}

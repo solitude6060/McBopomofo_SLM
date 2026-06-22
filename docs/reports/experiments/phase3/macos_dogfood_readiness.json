@@ -10,7 +10,9 @@
   "artifacts": {
     "dogfood_runbook": "docs/runbooks/macos_experimental_reranker_dogfood.md",
     "privacy_statement": "docs/privacy/local_reranker_privacy_statement.md",
-    "runtime_preference_report": "docs/reports/experiments/phase3/contextual_reranker_runtime_preference.json"
+    "runtime_preference_report": "docs/reports/experiments/phase3/contextual_reranker_runtime_preference.json",
+    "deterministic_runtime_hook_report": "docs/reports/experiments/phase3/deterministic_runtime_hook_static_gate.json",
+    "content_free_runtime_counters_report": "docs/reports/experiments/phase3/content_free_runtime_counters_static_gate.json"
   },
   "readiness": {
     "runtime_preference_exists": true,
@@ -18,13 +20,15 @@
     "typing_behavior_changed": false,
     "dogfood_checklist_exists": true,
     "privacy_statement_exists": true,
-    "content_free_issue_template_exists": true
+    "content_free_issue_template_exists": true,
+    "deterministic_runtime_hook_exists": true,
+    "content_free_runtime_counters_exist": true
   },
   "blocked_for_full_phase3": [
     "macOS build and PreferencesTests target execution",
     "manual IMK input menu validation",
-    "deterministic scorer wiring behind the runtime preference",
-    "content-free runtime latency and fallback counters"
+    "manual deterministic mode dogfood with aggregate counters",
+    "SLM Prototype remains intentionally unwired pending timeout and fallback gates"
   ],
   "verification": [
     "python3 -m json.tool docs/reports/experiments/phase3/contextual_reranker_runtime_preference.json",
@@ -39,6 +43,6 @@
   "next_steps": [
     "Run macOS build and PreferencesTests",
     "Use the dogfood runbook for manual menu and privacy validation",
-    "Wire deterministic scorer only after macOS validation of the preference surface"
+    "Keep collected dogfood evidence content-free and aggregate-only"
   ]
 }

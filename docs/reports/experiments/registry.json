@@ -872,9 +872,9 @@
       "result_files": [
         "docs/reports/experiments/phase3/contextual_reranker_runtime_preference.json"
       ],
-      "description": "Adds a disabled-by-default macOS runtime preference surface for contextual reranking. The input menu exposes Off, Deterministic, and SLM Prototype modes, and Preferences.createReport records the selected non-content setting. Typing behavior is intentionally unchanged until macOS build/manual IMK validation is available.",
+      "description": "Adds a disabled-by-default macOS runtime preference surface for contextual reranking. The input menu exposes Off, Deterministic, and SLM Prototype modes, and Preferences.createReport records the selected non-content setting. Follow-up reports now track deterministic runtime wiring and content-free counters; Off remains the default.",
       "runtime_default": "Off",
-      "typing_behavior_changed": false,
+      "typing_behavior_changed_by_default": false,
       "gate_result": "PARTIAL",
       "verification": [
         "git diff --check",
@@ -888,9 +888,8 @@
       ],
       "next_steps": [
         "Run PreferencesTests on macOS",
-        "Wire deterministic scorer behind the Deterministic mode with fail-closed behavior",
-        "Add content-free runtime counters before any model path",
-        "Create the macOS dogfood runbook"
+        "Validate Off and Deterministic modes with the macOS dogfood runbook",
+        "Keep SLM Prototype disabled until a separate local-only runtime path has timeout and fallback gates"
       ]
     },
     {
@@ -906,7 +905,7 @@
       "result_files": [
         "docs/reports/experiments/phase3/macos_dogfood_readiness.json"
       ],
-      "description": "Adds content-free Phase 3 dogfood and privacy artifacts for the macOS experimental reranker. The runbook defines toggle, latency, fallback, candidate UI, user phrase, rapid typing, and privacy checks. The privacy statement explicitly forbids collecting raw typed content, readings, candidate strings, committed text, screenshots with private text, or user phrase files.",
+      "description": "Adds content-free Phase 3 dogfood and privacy artifacts for the macOS experimental reranker. The runbook defines toggle, latency, fallback, candidate UI, user phrase, rapid typing, and privacy checks. Follow-up reports now track deterministic runtime wiring and content-free runtime counters. The privacy statement explicitly forbids collecting raw typed content, readings, candidate strings, committed text, screenshots with private text, or user phrase files.",
       "artifacts": [
         "docs/runbooks/macos_experimental_reranker_dogfood.md",
         "docs/privacy/local_reranker_privacy_statement.md"
@@ -924,7 +923,7 @@
       "next_steps": [
         "Run macOS build and PreferencesTests",
         "Use the dogfood runbook for manual menu and privacy validation",
-        "Wire deterministic scorer after the preference surface is validated on macOS"
+        "Keep dogfood evidence content-free and aggregate-only"
       ]
     },
     {
@@ -946,6 +945,7 @@
       "gate_result": "PARTIAL",
       "verification": [
         "opencode ultrawork prompt attempted and failed before repo work due to PRAGMA wal_checkpoint(PASSIVE)",
+        "follow-up opencode ultrawork audit launched with escalated DB access but interrupted after noisy internal event logging produced no findings",
         "cmake --build Source/Engine/build --target McBopomofoLMLibTest",
         "Source/Engine/build/McBopomofoLMLibTest: 119 passed, 2 skipped",
         "run_benchmark_suite.py --self-test",
@@ -960,7 +960,7 @@
       "next_steps": [
         "Run macOS xcodebuild and PreferencesTests",
         "Dogfood with the content-free Phase 3 runbook",
-        "Add runtime counters before enabling any tiny LLM path"
+        "Use the content-free runtime counters report to collect aggregate dogfood evidence"
       ]
     },
     {
@@ -998,6 +998,37 @@
         "Run macOS xcodebuild and PreferencesTests",
         "Dogfood deterministic mode with aggregate report lines only",
         "Use latency bucket counts to validate the interactive budget"
+      ]
+    },
+    {
+      "id": "phase3-runtime-readiness-matrix",
+      "name": "Phase 3 Runtime Readiness Matrix",
+      "status": "partial",
+      "date": "2026-06-22T18:31:21+08:00",
+      "branch": "slm-phase2-learnable",
+      "protocol_version": "1.0",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase3/",
+      "summary_file": "docs/reports/experiments/phase3/runtime_readiness_matrix.json",
+      "result_files": [
+        "docs/reports/experiments/phase3/runtime_readiness_matrix.json"
+      ],
+      "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, and dogfood/privacy artifacts are present at static-gate level. macOS xcodebuild, PreferencesTests, and manual IMK dogfood remain missing evidence. SLM Prototype remains intentionally unwired until a local-only constrained model path beats deterministic under the latency budget.",
+      "gate_result": "PARTIAL",
+      "verification": [
+        "json.tool runtime readiness matrix",
+        "json.tool registry",
+        "git diff --check"
+      ],
+      "not_tested": [
+        "macOS xcodebuild",
+        "macOS PreferencesTests",
+        "manual IMK dogfood"
+      ],
+      "next_steps": [
+        "Run macOS xcodebuild and PreferencesTests",
+        "Execute content-free dogfood for Off and Deterministic modes",
+        "Keep SLM Prototype unwired until model accuracy and latency gates pass"
       ]
     }
   ]

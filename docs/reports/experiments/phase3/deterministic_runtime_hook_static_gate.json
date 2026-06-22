@@ -23,6 +23,7 @@
   "gate_result": "PARTIAL",
   "verification": [
     "opencode run attempted with an ultrawork prompt and failed before repository work due to PRAGMA wal_checkpoint(PASSIVE)",
+    "follow-up opencode ultrawork audit launched with escalated DB access but interrupted after noisy internal event logging produced no findings",
     "cmake --build Source/Engine/build --target McBopomofoLMLibTest",
     "Source/Engine/build/McBopomofoLMLibTest: 119 passed, 2 skipped",
     "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --self-test",
@@ -37,7 +38,7 @@
   "next_steps": [
     "Run xcodebuild and PreferencesTests on macOS.",
     "Dogfood Off, Deterministic, and SLM Prototype menu switching with the Phase 3 privacy runbook.",
-    "Add content-free runtime counters for correction attempts, applied corrections, and latency buckets.",
+    "Use the content-free runtime counters report to collect aggregate dogfood evidence.",
     "Defer tiny LLM runtime wiring until deterministic runtime dogfood passes."
   ]
 }

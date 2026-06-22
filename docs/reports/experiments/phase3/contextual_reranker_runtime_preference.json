@@ -12,12 +12,13 @@
       "disabled-by-default ContextualRerankerMode preference",
       "input menu submenu for off, deterministic, and SLM prototype modes",
       "settings report entry for the selected mode",
-      "preference tests for default, round-trip, and settings report coverage"
+      "preference tests for default, round-trip, and settings report coverage",
+      "follow-up deterministic runtime hook tracked by phase3-deterministic-runtime-hook-static-gate",
+      "follow-up content-free runtime counters tracked by phase3-content-free-runtime-counters-static-gate"
     ],
     "not_implemented": [
-      "reranker application in the live composing path",
       "SLM model runtime invocation from the input method",
-      "latency/fallback counters in production runtime"
+      "macOS build validation and manual IMK dogfood"
     ]
   },
   "defaults": {
@@ -34,7 +35,7 @@
     {
       "name": "Deterministic",
       "raw_value": 1,
-      "behavior": "reserved for Phase 3 deterministic scorer wiring"
+      "behavior": "wired by the follow-up deterministic runtime hook"
     },
     {
       "name": "SLM Prototype",
@@ -56,13 +57,12 @@
   "gate_result": "PARTIAL",
   "gate_reasons": [
     "Phase 3 preference surface is in place and defaults off",
-    "typing behavior is intentionally unchanged until macOS build/manual validation is available",
-    "full Phase 3 runtime integration still needs scorer wiring, fallback counters, and dogfood checklist execution"
+    "typing behavior is unchanged by default because Off remains the default",
+    "full Phase 3 runtime integration still needs macOS build/manual validation and SLM runtime gating"
   ],
   "next_steps": [
     "Run the McBopomofoTests PreferencesTests target on macOS",
-    "Wire deterministic scorer behind ContextualRerankerMode.deterministic with fail-closed behavior",
-    "Add content-free latency/fallback counters before any SLM prototype runtime path",
-    "Create the macOS dogfood runbook before enabling the preference for users"
+    "Use the macOS dogfood runbook to validate Off and Deterministic modes",
+    "Keep SLM Prototype disabled until a separate local-only runtime path has timeout and fallback gates"
   ]
 }
