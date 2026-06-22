@@ -54,7 +54,7 @@ jobs:
       - name: Self-test fixture hygiene audit
         run: python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --self-test
       - name: Configure engine libraries
-        run: cmake -DENABLE_TEST=OFF -S . -B build
+        run: cmake -DENABLE_TEST=OFF -DCMAKE_BUILD_TYPE=Release -S . -B build
         working-directory: Source/Engine
       - name: Build engine libraries
         run: |
@@ -63,7 +63,7 @@ jobs:
           cmake --build build --target McBopomofoLMLib
         working-directory: Source/Engine
       - name: Configure contextual evaluator
-        run: cmake -S . -B build
+        run: cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
         working-directory: Tools/ContextualEvaluation
       - name: Build contextual evaluator
         run: cmake --build build --target evaluator
