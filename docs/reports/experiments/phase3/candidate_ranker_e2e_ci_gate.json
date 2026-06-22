@@ -2,9 +2,9 @@
   "id": "phase3-candidate-ranker-e2e-ci-gate",
   "name": "Phase 3 Candidate Ranker E2E CI Gate",
   "status": "verified",
-  "date": "2026-06-22T22:22:41+08:00",
+  "date": "2026-06-22T23:57:51+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "63f6f7c",
+  "commit": "e0a2b94",
   "protocol_version": "1.0",
   "model": "candidate-ranker-v1-seed-char",
   "results_dir": "docs/reports/experiments/phase3/",
@@ -22,10 +22,10 @@
     ".github/workflows/experiment-reports.yml"
   ],
   "ci_workflow": ".github/workflows/experiment-reports.yml",
-  "github_run_id": 27959649945,
-  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27959649945",
+  "github_run_id": 27965857894,
+  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27965857894",
   "gate_result": "PASS",
-  "scope": "Protect the non-generative learned candidate-ranker path end to end on both canonical and heldout fixtures: C++ evaluator request export, persistent Python scorer protocol, model schema loading, candidate validation, and content-free aggregate analysis.",
+  "scope": "Protect the non-generative learned candidate-ranker path end to end on both canonical and heldout fixtures: C++ evaluator request export, persistent Python scorer protocol, model schema loading, candidate validation, content-free aggregate analysis, and heldout no-regression validation.",
   "privacy": {
     "content_free": true,
     "raw_text_recorded": false,
@@ -89,15 +89,15 @@
     "python3 -m py_compile Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py",
     "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --self-test",
     "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e_gate --suite-report /tmp/candidate_ranker_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_e2e_gate_analysis.json",
-    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_gate --suite-report /tmp/candidate_ranker_heldout_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_heldout_e2e_gate_analysis.json",
-    "gh run watch 27959649945 --exit-status"
+    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_gate --suite-report /tmp/candidate_ranker_heldout_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_heldout_e2e_gate_analysis.json --require-no-regression",
+    "gh run watch 27965857894 --exit-status"
   ],
   "not_tested": [
     "manual IMK dogfood",
     "a real SLM model passing the promotion gate"
   ],
   "next_steps": [
-    "Use this gate as the regression baseline before improving the learned candidate ranker.",
+    "Use --require-no-regression or --require-improvement for promotion-style candidate-ranker checks.",
     "Keep generated request and analysis artifacts under /tmp unless explicitly publishing a content-free aggregate report."
   ]
 }

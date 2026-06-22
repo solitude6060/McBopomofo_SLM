@@ -871,7 +871,7 @@
       "status": "benchmarked",
       "date": "2026-06-22T23:50:57+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "eddc459",
+      "commit": "e0a2b94",
       "protocol_version": "1.2",
       "model": "/tmp/candidate_ranker_combined.json",
       "results_dir": "docs/reports/experiments/phase2/",
@@ -893,7 +893,8 @@
         "validate_candidate_ranker_e2e.py combined model heldout contract",
         "validate_candidate_ranker_e2e.py --require-no-regression rejects combined heldout regression with --expect-fail",
         "validate_candidate_ranker_e2e.py --require-no-regression passes default heldout no-change model",
-        "json.tool candidate_ranker_combined_sparsity_benchmark.json"
+        "json.tool candidate_ranker_combined_sparsity_benchmark.json",
+        "gh run watch 27965857894 --exit-status"
       ],
       "next_steps": [
         "Use --require-no-regression or --require-improvement for future candidate-ranker promotion checks",
@@ -1239,9 +1240,9 @@
       "id": "phase3-linux-verification-coverage-gate",
       "name": "Phase 3 Linux Verification Coverage Gate",
       "status": "verified",
-      "date": "2026-06-22T23:02:40+08:00",
+      "date": "2026-06-22T23:57:51+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "63f6f7c",
+      "commit": "e0a2b94",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1256,13 +1257,13 @@
         "Tools/SLMRerankerExperiment/run_benchmark_suite.py",
         "Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py"
       ],
-      "description": "Adds Linux CI coverage for previously indirect verification paths: dynamic heldout clean export, character-granularity candidate export, canonical and heldout candidate-ranker E2E contract validation, and runtime readiness evidence-link validation. This keeps the promotion pipeline's generated heldout fixture path, learned candidate-ranker protocol path, character candidate path, and evidence chain protected even when manual macOS dogfood and real-model promotion remain open gates.",
+      "description": "Adds Linux CI coverage for previously indirect verification paths: dynamic heldout clean export, character-granularity candidate export, canonical candidate-ranker E2E contract validation, heldout candidate-ranker no-regression validation, and runtime readiness evidence-link validation. This keeps the promotion pipeline's generated heldout fixture path, learned candidate-ranker protocol path, character candidate path, and evidence chain protected even when manual macOS dogfood and real-model promotion remain open gates.",
       "runtime_default": "Off",
       "typing_behavior_changed_by_default": false,
       "gate_result": "PASS",
       "ci_workflow": ".github/workflows/experiment-reports.yml",
-      "github_run_id": "27959649945",
-      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27959649945",
+      "github_run_id": "27965857894",
+      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27965857894",
       "privacy": {
         "content_free": true,
         "raw_text_recorded": false,
@@ -1280,11 +1281,11 @@
         "run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character --output /tmp/slm_ci_smoke_character_report.json",
         "validate_candidate_ranker_e2e.py --self-test",
         "validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e_gate --suite-report /tmp/candidate_ranker_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_e2e_gate_analysis.json",
-        "validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_gate --suite-report /tmp/candidate_ranker_heldout_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_heldout_e2e_gate_analysis.json",
+        "validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_gate --suite-report /tmp/candidate_ranker_heldout_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_heldout_e2e_gate_analysis.json --require-no-regression",
         "validate_experiment_reports.py",
         "git diff --check",
-        "gh run watch 27959649945 --exit-status",
-        "GitHub experiment-reports.yml run 27959649945 passed canonical and heldout candidate-ranker E2E contract plus runtime readiness matrix"
+        "gh run watch 27965857894 --exit-status",
+        "GitHub experiment-reports.yml run 27965857894 passed canonical candidate-ranker E2E contract, heldout candidate-ranker no-regression validation, and runtime readiness matrix"
       ],
       "not_tested": [
         "manual IMK dogfood",
@@ -1299,9 +1300,9 @@
       "id": "phase3-candidate-ranker-e2e-ci-gate",
       "name": "Phase 3 Candidate Ranker E2E CI Gate",
       "status": "verified",
-      "date": "2026-06-22T22:22:41+08:00",
+      "date": "2026-06-22T23:57:51+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "63f6f7c",
+      "commit": "e0a2b94",
       "protocol_version": "1.0",
       "model": "candidate-ranker-v1-seed-char",
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1309,13 +1310,13 @@
       "result_files": [
         "docs/reports/experiments/phase3/candidate_ranker_e2e_ci_gate.json"
       ],
-      "description": "Protects the non-generative learned candidate-ranker path end to end on canonical and heldout fixtures: C++ evaluator request export, persistent Python scorer protocol, model schema loading, candidate validation, and content-free aggregate analysis. Local verification covered 234 canonical requests and 63 heldout requests with zero fallbacks and zero non-candidate violations.",
+      "description": "Protects the non-generative learned candidate-ranker path end to end on canonical and heldout fixtures: C++ evaluator request export, persistent Python scorer protocol, model schema loading, candidate validation, content-free aggregate analysis, and heldout no-regression validation. Local verification covered 234 canonical requests and 63 heldout requests with zero fallbacks and zero non-candidate violations.",
       "runtime_default": "Off",
       "typing_behavior_changed_by_default": false,
       "gate_result": "PASS",
       "ci_workflow": ".github/workflows/experiment-reports.yml",
-      "github_run_id": 27959649945,
-      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27959649945",
+      "github_run_id": 27965857894,
+      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27965857894",
       "privacy": {
         "content_free": true,
         "raw_text_recorded": false,
@@ -1329,15 +1330,15 @@
         "python3 -m py_compile Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py",
         "validate_candidate_ranker_e2e.py --self-test",
         "validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e_gate --suite-report /tmp/candidate_ranker_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_e2e_gate_analysis.json",
-        "validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_gate --suite-report /tmp/candidate_ranker_heldout_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_heldout_e2e_gate_analysis.json",
-        "gh run watch 27959649945 --exit-status"
+        "validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_gate --suite-report /tmp/candidate_ranker_heldout_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_heldout_e2e_gate_analysis.json --require-no-regression",
+        "gh run watch 27965857894 --exit-status"
       ],
       "not_tested": [
         "manual IMK dogfood",
         "a real SLM model passing the promotion gate"
       ],
       "next_steps": [
-        "Use this gate as the regression baseline before improving the learned candidate ranker",
+        "Use --require-no-regression or --require-improvement for promotion-style candidate-ranker checks",
         "Keep generated request and analysis artifacts under /tmp unless explicitly publishing a content-free aggregate report"
       ]
     },
@@ -1622,9 +1623,9 @@
       "id": "phase3-runtime-gate-health-static-gate",
       "name": "Phase 3 Runtime Gate Health Static Gate",
       "status": "verified",
-      "date": "2026-06-22T23:38:15+08:00",
+      "date": "2026-06-22T23:57:51+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "eed2b0d",
+      "commit": "e0a2b94",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1648,7 +1649,7 @@
         "validate_runtime_readiness_matrix.py --summary-output /tmp/runtime_gate_health.json",
         "json.tool /tmp/runtime_gate_health.json",
         "validate_experiment_reports.py",
-        "gh run watch 27964538250 --exit-status"
+        "gh run watch 27965857894 --exit-status"
       ],
       "not_tested": [
         "manual IMK dogfood",
@@ -1664,7 +1665,7 @@
             "id": "phase3-runtime-readiness-matrix",
             "name": "Phase 3 Runtime Readiness Matrix",
             "status": "partial",
-            "date": "2026-06-22T23:38:15+08:00",
+            "date": "2026-06-22T23:57:51+08:00",
       "branch": "slm-phase2-learnable",
       "protocol_version": "1.0",
       "model": null,
@@ -1673,7 +1674,7 @@
       "result_files": [
         "docs/reports/experiments/phase3/runtime_readiness_matrix.json"
       ],
-      "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local nested strict validator and generator, Linux deterministic canonical and 63-case heldout clean regression gates, SLM promotion validation for raw and curated clean-gate summaries plus a generated synthetic acceptance-path regression, dynamic heldout export coverage, character candidate smoke coverage, candidate-ranker canonical and heldout E2E contract validation in CI, Linux engine GTest CI coverage, readiness evidence validation, content-free runtime gate health summary generation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
+      "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local nested strict validator and generator, Linux deterministic canonical and 63-case heldout clean regression gates, SLM promotion validation for raw and curated clean-gate summaries plus a generated synthetic acceptance-path regression, dynamic heldout export coverage, character candidate smoke coverage, candidate-ranker canonical E2E and heldout no-regression validation in CI, Linux engine GTest CI coverage, readiness evidence validation, content-free runtime gate health summary generation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
       "gate_result": "PARTIAL",
       "verification": [
         "gh run watch 27949662127 --exit-status",
@@ -1708,11 +1709,12 @@
         "run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character",
         "validate_candidate_ranker_e2e.py --self-test",
         "validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e_gate --suite-report /tmp/candidate_ranker_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_e2e_gate_analysis.json",
-        "validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_gate --suite-report /tmp/candidate_ranker_heldout_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_heldout_e2e_gate_analysis.json",
+        "validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_gate --suite-report /tmp/candidate_ranker_heldout_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_heldout_e2e_gate_analysis.json --require-no-regression",
         "gh run watch 27959649945 --exit-status",
         "gh run watch 27963083488 --exit-status",
         "gh run watch 27963845787 --exit-status",
         "gh run watch 27964538250 --exit-status",
+        "gh run watch 27965857894 --exit-status",
         "json.tool registry",
         "git diff --check"
       ],

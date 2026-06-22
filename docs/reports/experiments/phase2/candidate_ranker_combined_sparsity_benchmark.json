@@ -2,7 +2,7 @@
   "report": "candidate_ranker_combined_sparsity_benchmark",
   "date": "2026-06-22T23:50:57+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "eddc4594e3c768cd5d206641af7f65e4aa879d78",
+  "commit": "e0a2b949aa9da1f2b110ce9a0088a1a00c139a8b",
   "protocol_version": "1.2",
   "content_policy": {
     "raw_case_strings_in_report": false,
@@ -131,7 +131,8 @@
     "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --model /tmp/candidate_ranker_combined.json --heldout --work-dir /tmp/e2e_combined_no_regression --suite-report /tmp/e2e_combined_no_regression_report.json --analysis-report /tmp/e2e_combined_no_regression_analysis.json --require-no-regression --expect-fail",
     "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_default --suite-report /tmp/default_heldout_report.json --analysis-report /tmp/default_heldout_analysis.json --require-no-regression",
     "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --self-test",
-    "python3 Tools/SLMRerankerExperiment/analyze_candidate_ranker.py --self-test"
+    "python3 Tools/SLMRerankerExperiment/analyze_candidate_ranker.py --self-test",
+    "gh run watch 27965857894 --exit-status"
   ],
   "next_steps": [
     "Use validate_candidate_ranker_e2e.py --require-no-regression or --require-improvement for future candidate-ranker promotion checks",

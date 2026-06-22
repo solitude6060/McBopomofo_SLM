@@ -2,9 +2,9 @@
   "id": "phase3-linux-verification-coverage-gate",
   "name": "Phase 3 Linux Verification Coverage Gate",
   "status": "verified",
-  "date": "2026-06-22T22:22:41+08:00",
+  "date": "2026-06-22T23:57:51+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "63f6f7c",
+  "commit": "e0a2b94",
   "protocol_version": "1.0",
   "model": null,
   "results_dir": "docs/reports/experiments/phase3/",
@@ -20,10 +20,10 @@
     "Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py"
   ],
   "ci_workflow": ".github/workflows/experiment-reports.yml",
-  "github_run_id": "27959649945",
-  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27959649945",
+  "github_run_id": "27965857894",
+  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27965857894",
   "gate_result": "PASS",
-  "scope": "Linux-verifiable coverage for heldout clean export, character-granularity candidate export, canonical and heldout candidate-ranker E2E contract validation, and runtime readiness evidence links",
+  "scope": "Linux-verifiable coverage for heldout clean export, character-granularity candidate export, canonical candidate-ranker E2E contract validation, heldout candidate-ranker no-regression validation, and runtime readiness evidence links",
   "privacy": {
     "content_free": true,
     "raw_text_recorded": false,
@@ -36,7 +36,7 @@
   "coverage_added": [
     "fixture_hygiene_audit.py --export-clean heldout_generalization is exercised in CI and must produce a non-empty clean JSONL whose line count matches the clean count",
     "run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character is exercised in CI so the character candidate export path remains covered",
-    "validate_candidate_ranker_e2e.py exercises the C++ request export, persistent candidate-ranker scorer protocol, model schema loading, candidate validation, and content-free aggregate analysis for canonical and heldout fixtures",
+    "validate_candidate_ranker_e2e.py exercises the C++ request export, persistent candidate-ranker scorer protocol, model schema loading, candidate validation, content-free aggregate analysis for canonical and heldout fixtures, and no-regression validation for heldout fixtures",
     "validate_runtime_readiness_matrix.py checks runtime_readiness_matrix.json evidence links, JSON validity, privacy flag, and the expected open gates"
   ],
   "verification": [
@@ -47,11 +47,11 @@
     "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character --output /tmp/slm_ci_smoke_character_report.json",
     "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --self-test",
     "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e_gate --suite-report /tmp/candidate_ranker_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_e2e_gate_analysis.json",
-    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_gate --suite-report /tmp/candidate_ranker_heldout_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_heldout_e2e_gate_analysis.json",
+    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_gate --suite-report /tmp/candidate_ranker_heldout_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_heldout_e2e_gate_analysis.json --require-no-regression",
     "python3 Tools/SLMRerankerExperiment/validate_experiment_reports.py",
     "git diff --check",
-    "gh run watch 27959649945 --exit-status",
-    "GitHub experiment-reports.yml run 27959649945 passed canonical and heldout candidate-ranker E2E contract plus runtime readiness matrix"
+    "gh run watch 27965857894 --exit-status",
+    "GitHub experiment-reports.yml run 27965857894 passed canonical candidate-ranker E2E contract, heldout candidate-ranker no-regression validation, and runtime readiness matrix"
   ],
   "not_tested": [
     "manual IMK dogfood",
