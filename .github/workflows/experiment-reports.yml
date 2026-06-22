@@ -57,7 +57,10 @@ jobs:
         run: cmake -DENABLE_TEST=OFF -S . -B build
         working-directory: Source/Engine
       - name: Build engine libraries
-        run: cmake --build build --target McBopomofoLMLib
+        run: |
+          cmake --build build --target gramambular2_lib
+          cmake --build build --target MandarinLib
+          cmake --build build --target McBopomofoLMLib
         working-directory: Source/Engine
       - name: Configure contextual evaluator
         run: cmake -S . -B build
