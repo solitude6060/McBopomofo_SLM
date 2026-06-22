@@ -196,6 +196,43 @@
       ]
     },
     {
+      "id": "bigram-benchmark-suite-lane-smoke",
+      "name": "Bigram Benchmark Suite Lane Smoke",
+      "status": "verified",
+      "date": "2026-06-22T18:43:53+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit": "f5a0e20",
+      "protocol_version": "1.2",
+      "model": {
+        "model_name": "dictionary-bigram",
+        "provider": "in-process BIGR",
+        "model_path": "Models/bigram_model.bin",
+        "local_only": true
+      },
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/bigram_benchmark_suite_lane_smoke.json",
+      "result_files": [
+        "docs/reports/experiments/phase2/bigram_benchmark_suite_lane_smoke.json"
+      ],
+      "description": "Adds an opt-in --run-bigram comparison lane to the SLM benchmark suite. A clean heldout smoke verifies the report schema and latency collection, while confirming the dictionary bigram model remains equal to baseline and below deterministic.",
+      "fixture": "heldout_generalization_clean",
+      "total_cases": 57,
+      "real_model_benchmarked": false,
+      "gate_result": "SCHEMA_PASS_MODEL_FAIL",
+      "verification": [
+        "run_benchmark_suite.py --self-test",
+        "run_benchmark_suite.py --fixtures heldout_generalization_clean --dry-run-local-wrapper --run-bigram --bigram-model Models/bigram_model.bin --work-dir /tmp/slm_suite_bigram_smoke --output /tmp/slm_suite_bigram_smoke_report.json --no-gate",
+        "json.tool /tmp/slm_suite_bigram_smoke_report.json",
+        "json.tool docs/reports/experiments/phase2/bigram_benchmark_suite_lane_smoke.json",
+        "json.tool docs/reports/experiments/registry.json"
+      ],
+      "next_steps": [
+        "Use --run-bigram as an opt-in comparison lane when evaluating new learned scorers",
+        "Do not promote dictionary bigram as a runtime candidate without a heldout win over deterministic",
+        "Keep raw suite output in /tmp unless it has been reduced to content-free aggregate metrics"
+      ]
+    },
+    {
       "id": "deterministic-context-rules",
       "name": "Phase 2 Deterministic Context Rule Improvement",
       "status": "benchmarked",

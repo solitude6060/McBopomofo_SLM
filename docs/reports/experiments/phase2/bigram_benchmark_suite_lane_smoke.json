@@ -1,0 +1,69 @@
+{
+  "id": "bigram-benchmark-suite-lane-smoke",
+  "name": "Bigram Benchmark Suite Lane Smoke",
+  "status": "verified",
+  "date": "2026-06-22T18:43:53+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "f5a0e20",
+  "protocol_version": "1.2",
+  "model": {
+    "model_name": "dictionary-bigram",
+    "provider": "in-process BIGR",
+    "model_path": "Models/bigram_model.bin",
+    "local_only": true
+  },
+  "results_dir": "docs/reports/experiments/phase2/",
+  "summary_file": "docs/reports/experiments/phase2/bigram_benchmark_suite_lane_smoke.json",
+  "raw_artifacts_location": "/tmp/slm_suite_bigram_smoke*",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false
+  },
+  "fixture": "heldout_generalization_clean",
+  "total_cases": 57,
+  "baseline": {
+    "exact_matches": 39,
+    "total_cases": 57,
+    "exact_accuracy": 68.4211,
+    "latency_p95_us": 4
+  },
+  "deterministic": {
+    "exact_matches": 57,
+    "total_cases": 57,
+    "exact_accuracy": 100.0,
+    "latency_p95_us": 896
+  },
+  "bigram": {
+    "exact_matches": 39,
+    "total_cases": 57,
+    "exact_accuracy": 68.4211,
+    "latency_p95_us": 134,
+    "relative_error_reduction_vs_baseline_pct": 0.0,
+    "relative_error_reduction_vs_deterministic_pct": 0.0
+  },
+  "slm_dry_run_control": {
+    "exact_matches": 39,
+    "total_cases": 57,
+    "exact_accuracy": 68.4211,
+    "fallbacks": 0,
+    "candidate_validation_cases": 57,
+    "non_candidate_violations": 0
+  },
+  "gate_result": "SCHEMA_PASS_MODEL_FAIL",
+  "gate_reason": "The benchmark suite now emits first-class bigram metrics and RER maps, but the dictionary bigram model remains equal to baseline on the clean heldout smoke and does not challenge deterministic.",
+  "verification": [
+    "python3 -m py_compile Tools/SLMRerankerExperiment/run_benchmark_suite.py",
+    "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --self-test",
+    "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --fixtures heldout_generalization_clean --dry-run-local-wrapper --run-bigram --bigram-model Models/bigram_model.bin --work-dir /tmp/slm_suite_bigram_smoke --output /tmp/slm_suite_bigram_smoke_report.json --no-gate",
+    "python3 -m json.tool /tmp/slm_suite_bigram_smoke_report.json",
+    "git diff --check"
+  ],
+  "next_steps": [
+    "Use --run-bigram as an opt-in comparison lane when evaluating new learned scorers.",
+    "Do not promote dictionary bigram as a runtime candidate without a heldout win over deterministic.",
+    "Keep raw suite output in /tmp unless it has been reduced to content-free aggregate metrics."
+  ]
+}
