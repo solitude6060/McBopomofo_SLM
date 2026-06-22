@@ -2,7 +2,7 @@
   "id": "phase3-runtime-readiness-matrix",
   "name": "Phase 3 Runtime Readiness Matrix",
   "status": "partial",
-  "date": "2026-06-22T19:03:51+08:00",
+  "date": "2026-06-22T19:44:49+08:00",
   "branch": "slm-phase2-learnable",
   "protocol_version": "1.0",
   "privacy": {
@@ -40,8 +40,8 @@
     },
     {
       "area": "macOS build and IMK validation",
-      "state": "ci_path_defined_pending_run",
-      "evidence": ".github/workflows/continuous-integration-workflow-xcode-latest.yml is the authoritative macOS build and test path on macos-15 and macos-26; this Linux environment still cannot run xcodebuild or swift locally"
+      "state": "ci_verified_pending_manual_dogfood",
+      "evidence": "docs/reports/experiments/phase3/macos_ci_runtime_build_gate.json"
     }
   ],
   "ci_verification_path": {
@@ -59,18 +59,19 @@
       "xcodebuild Release build for McBopomofo and McBopomofoInstaller",
       "Source/Data make check"
     ],
-    "current_branch_status": "needs_passing_ci_run"
+    "current_branch_status": "pass_github_run_27949662127",
+    "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27949662127"
   },
   "promotion_gates": [
     {
       "gate": "macOS compile",
       "required_evidence": "continuous-integration-workflow-xcode-latest.yml passes on this branch, including xcodebuild Debug test and Release builds",
-      "status": "pending_ci_run"
+      "status": "pass_github_run_27949662127"
     },
     {
       "gate": "PreferencesTests",
       "required_evidence": "continuous-integration-workflow-xcode-latest.yml passes on this branch, including the McBopomofo Debug test step that exercises PreferencesTests",
-      "status": "pending_ci_run"
+      "status": "pass_github_run_27949662127"
     },
     {
       "gate": "manual IMK dogfood",
@@ -85,7 +86,7 @@
     {
       "gate": "deterministic Linux regression",
       "required_evidence": "experiment-reports.yml builds the evaluator and validate_deterministic_gate.py passes canonical 234/234 with p95 under 2000us",
-      "status": "pass_local_pending_github_run"
+      "status": "pass_github_run_27949159665"
     },
     {
       "gate": "SLM runtime",
@@ -95,15 +96,16 @@
   ],
   "verification": [
     "python3 -m json.tool docs/reports/experiments/phase3/runtime_readiness_matrix.json",
+    "python3 -m json.tool docs/reports/experiments/phase3/macos_ci_runtime_build_gate.json",
     "python3 -m json.tool docs/reports/experiments/phase3/deterministic_linux_ci_gate.json",
     "python3 -m json.tool docs/reports/experiments/registry.json",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py",
+    "gh run watch 27949662127 --exit-status",
     "git diff --check"
   ],
   "next_steps": [
-    "Get a passing continuous-integration-workflow-xcode-latest.yml run for this branch.",
-    "Get a passing experiment-reports.yml run for the Linux deterministic gate.",
     "Execute the macOS dogfood runbook for Off and Deterministic modes.",
+    "Record content-free aggregate runtime counters from manual dogfood.",
     "Keep SLM Prototype unwired until a local-only constrained model path beats deterministic under the latency budget."
   ]
 }

@@ -1,0 +1,63 @@
+{
+  "id": "phase3-macos-ci-runtime-build-gate",
+  "name": "Phase 3 macOS CI Runtime Build Gate",
+  "status": "verified",
+  "date": "2026-06-22T19:44:49+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "2430ac5",
+  "protocol_version": "1.0",
+  "model": null,
+  "results_dir": "docs/reports/experiments/phase3/",
+  "summary_file": "docs/reports/experiments/phase3/macos_ci_runtime_build_gate.json",
+  "result_files": [
+    "docs/reports/experiments/phase3/macos_ci_runtime_build_gate.json"
+  ],
+  "ci_workflow": ".github/workflows/continuous-integration-workflow-xcode-latest.yml",
+  "github_run_id": "27949662127",
+  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27949662127",
+  "matrix": [
+    {
+      "runner": "macos-15",
+      "job_id": "82703101789",
+      "status": "pass",
+      "duration": "8m23s"
+    },
+    {
+      "runner": "macos-26",
+      "job_id": "82703101867",
+      "status": "pass",
+      "duration": "9m30s"
+    }
+  ],
+  "runtime_default": "Off",
+  "typing_behavior_changed_by_default": false,
+  "gate_result": "PASS",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false
+  },
+  "verification": [
+    "GitHub Build workflow run 27949662127 passed on macos-15 and macos-26",
+    "McBopomofoLMLibTest build and run",
+    "MandarinTest build and run",
+    "Gramambular2Test build and run",
+    "Swift package tests for CandidateUI, OpenCCBridge, BopomofoBraille, NSStringUtils, ChineseNumbers, and RomanNumbers",
+    "xcodebuild -scheme McBopomofo -configuration Debug test",
+    "xcodebuild -scheme McBopomofo -configuration Release build",
+    "xcodebuild -scheme McBopomofoInstaller -configuration Release build",
+    "Source/Data make check"
+  ],
+  "not_tested": [
+    "manual IMK dogfood",
+    "local user dogfood",
+    "SLM Prototype runtime"
+  ],
+  "next_steps": [
+    "Execute the macOS dogfood runbook for Off and Deterministic modes",
+    "Record content-free aggregate runtime counters from dogfood only",
+    "Keep SLM Prototype unwired until a local-only constrained model path beats deterministic under the latency budget"
+  ]
+}
