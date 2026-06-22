@@ -24,10 +24,14 @@ on:
       - '.github/workflows/continuous-integration-workflow-xcode-latest.yml'
       - '!Source/Data/**'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build and Test with Xcode
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-15, macos-26]
     runs-on: ${{ matrix.os }}
