@@ -2,10 +2,10 @@
   "id": "phase3-slm-promotion-gate-static-gate",
   "name": "Phase 3 SLM Promotion Gate Static Gate",
   "status": "verified",
-  "date": "2026-06-22T23:02:40+08:00",
+  "date": "2026-06-22T23:26:10+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "25c2597",
-  "protocol_version": "1.1",
+  "commit": "89778ec",
+  "protocol_version": "1.2",
   "model": null,
   "results_dir": "docs/reports/experiments/phase3/",
   "summary_file": "docs/reports/experiments/phase3/slm_promotion_gate_static_gate.json",
@@ -18,8 +18,8 @@
     ".github/workflows/experiment-reports.yml"
   ],
   "ci_workflow": ".github/workflows/experiment-reports.yml",
-  "github_run_id": "27962209549",
-  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27962209549",
+  "github_run_id": "27963845787",
+  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27963845787",
   "gate_script": "Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py",
   "scope": "Reusable validator for deciding whether an SLM benchmark report is promotable to runtime",
   "gate_result": "PASS",
@@ -42,17 +42,20 @@
     "SLM has fewer aggregate errors than deterministic",
     "SLM relative error reduction versus deterministic is above the configured minimum",
     "required promotion fixtures such as heldout_generalization_clean are present when requested",
-    "content-free curated clean-gate summaries normalize to the same promotion semantics as raw slm-benchmark-suite reports"
+    "content-free curated clean-gate summaries normalize to the same promotion semantics as raw slm-benchmark-suite reports",
+    "a generated /tmp synthetic PASS report exercises the acceptance path in CI without registering synthetic data as benchmark evidence"
   ],
   "verification": [
     "python3 -m py_compile Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py",
     "python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --self-test",
+    "validate_slm_promotion_gate.py --write-synthetic-pass-report /tmp/slm_synthetic_pass_report.json",
+    "validate_slm_promotion_gate.py --report /tmp/slm_synthetic_pass_report.json --required-fixture heldout_generalization_clean",
     "validate_slm_promotion_gate.py --report slm_qwen2_5_0_5b_index_taiwan_ambiguous.json --required-fixture heldout_generalization_clean --expect-fail",
     "validate_slm_promotion_gate.py --report slm_qwen2_5_0_5b_indices_repair_clean_gate_benchmark.json --required-fixture heldout_generalization_clean --expect-fail",
     "python3 Tools/SLMRerankerExperiment/validate_experiment_reports.py",
     "git diff --check",
-    "gh run watch 27962209549 --exit-status",
-    "GitHub experiment-reports.yml run 27962209549 passed Validate SLM promotion gate"
+    "gh run watch 27963845787 --exit-status",
+    "GitHub experiment-reports.yml run 27963845787 passed Validate SLM promotion gate"
   ],
   "not_tested": [
     "a real SLM model passing the promotion gate",

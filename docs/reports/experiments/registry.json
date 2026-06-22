@@ -1144,10 +1144,10 @@
       "id": "phase3-slm-promotion-gate-static-gate",
       "name": "Phase 3 SLM Promotion Gate Static Gate",
       "status": "verified",
-      "date": "2026-06-22T23:02:40+08:00",
+      "date": "2026-06-22T23:26:10+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "25c2597",
-      "protocol_version": "1.1",
+      "commit": "89778ec",
+      "protocol_version": "1.2",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
       "summary_file": "docs/reports/experiments/phase3/slm_promotion_gate_static_gate.json",
@@ -1159,13 +1159,13 @@
         "Tools/SLMRerankerExperiment/run_benchmark_suite.py",
         ".github/workflows/experiment-reports.yml"
       ],
-      "description": "Adds a reusable promotion validator for raw SLM benchmark reports and content-free curated clean-gate summaries. The validator requires a real local model manifest, candidate validation with zero non-candidate violations, no excess fallbacks, p95 latency under budget, fewer aggregate errors than deterministic, positive relative error reduction versus deterministic, and requested heldout fixtures before any SLM runtime promotion claim.",
+      "description": "Adds a reusable promotion validator for raw SLM benchmark reports and content-free curated clean-gate summaries. The validator requires a real local model manifest, candidate validation with zero non-candidate violations, no excess fallbacks, p95 latency under budget, fewer aggregate errors than deterministic, positive relative error reduction versus deterministic, and requested heldout fixtures before any SLM runtime promotion claim. CI now covers both rejection paths and a generated /tmp synthetic PASS acceptance path without registering synthetic data as benchmark evidence.",
       "runtime_default": "Off",
       "typing_behavior_changed_by_default": false,
       "gate_result": "PASS",
       "ci_workflow": ".github/workflows/experiment-reports.yml",
-      "github_run_id": "27962209549",
-      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27962209549",
+      "github_run_id": "27963845787",
+      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27963845787",
       "privacy": {
         "content_free": true,
         "raw_text_recorded": false,
@@ -1178,11 +1178,13 @@
       "verification": [
         "python3 -m py_compile Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py",
         "validate_slm_promotion_gate.py --self-test",
+        "validate_slm_promotion_gate.py --write-synthetic-pass-report /tmp/slm_synthetic_pass_report.json",
+        "validate_slm_promotion_gate.py --report /tmp/slm_synthetic_pass_report.json --required-fixture heldout_generalization_clean",
         "validate_slm_promotion_gate.py --report slm_qwen2_5_0_5b_index_taiwan_ambiguous.json --required-fixture heldout_generalization_clean --expect-fail",
         "validate_slm_promotion_gate.py --report slm_qwen2_5_0_5b_indices_repair_clean_gate_benchmark.json --required-fixture heldout_generalization_clean --expect-fail",
         "validate_experiment_reports.py",
         "git diff --check",
-        "gh run watch 27962209549 --exit-status"
+        "gh run watch 27963845787 --exit-status"
       ],
       "not_tested": [
         "a real SLM model passing the promotion gate",
@@ -1581,9 +1583,9 @@
       "id": "phase3-runtime-gate-health-static-gate",
       "name": "Phase 3 Runtime Gate Health Static Gate",
       "status": "verified",
-      "date": "2026-06-22T23:14:47+08:00",
+      "date": "2026-06-22T23:26:10+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "ba4b97e",
+      "commit": "89778ec",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1607,7 +1609,7 @@
         "validate_runtime_readiness_matrix.py --summary-output /tmp/runtime_gate_health.json",
         "json.tool /tmp/runtime_gate_health.json",
         "validate_experiment_reports.py",
-        "gh run watch 27963083488 --exit-status"
+        "gh run watch 27963845787 --exit-status"
       ],
       "not_tested": [
         "manual IMK dogfood",
@@ -1623,7 +1625,7 @@
             "id": "phase3-runtime-readiness-matrix",
             "name": "Phase 3 Runtime Readiness Matrix",
             "status": "partial",
-            "date": "2026-06-22T23:14:47+08:00",
+            "date": "2026-06-22T23:26:10+08:00",
       "branch": "slm-phase2-learnable",
       "protocol_version": "1.0",
       "model": null,
@@ -1632,7 +1634,7 @@
       "result_files": [
         "docs/reports/experiments/phase3/runtime_readiness_matrix.json"
       ],
-      "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local validator and generator, Linux deterministic canonical and 63-case heldout clean regression gates, SLM promotion validation for raw and curated clean-gate summaries, dynamic heldout export coverage, character candidate smoke coverage, candidate-ranker canonical and heldout E2E contract validation in CI, Linux engine GTest CI coverage, readiness evidence validation, content-free runtime gate health summary generation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
+      "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local validator and generator, Linux deterministic canonical and 63-case heldout clean regression gates, SLM promotion validation for raw and curated clean-gate summaries plus a generated synthetic acceptance-path regression, dynamic heldout export coverage, character candidate smoke coverage, candidate-ranker canonical and heldout E2E contract validation in CI, Linux engine GTest CI coverage, readiness evidence validation, content-free runtime gate health summary generation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
       "gate_result": "PARTIAL",
       "verification": [
         "gh run watch 27949662127 --exit-status",
@@ -1656,6 +1658,8 @@
         "generate_dogfood_evidence.py --self-test",
         "generated Deterministic session_complete evidence validated",
         "validate_slm_promotion_gate.py --self-test",
+        "validate_slm_promotion_gate.py --write-synthetic-pass-report /tmp/slm_synthetic_pass_report.json",
+        "validate_slm_promotion_gate.py --report /tmp/slm_synthetic_pass_report.json --required-fixture heldout_generalization_clean",
         "qwen2.5:0.5b raw and curated clean-gate reports remain expected-fail under promotion gate",
         "validate_runtime_readiness_matrix.py --self-test",
         "validate_runtime_readiness_matrix.py --summary-output /tmp/runtime_gate_health.json",
@@ -1668,6 +1672,7 @@
         "validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_gate --suite-report /tmp/candidate_ranker_heldout_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_heldout_e2e_gate_analysis.json",
         "gh run watch 27959649945 --exit-status",
         "gh run watch 27963083488 --exit-status",
+        "gh run watch 27963845787 --exit-status",
         "json.tool registry",
         "git diff --check"
       ],
