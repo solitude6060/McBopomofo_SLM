@@ -4,7 +4,8 @@ on:
   push:
     paths:
       - 'Tools/SLMRerankerExperiment/**'
-      - 'Tools/ContextualEvaluation/fixture_hygiene_audit.py'
+      - 'Tools/ContextualEvaluation/**'
+      - 'Source/Engine/**'
       - 'docs/reports/experiments/**'
       - 'Tests/fixtures/contextual_bopomofo/**'
       - 'Models/*.json'
@@ -12,7 +13,8 @@ on:
   pull_request:
     paths:
       - 'Tools/SLMRerankerExperiment/**'
-      - 'Tools/ContextualEvaluation/fixture_hygiene_audit.py'
+      - 'Tools/ContextualEvaluation/**'
+      - 'Source/Engine/**'
       - 'docs/reports/experiments/**'
       - 'Tests/fixtures/contextual_bopomofo/**'
       - 'Models/*.json'
@@ -30,7 +32,7 @@ jobs:
       - name: Compile experiment Python tools
         run: |
           python3 -m py_compile Tools/SLMRerankerExperiment/*.py
-          python3 -m py_compile Tools/ContextualEvaluation/fixture_hygiene_audit.py
+          python3 -m py_compile Tools/ContextualEvaluation/*.py
       - name: Validate experiment registry
         run: python3 Tools/SLMRerankerExperiment/validate_experiment_reports.py
       - name: Self-test report validator
@@ -48,3 +50,19 @@ jobs:
           python3 Tools/SLMRerankerExperiment/analyze_candidate_ranker.py --self-test
       - name: Self-test fixture hygiene audit
         run: python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --self-test
+      - name: Configure engine libraries
+        run: cmake -DENABLE_TEST=OFF -S . -B build
+        working-directory: Source/Engine
+      - name: Build engine libraries
+        run: cmake --build build --target McBopomofoLMLib
+        working-directory: Source/Engine
+      - name: Configure contextual evaluator
+        run: cmake -S . -B build
+        working-directory: Tools/ContextualEvaluation
+      - name: Build contextual evaluator
+        run: cmake --build build --target evaluator
+        working-directory: Tools/ContextualEvaluation
+      - name: Self-test deterministic gate
+        run: python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --self-test
+      - name: Run deterministic canonical gate
+        run: python3 Tools/ContextualEvaluation/validate_deterministic_gate.py
