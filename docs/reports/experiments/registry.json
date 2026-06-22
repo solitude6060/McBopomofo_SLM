@@ -1040,9 +1040,9 @@
       "id": "phase3-dogfood-evidence-validator-static-gate",
       "name": "Phase 3 Dogfood Evidence Validator Static Gate",
       "status": "verified",
-      "date": "2026-06-22T20:07:05+08:00",
+      "date": "2026-06-22T23:38:15+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "c0f2224",
+      "commit": "eed2b0d",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1052,7 +1052,7 @@
         "docs/reports/experiments/phase3/dogfood_evidence_schema.json",
         "docs/reports/experiments/phase3/dogfood_evidence_template.json"
       ],
-      "description": "Adds a content-free dogfood evidence schema, template, and validator for future manual macOS IMK dogfood sessions. The validator enforces required session/checklist/metric fields, privacy flags, valid enumerations, non-negative aggregate counters, and rejects raw content field names such as readings, candidates, committed_text, expected, input, and output.",
+      "description": "Adds a content-free dogfood evidence schema, template, and nested strict validator for future manual macOS IMK dogfood sessions. The validator enforces required session/checklist/metric fields, privacy flags, valid enumerations, non-negative aggregate counters, rejects raw content field names such as readings, candidates, committed_text, expected, input, and output, and rejects unknown nested fields in the privacy/session/mode_switching/checklist/metrics/latency bucket/issues sections.",
       "runtime_default": "Off",
       "typing_behavior_changed_by_default": false,
       "gate_result": "PASS",
@@ -1068,13 +1068,15 @@
       "verification": [
         "python3 -m py_compile Tools/ContextualEvaluation/validate_dogfood_evidence.py",
         "validate_dogfood_evidence.py --self-test",
-        "validate_dogfood_evidence.py --dogfood dogfood_evidence_template.json",
+        "validate_dogfood_evidence.py --strict --dogfood dogfood_evidence_template.json",
+        "generated Deterministic session_complete evidence validates with --strict",
         "json.tool dogfood_evidence_schema.json",
         "json.tool dogfood_evidence_template.json",
         "negative validation rejects raw content field $.readings",
         "negative validation rejects privacy.content_free=false",
         "negative validation rejects missing required fields",
-        "gh run watch 27951356566 --exit-status"
+        "negative strict validation rejects unknown nested fields",
+        "gh run watch 27964538250 --exit-status"
       ],
       "not_tested": [
         "manual IMK dogfood",
@@ -1089,9 +1091,9 @@
       "id": "phase3-dogfood-evidence-generator-static-gate",
       "name": "Phase 3 Dogfood Evidence Generator Static Gate",
       "status": "verified",
-      "date": "2026-06-22T20:23:15+08:00",
+      "date": "2026-06-22T23:38:15+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "28f259a",
+      "commit": "eed2b0d",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1109,8 +1111,8 @@
       "typing_behavior_changed_by_default": false,
       "gate_result": "PASS",
       "ci_workflow": ".github/workflows/experiment-reports.yml",
-      "github_run_id": "27952280884",
-      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27952280884",
+      "github_run_id": "27964538250",
+      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27964538250",
       "privacy": {
         "content_free": true,
         "raw_text_recorded": false,
@@ -1124,12 +1126,13 @@
         "python3 -m py_compile Tools/ContextualEvaluation/generate_dogfood_evidence.py",
         "generate_dogfood_evidence.py --self-test",
         "generate_dogfood_evidence.py --output /tmp/test_dogfood_default.json",
-        "validate_dogfood_evidence.py --dogfood /tmp/test_dogfood_default.json",
+        "validate_dogfood_evidence.py --strict --dogfood /tmp/test_dogfood_default.json",
         "generate_dogfood_evidence.py --mode Deterministic --status session_complete --output /tmp/test_det.json",
-        "validate_dogfood_evidence.py --dogfood /tmp/test_det.json",
+        "validate_dogfood_evidence.py --strict --dogfood /tmp/test_det.json",
         "negative generation rejects unsupported SLM Prototype mode",
         "negative validation rejects session_complete checklist not_run",
-        "gh run watch 27952280884 --exit-status"
+        "negative strict validation rejects typo/extra nested fields",
+        "gh run watch 27964538250 --exit-status"
       ],
       "not_tested": [
         "manual IMK dogfood",
@@ -1144,9 +1147,9 @@
       "id": "phase3-slm-promotion-gate-static-gate",
       "name": "Phase 3 SLM Promotion Gate Static Gate",
       "status": "verified",
-      "date": "2026-06-22T23:26:10+08:00",
+      "date": "2026-06-22T23:38:15+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "89778ec",
+      "commit": "eed2b0d",
       "protocol_version": "1.2",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1164,8 +1167,8 @@
       "typing_behavior_changed_by_default": false,
       "gate_result": "PASS",
       "ci_workflow": ".github/workflows/experiment-reports.yml",
-      "github_run_id": "27963845787",
-      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27963845787",
+      "github_run_id": "27964538250",
+      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27964538250",
       "privacy": {
         "content_free": true,
         "raw_text_recorded": false,
@@ -1184,7 +1187,7 @@
         "validate_slm_promotion_gate.py --report slm_qwen2_5_0_5b_indices_repair_clean_gate_benchmark.json --required-fixture heldout_generalization_clean --expect-fail",
         "validate_experiment_reports.py",
         "git diff --check",
-        "gh run watch 27963845787 --exit-status"
+        "gh run watch 27964538250 --exit-status"
       ],
       "not_tested": [
         "a real SLM model passing the promotion gate",
@@ -1583,9 +1586,9 @@
       "id": "phase3-runtime-gate-health-static-gate",
       "name": "Phase 3 Runtime Gate Health Static Gate",
       "status": "verified",
-      "date": "2026-06-22T23:26:10+08:00",
+      "date": "2026-06-22T23:38:15+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "89778ec",
+      "commit": "eed2b0d",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1609,7 +1612,7 @@
         "validate_runtime_readiness_matrix.py --summary-output /tmp/runtime_gate_health.json",
         "json.tool /tmp/runtime_gate_health.json",
         "validate_experiment_reports.py",
-        "gh run watch 27963845787 --exit-status"
+        "gh run watch 27964538250 --exit-status"
       ],
       "not_tested": [
         "manual IMK dogfood",
@@ -1625,7 +1628,7 @@
             "id": "phase3-runtime-readiness-matrix",
             "name": "Phase 3 Runtime Readiness Matrix",
             "status": "partial",
-            "date": "2026-06-22T23:26:10+08:00",
+            "date": "2026-06-22T23:38:15+08:00",
       "branch": "slm-phase2-learnable",
       "protocol_version": "1.0",
       "model": null,
@@ -1634,7 +1637,7 @@
       "result_files": [
         "docs/reports/experiments/phase3/runtime_readiness_matrix.json"
       ],
-      "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local validator and generator, Linux deterministic canonical and 63-case heldout clean regression gates, SLM promotion validation for raw and curated clean-gate summaries plus a generated synthetic acceptance-path regression, dynamic heldout export coverage, character candidate smoke coverage, candidate-ranker canonical and heldout E2E contract validation in CI, Linux engine GTest CI coverage, readiness evidence validation, content-free runtime gate health summary generation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
+      "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local nested strict validator and generator, Linux deterministic canonical and 63-case heldout clean regression gates, SLM promotion validation for raw and curated clean-gate summaries plus a generated synthetic acceptance-path regression, dynamic heldout export coverage, character candidate smoke coverage, candidate-ranker canonical and heldout E2E contract validation in CI, Linux engine GTest CI coverage, readiness evidence validation, content-free runtime gate health summary generation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
       "gate_result": "PARTIAL",
       "verification": [
         "gh run watch 27949662127 --exit-status",
@@ -1673,6 +1676,7 @@
         "gh run watch 27959649945 --exit-status",
         "gh run watch 27963083488 --exit-status",
         "gh run watch 27963845787 --exit-status",
+        "gh run watch 27964538250 --exit-status",
         "json.tool registry",
         "git diff --check"
       ],

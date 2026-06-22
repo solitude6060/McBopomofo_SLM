@@ -2,7 +2,7 @@
   "id": "phase3-runtime-readiness-matrix",
   "name": "Phase 3 Runtime Readiness Matrix",
   "status": "partial",
-  "date": "2026-06-22T23:26:10+08:00",
+  "date": "2026-06-22T23:38:15+08:00",
   "branch": "slm-phase2-learnable",
   "protocol_version": "1.0",
   "privacy": {
@@ -30,7 +30,7 @@
     },
     {
       "area": "dogfood privacy boundary",
-      "state": "documented_with_schema_validator_and_generator",
+      "state": "documented_with_nested_strict_schema_validator_and_generator",
       "evidence": "docs/reports/experiments/phase3/macos_dogfood_readiness.json; docs/reports/experiments/phase3/dogfood_evidence_validator_static_gate.json; docs/reports/experiments/phase3/dogfood_evidence_generator_static_gate.json"
     },
     {
@@ -96,7 +96,7 @@
     {
       "gate": "runtime privacy",
       "required_evidence": "dogfood artifacts contain only aggregate counters and categories",
-      "status": "ready_for_dogfood_with_validator_pass_github_run_27951356566_and_generator_pass_github_run_27952280884"
+      "status": "ready_for_dogfood_with_nested_strict_validator_and_generator_pass_github_run_27964538250"
     },
     {
       "gate": "deterministic Linux regression",
@@ -123,10 +123,10 @@
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --heldout",
     "python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --self-test",
-    "python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --dogfood docs/reports/experiments/phase3/dogfood_evidence_template.json",
+    "python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --strict --dogfood docs/reports/experiments/phase3/dogfood_evidence_template.json",
     "python3 Tools/ContextualEvaluation/generate_dogfood_evidence.py --self-test",
     "python3 Tools/ContextualEvaluation/generate_dogfood_evidence.py --mode Deterministic --status session_complete --output /tmp/test_det.json",
-    "python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --dogfood /tmp/test_det.json",
+    "python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --strict --dogfood /tmp/test_det.json",
     "python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --self-test",
     "python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --write-synthetic-pass-report /tmp/slm_synthetic_pass_report.json",
     "python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --report /tmp/slm_synthetic_pass_report.json --required-fixture heldout_generalization_clean",
@@ -150,6 +150,7 @@
     "gh run watch 27963845787 --exit-status",
     "gh run watch 27951356566 --exit-status",
     "gh run watch 27952280884 --exit-status",
+    "gh run watch 27964538250 --exit-status",
     "gh run watch 27950784933 --exit-status",
     "gh run watch 27949662127 --exit-status",
     "gh run watch 27957371891 --exit-status",
