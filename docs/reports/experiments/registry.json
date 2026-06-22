@@ -1034,6 +1034,55 @@
       ]
     },
     {
+      "id": "phase3-dogfood-evidence-validator-static-gate",
+      "name": "Phase 3 Dogfood Evidence Validator Static Gate",
+      "status": "partial",
+      "date": "2026-06-22T20:03:50+08:00",
+      "branch": "slm-phase2-learnable",
+      "protocol_version": "1.0",
+      "model": null,
+      "results_dir": "docs/reports/experiments/phase3/",
+      "summary_file": "docs/reports/experiments/phase3/dogfood_evidence_validator_static_gate.json",
+      "result_files": [
+        "docs/reports/experiments/phase3/dogfood_evidence_validator_static_gate.json",
+        "docs/reports/experiments/phase3/dogfood_evidence_schema.json",
+        "docs/reports/experiments/phase3/dogfood_evidence_template.json"
+      ],
+      "description": "Adds a content-free dogfood evidence schema, template, and validator for future manual macOS IMK dogfood sessions. The validator enforces required session/checklist/metric fields, privacy flags, valid enumerations, non-negative aggregate counters, and rejects raw content field names such as readings, candidates, committed_text, expected, input, and output.",
+      "runtime_default": "Off",
+      "typing_behavior_changed_by_default": false,
+      "gate_result": "PASS_LOCAL_PENDING_CI",
+      "privacy": {
+        "content_free": true,
+        "raw_text_recorded": false,
+        "readings_recorded": false,
+        "candidate_text_recorded": false,
+        "committed_text_recorded": false,
+        "screenshots_with_private_text": false,
+        "user_phrase_files_recorded": false
+      },
+      "verification": [
+        "python3 -m py_compile Tools/ContextualEvaluation/validate_dogfood_evidence.py",
+        "validate_dogfood_evidence.py --self-test",
+        "validate_dogfood_evidence.py --dogfood dogfood_evidence_template.json",
+        "json.tool dogfood_evidence_schema.json",
+        "json.tool dogfood_evidence_template.json",
+        "negative validation rejects raw content field $.readings",
+        "negative validation rejects privacy.content_free=false",
+        "negative validation rejects missing required fields"
+      ],
+      "not_tested": [
+        "GitHub-hosted experiment-reports.yml execution for the new dogfood evidence validator step",
+        "manual IMK dogfood",
+        "filled dogfood session evidence from a real operator"
+      ],
+      "next_steps": [
+        "Monitor experiment-reports.yml after pushing this validator",
+        "Use the template for actual Off and Deterministic dogfood sessions",
+        "Commit only validator-approved content-free dogfood evidence"
+      ]
+    },
+    {
       "id": "phase3-deterministic-runtime-hook-static-gate",
       "name": "Phase 3 Deterministic Runtime Hook Static Gate",
       "status": "partial",
@@ -1235,7 +1284,7 @@
             "id": "phase3-runtime-readiness-matrix",
             "name": "Phase 3 Runtime Readiness Matrix",
             "status": "partial",
-            "date": "2026-06-22T19:56:26+08:00",
+            "date": "2026-06-22T20:03:50+08:00",
       "branch": "slm-phase2-learnable",
       "protocol_version": "1.0",
       "model": null,
@@ -1244,12 +1293,13 @@
       "result_files": [
         "docs/reports/experiments/phase3/runtime_readiness_matrix.json"
       ],
-            "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts, Linux deterministic canonical and heldout clean regression gates, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path beats deterministic under the latency budget.",
+            "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local validator, Linux deterministic canonical and heldout clean regression gates, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path beats deterministic under the latency budget.",
       "gate_result": "PARTIAL",
       "verification": [
         "gh run watch 27949662127 --exit-status",
         "gh run watch 27950784933 --exit-status",
         "json.tool runtime readiness matrix",
+        "json.tool dogfood evidence validator report",
         "json.tool heldout clean CI gate report",
         "json.tool macOS CI runtime build gate report",
         "json.tool registry",

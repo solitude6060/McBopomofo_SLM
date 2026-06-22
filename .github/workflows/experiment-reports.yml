@@ -53,6 +53,10 @@ jobs:
           python3 Tools/SLMRerankerExperiment/analyze_candidate_ranker.py --self-test
       - name: Self-test fixture hygiene audit
         run: python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --self-test
+      - name: Validate dogfood evidence template
+        run: |
+          python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --self-test
+          python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --dogfood docs/reports/experiments/phase3/dogfood_evidence_template.json
       - name: Configure engine libraries
         run: cmake -DENABLE_TEST=OFF -DCMAKE_BUILD_TYPE=Release -S . -B build
         working-directory: Source/Engine

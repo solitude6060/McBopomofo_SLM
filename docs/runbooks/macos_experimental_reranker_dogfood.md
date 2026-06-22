@@ -20,6 +20,10 @@ private text, or user phrase files.
 - Confirm the current branch has passing evaluator benchmarks for the intended
   scorer mode.
 - Keep a rollback build or installer available.
+- Start from
+  `docs/reports/experiments/phase3/dogfood_evidence_template.json` and validate
+  the filled copy with
+  `python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --dogfood <path>`.
 
 ## Modes
 
@@ -63,6 +67,11 @@ Use buckets or counts only.
 - Crash or hang count.
 - User-disabled-due-to-latency count.
 
+Record these fields in a copy of
+`docs/reports/experiments/phase3/dogfood_evidence_template.json`. The template
+is intentionally content-free and must continue to validate with
+`Tools/ContextualEvaluation/validate_dogfood_evidence.py`.
+
 ## Issue Template
 
 ```
@@ -85,6 +94,8 @@ and create a synthetic fixture separately. Do not attach the private text.
 ## Stop Conditions
 
 - Any log, report, crash artifact, or issue contains raw typed content.
+- The dogfood evidence JSON fails
+  `python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --dogfood <path>`.
 - The reranker causes committed text loss.
 - Rapid typing visibly stalls in normal writing.
 - Users disable the feature because latency or candidate ordering is surprising.

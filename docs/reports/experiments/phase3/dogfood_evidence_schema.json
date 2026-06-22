@@ -1,0 +1,114 @@
+{
+  "id": "phase3-dogfood-evidence-schema",
+  "name": "Phase 3 Dogfood Evidence Schema",
+  "protocol_version": "1.0",
+  "description": "Content-free schema for manual macOS IMK dogfood evidence. The validator in Tools/ContextualEvaluation/validate_dogfood_evidence.py is authoritative.",
+  "required_top_level_fields": [
+    "id",
+    "name",
+    "status",
+    "date",
+    "branch",
+    "commit",
+    "protocol_version",
+    "privacy",
+    "session",
+    "mode_switching",
+    "checklist",
+    "metrics",
+    "issues",
+    "verification"
+  ],
+  "status_values": [
+    "template",
+    "session_complete",
+    "session_aborted"
+  ],
+  "mode_values": [
+    "Off",
+    "Deterministic"
+  ],
+  "session_duration_bucket_values": [
+    "lt5min",
+    "5_to_30min",
+    "30_to_120min",
+    "gt120min"
+  ],
+  "privacy": {
+    "content_free": true,
+    "must_be_false": [
+      "raw_text_recorded",
+      "readings_recorded",
+      "candidate_text_recorded",
+      "committed_text_recorded",
+      "screenshots_with_private_text",
+      "user_phrase_files_recorded"
+    ]
+  },
+  "checklist_fields": [
+    "toggle",
+    "baseline_behavior",
+    "long_composition",
+    "candidate_ui",
+    "english_mixed",
+    "user_phrases",
+    "phrase_replacement",
+    "rapid_typing",
+    "input_method_switching",
+    "error_handling",
+    "privacy_verified"
+  ],
+  "checklist_values": [
+    "pass",
+    "fail",
+    "not_run"
+  ],
+  "session_complete_checklist_values": [
+    "pass",
+    "fail"
+  ],
+  "metric_counters": [
+    "fallback_count",
+    "candidate_order_surprises",
+    "crash_or_hang_count",
+    "user_disabled_due_to_latency_count"
+  ],
+  "latency_bucket_fields": [
+    "lt2000",
+    "2000_to_20000",
+    "20000_to_100000",
+    "gt100000"
+  ],
+  "issue_categories": [
+    "latency",
+    "candidate-order",
+    "fallback",
+    "crash",
+    "privacy",
+    "other"
+  ],
+  "issue_severities": [
+    "low",
+    "medium",
+    "high",
+    "blocker"
+  ],
+  "disallowed_content_field_names": [
+    "baseline_output",
+    "candidate_text",
+    "candidates",
+    "committed_text",
+    "engine_output",
+    "expected",
+    "expected_output",
+    "input",
+    "output",
+    "reading",
+    "readings",
+    "raw_text",
+    "screenshot",
+    "typed_text",
+    "user_phrase_file",
+    "user_phrase_files"
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "id": "phase3-dogfood-evidence-validator-static-gate",
+  "name": "Phase 3 Dogfood Evidence Validator Static Gate",
+  "status": "partial",
+  "date": "2026-06-22T20:03:50+08:00",
+  "branch": "slm-phase2-learnable",
+  "protocol_version": "1.0",
+  "model": null,
+  "results_dir": "docs/reports/experiments/phase3/",
+  "summary_file": "docs/reports/experiments/phase3/dogfood_evidence_validator_static_gate.json",
+  "result_files": [
+    "docs/reports/experiments/phase3/dogfood_evidence_validator_static_gate.json",
+    "docs/reports/experiments/phase3/dogfood_evidence_schema.json",
+    "docs/reports/experiments/phase3/dogfood_evidence_template.json"
+  ],
+  "ci_workflow": ".github/workflows/experiment-reports.yml",
+  "gate_script": "Tools/ContextualEvaluation/validate_dogfood_evidence.py",
+  "scope": "Content-free schema, template, and validator for manual macOS IMK dogfood evidence",
+  "gate_result": "PASS_LOCAL_PENDING_CI",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false,
+    "screenshots_with_private_text": false,
+    "user_phrase_files_recorded": false
+  },
+  "verification": [
+    "python3 -m py_compile Tools/ContextualEvaluation/validate_dogfood_evidence.py",
+    "python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --self-test",
+    "python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --dogfood docs/reports/experiments/phase3/dogfood_evidence_template.json",
+    "python3 -m json.tool docs/reports/experiments/phase3/dogfood_evidence_schema.json",
+    "python3 -m json.tool docs/reports/experiments/phase3/dogfood_evidence_template.json",
+    "negative validation: /tmp/bad_dogfood_raw.json rejected raw content field $.readings",
+    "negative validation: /tmp/bad_dogfood_privacy.json rejected privacy.content_free=false",
+    "negative validation: /tmp/bad_dogfood_incomplete.json rejected missing required fields"
+  ],
+  "not_tested": [
+    "GitHub-hosted experiment-reports.yml execution for the new dogfood evidence validator step",
+    "manual IMK dogfood",
+    "filled dogfood session evidence from a real operator"
+  ],
+  "next_steps": [
+    "Monitor the next experiment-reports.yml run after pushing this validator",
+    "Use the template for actual Off and Deterministic dogfood sessions",
+    "Commit only validator-approved content-free dogfood evidence"
+  ]
+}

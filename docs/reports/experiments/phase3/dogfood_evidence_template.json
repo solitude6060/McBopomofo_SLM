@@ -1,0 +1,64 @@
+{
+  "id": "phase3-dogfood-template",
+  "name": "Phase 3 macOS Dogfood Evidence Template",
+  "status": "template",
+  "date": "2026-06-22T00:00:00+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "TEMPLATE_COMMIT",
+  "protocol_version": "1.0",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false,
+    "screenshots_with_private_text": false,
+    "user_phrase_files_recorded": false
+  },
+  "session": {
+    "mode_under_test": "Off",
+    "build_identifier": "TEMPLATE_BUILD_IDENTIFIER",
+    "session_duration_bucket": "lt5min",
+    "os_version_bucket": "macos-15-or-newer",
+    "hardware_class": "apple-silicon-or-intel",
+    "keyboard_layout": "bopomofo"
+  },
+  "mode_switching": {
+    "off_to_deterministic": false,
+    "deterministic_to_off": false,
+    "required_switches": 0
+  },
+  "checklist": {
+    "toggle": "not_run",
+    "baseline_behavior": "not_run",
+    "long_composition": "not_run",
+    "candidate_ui": "not_run",
+    "english_mixed": "not_run",
+    "user_phrases": "not_run",
+    "phrase_replacement": "not_run",
+    "rapid_typing": "not_run",
+    "input_method_switching": "not_run",
+    "error_handling": "not_run",
+    "privacy_verified": "not_run"
+  },
+  "metrics": {
+    "fallback_count": 0,
+    "candidate_order_surprises": 0,
+    "crash_or_hang_count": 0,
+    "user_disabled_due_to_latency_count": 0,
+    "latency_buckets_us": {
+      "lt2000": 0,
+      "2000_to_20000": 0,
+      "20000_to_100000": 0,
+      "gt100000": 0
+    }
+  },
+  "issues": [],
+  "runtime_counters_report_path": "",
+  "notes": [
+    "content-free notes only; do not include typed text, readings, candidates, committed text, screenshots, or user phrase file contents"
+  ],
+  "verification": [
+    "python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --dogfood docs/reports/experiments/phase3/dogfood_evidence_template.json"
+  ]
+}

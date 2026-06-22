@@ -2,7 +2,7 @@
   "id": "phase3-runtime-readiness-matrix",
   "name": "Phase 3 Runtime Readiness Matrix",
   "status": "partial",
-  "date": "2026-06-22T19:56:26+08:00",
+  "date": "2026-06-22T20:03:50+08:00",
   "branch": "slm-phase2-learnable",
   "protocol_version": "1.0",
   "privacy": {
@@ -30,8 +30,8 @@
     },
     {
       "area": "dogfood privacy boundary",
-      "state": "documented",
-      "evidence": "docs/reports/experiments/phase3/macos_dogfood_readiness.json"
+      "state": "documented_with_schema_and_validator",
+      "evidence": "docs/reports/experiments/phase3/macos_dogfood_readiness.json; docs/reports/experiments/phase3/dogfood_evidence_validator_static_gate.json"
     },
     {
       "area": "tiny LLM runtime",
@@ -81,7 +81,7 @@
     {
       "gate": "runtime privacy",
       "required_evidence": "dogfood artifacts contain only aggregate counters and categories",
-      "status": "ready_for_dogfood"
+      "status": "ready_for_dogfood_with_validator_pending_github_run"
     },
     {
       "gate": "deterministic Linux regression",
@@ -96,12 +96,15 @@
   ],
   "verification": [
     "python3 -m json.tool docs/reports/experiments/phase3/runtime_readiness_matrix.json",
+    "python3 -m json.tool docs/reports/experiments/phase3/dogfood_evidence_validator_static_gate.json",
     "python3 -m json.tool docs/reports/experiments/phase3/heldout_generalization_clean_ci_gate.json",
     "python3 -m json.tool docs/reports/experiments/phase3/macos_ci_runtime_build_gate.json",
     "python3 -m json.tool docs/reports/experiments/phase3/deterministic_linux_ci_gate.json",
     "python3 -m json.tool docs/reports/experiments/registry.json",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --heldout",
+    "python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --self-test",
+    "python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --dogfood docs/reports/experiments/phase3/dogfood_evidence_template.json",
     "gh run watch 27950784933 --exit-status",
     "gh run watch 27949662127 --exit-status",
     "git diff --check"
