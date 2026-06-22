@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate deterministic reranker accuracy and latency on canonical fixtures."""
+"""Validate deterministic reranker accuracy and latency gates."""
 
 import argparse
 import json
@@ -20,6 +20,10 @@ CANONICAL_FIXTURES = [
     ("taiwan_ambiguous", "taiwan_ambiguous.jsonl", 100),
     ("english_mixed", "english_mixed.jsonl", 50),
     ("taiwan_specific", "taiwan_specific.jsonl", 84),
+]
+
+HELDOUT_CLEAN_FIXTURES = [
+    ("heldout_generalization_clean", "heldout_generalization_clean.jsonl", 57),
 ]
 
 
@@ -112,10 +116,17 @@ def validate_summary(name, summary, expected_matches, latency_threshold_us):
     return errors
 
 
+def fixture_set(args):
+    if args.heldout:
+        return "heldout clean", HELDOUT_CLEAN_FIXTURES
+    return "canonical", CANONICAL_FIXTURES
+
+
 def run_gate(args):
     errors = []
     summaries = []
-    for name, filename, expected in CANONICAL_FIXTURES:
+    gate_name, fixtures = fixture_set(args)
+    for name, filename, expected in fixtures:
         fixture_path = os.path.join(args.fixtures_dir, filename)
         if not os.path.isfile(fixture_path):
             errors.append(f"{name}: fixture file not found: {fixture_path}")
@@ -137,7 +148,7 @@ def run_gate(args):
 
     total_cases = sum(s.get("total_cases", 0) for _, s in summaries)
     total_matches = sum(s.get("exact_match_count", 0) for _, s in summaries)
-    expected_total = sum(expected for _, _, expected in CANONICAL_FIXTURES)
+    expected_total = sum(expected for _, _, expected in fixtures)
     if total_cases != expected_total:
         errors.append(f"aggregate: expected total_cases={expected_total}, got {total_cases}")
     if total_matches != expected_total:
@@ -153,7 +164,7 @@ def run_gate(args):
 
     max_p95 = max(s["latency_microseconds_p95"] for _, s in summaries)
     print(
-        "GATE PASS: deterministic canonical fixtures "
+        f"GATE PASS: deterministic {gate_name} fixtures "
         f"{total_matches}/{total_cases}, max_p95={max_p95}us",
         file=sys.stderr,
     )
@@ -186,18 +197,34 @@ def run_self_test():
     if not validate_summary("self", failing, 2, 2000):
         print("SELF-TEST FAIL: expected exact_match_count error", file=sys.stderr)
         return 1
+    class Args:
+        heldout = False
+    gate_name, fixtures = fixture_set(Args())
+    if gate_name != "canonical" or fixtures != CANONICAL_FIXTURES:
+        print("SELF-TEST FAIL: expected canonical fixture set", file=sys.stderr)
+        return 1
+    Args.heldout = True
+    gate_name, fixtures = fixture_set(Args())
+    if gate_name != "heldout clean" or fixtures != HELDOUT_CLEAN_FIXTURES:
+        print("SELF-TEST FAIL: expected heldout clean fixture set", file=sys.stderr)
+        return 1
     print("SELF-TEST PASSED: deterministic gate parser", file=sys.stderr)
     return 0
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Validate deterministic reranker canonical gate"
+        description="Validate deterministic reranker regression gates"
     )
     parser.add_argument("--evaluator", default=DEFAULT_EVALUATOR)
     parser.add_argument("--data", default=DEFAULT_DATA)
     parser.add_argument("--fixtures-dir", default=DEFAULT_FIXTURES_DIR)
     parser.add_argument("--latency-p95-threshold-us", type=int, default=2000)
+    parser.add_argument(
+        "--heldout",
+        action="store_true",
+        help="Validate heldout_generalization_clean instead of canonical fixtures",
+    )
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
 

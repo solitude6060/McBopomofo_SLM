@@ -72,5 +72,7 @@ jobs:
         run: python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --self-test
       - name: Run deterministic canonical gate
         run: python3 Tools/ContextualEvaluation/validate_deterministic_gate.py
+      - name: Run deterministic heldout clean gate
+        run: python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --heldout
       - name: CI smoke full benchmark suite pipeline
         run: python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke

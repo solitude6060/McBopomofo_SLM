@@ -1,0 +1,61 @@
+{
+  "id": "phase3-heldout-generalization-clean-ci-gate",
+  "name": "Phase 3 Heldout Generalization Clean CI Gate",
+  "status": "partial",
+  "date": "2026-06-22T19:52:59+08:00",
+  "branch": "slm-phase2-learnable",
+  "protocol_version": "1.0",
+  "model": null,
+  "results_dir": "docs/reports/experiments/phase3/",
+  "summary_file": "docs/reports/experiments/phase3/heldout_generalization_clean_ci_gate.json",
+  "result_files": [
+    "docs/reports/experiments/phase3/heldout_generalization_clean_ci_gate.json"
+  ],
+  "ci_workflow": ".github/workflows/experiment-reports.yml",
+  "gate_script": "Tools/ContextualEvaluation/validate_deterministic_gate.py --heldout",
+  "fixture": {
+    "name": "heldout_generalization_clean",
+    "path": "Tests/fixtures/contextual_bopomofo/heldout_generalization_clean.jsonl",
+    "total_cases": 57,
+    "source_fixture": "heldout_generalization",
+    "excluded_hygiene_blocked_cases": 6
+  },
+  "requirements": {
+    "exact_match_count": 57,
+    "total_cases": 57,
+    "max_latency_p95_us": 2000,
+    "candidate_diagnostics_failing_cases": 0
+  },
+  "observed": {
+    "exact_match_count": 57,
+    "total_cases": 57,
+    "max_latency_p95_us": 1434,
+    "candidate_diagnostics_failing_cases": 0
+  },
+  "gate_result": "PASS_LOCAL_PENDING_CI",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false,
+    "persistent_runtime_log": false
+  },
+  "verification": [
+    "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --export-clean heldout_generalization",
+    "wc -l Tests/fixtures/contextual_bopomofo/heldout_generalization_clean.jsonl: 57",
+    "python3 -m py_compile Tools/ContextualEvaluation/validate_deterministic_gate.py",
+    "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --self-test",
+    "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --heldout: 57/57, max_p95=1434us"
+  ],
+  "not_tested": [
+    "GitHub-hosted experiment-reports.yml execution for the new heldout clean gate",
+    "manual IMK dogfood",
+    "SLM Prototype runtime"
+  ],
+  "next_steps": [
+    "Monitor the next experiment-reports.yml run after pushing this gate",
+    "Keep the clean heldout gate as regression coverage for deterministic and learned scorer promotion",
+    "Keep raw per-case evaluator output out of committed artifacts"
+  ]
+}
