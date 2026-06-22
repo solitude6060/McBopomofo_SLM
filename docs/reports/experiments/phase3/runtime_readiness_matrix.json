@@ -21,7 +21,7 @@
     {
       "area": "deterministic runtime hook",
       "state": "implemented_with_linux_and_heldout_regression_gates",
-      "evidence": "docs/reports/experiments/phase3/deterministic_runtime_hook_static_gate.json; docs/reports/experiments/phase3/deterministic_linux_ci_gate.json; docs/reports/experiments/phase3/heldout_generalization_clean_ci_gate.json"
+      "evidence": "docs/reports/experiments/phase3/deterministic_runtime_hook_static_gate.json; docs/reports/experiments/phase3/deterministic_linux_ci_gate.json; docs/reports/experiments/phase3/heldout_generalization_clean_ci_gate.json; docs/reports/experiments/phase3/heldout_fixture_hygiene_repair_gate.json"
     },
     {
       "area": "content-free runtime counters",
@@ -40,8 +40,8 @@
     },
     {
       "area": "linux verification coverage",
-      "state": "heldout_export_character_smoke_and_readiness_evidence_ci_verified",
-      "evidence": "docs/reports/experiments/phase3/linux_verification_coverage_gate.json"
+      "state": "heldout_export_character_smoke_and_readiness_evidence_ci_verified_with_63_case_hygiene_pending_ci",
+      "evidence": "docs/reports/experiments/phase3/linux_verification_coverage_gate.json; docs/reports/experiments/phase3/heldout_fixture_hygiene_repair_gate.json"
     },
     {
       "area": "linux engine gtest coverage",
@@ -95,8 +95,8 @@
     },
     {
       "gate": "deterministic Linux regression",
-      "required_evidence": "experiment-reports.yml builds the evaluator and validate_deterministic_gate.py passes canonical 234/234 and heldout clean 57/57 with p95 under 2000us",
-      "status": "pass_github_run_27950784933"
+      "required_evidence": "experiment-reports.yml builds the evaluator and validate_deterministic_gate.py passes canonical 234/234 and heldout clean 63/63 with p95 under 2000us",
+      "status": "pending_63_case_ci_local_pass_63_of_63"
     },
     {
       "gate": "SLM runtime",
@@ -110,6 +110,7 @@
     "python3 -m json.tool docs/reports/experiments/phase3/heldout_generalization_clean_ci_gate.json",
     "python3 -m json.tool docs/reports/experiments/phase3/macos_ci_runtime_build_gate.json",
     "python3 -m json.tool docs/reports/experiments/phase3/deterministic_linux_ci_gate.json",
+    "python3 -m json.tool docs/reports/experiments/phase3/heldout_fixture_hygiene_repair_gate.json",
     "python3 -m json.tool docs/reports/experiments/phase3/linux_engine_gtest_ci_gate.json",
     "python3 -m json.tool docs/reports/experiments/registry.json",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py",
@@ -124,6 +125,7 @@
     "python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py --self-test",
     "python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py",
     "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --export-clean heldout_generalization",
+    "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --fixtures all",
     "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --ci-smoke --slm-candidate-granularity character --output /tmp/slm_ci_smoke_character_report.json",
     "cmake -DENABLE_TEST=ON -DCMAKE_BUILD_TYPE=Release -S Source/Engine -B /tmp/mcbopomofo_engine_linux_gtests",
     "cmake --build /tmp/mcbopomofo_engine_linux_gtests --target runMcBopomofoLMLibTest runMandarinTest runGramambular2Test",

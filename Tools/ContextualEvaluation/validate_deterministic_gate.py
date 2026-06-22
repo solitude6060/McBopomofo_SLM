@@ -23,7 +23,7 @@ CANONICAL_FIXTURES = [
 ]
 
 HELDOUT_CLEAN_FIXTURES = [
-    ("heldout_generalization_clean", "heldout_generalization_clean.jsonl", 57),
+    ("heldout_generalization_clean", "heldout_generalization_clean.jsonl", 63),
 ]
 
 

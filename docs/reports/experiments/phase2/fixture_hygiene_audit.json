@@ -1,8 +1,8 @@
 {
   "audit": "fixture_hygiene_audit",
-  "date": "2026-06-22T01:32:34+08:00",
+  "date": "2026-06-22T21:37:49+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "37b5bcc6625766ef87b26fb45515e9d365196fc1",
+  "commit": "pending",
   "content_policy": {
     "raw_case_strings_in_report": false,
     "raw_debug_output_location": "/tmp/"
@@ -10,40 +10,29 @@
   "total_cases": 297,
   "aggregate": {
     "categories": {
-      "exact_reading_compatible": 291,
-      "reading_mismatch": 5,
-      "insufficient_readings": 1,
+      "exact_reading_compatible": 297,
+      "reading_mismatch": 0,
+      "insufficient_readings": 0,
       "missing_candidate_for_reading": 0,
       "phrase_length_or_segmentation_gap": 0,
       "protected_token_alignment": 0
     },
-    "problematic_cases": 6
+    "problematic_cases": 0
   },
   "per_fixture": [
     {
       "fixture": "heldout_generalization",
       "total_cases": 63,
       "categories": {
-        "exact_reading_compatible": 57,
-        "reading_mismatch": 5,
-        "insufficient_readings": 1,
+        "exact_reading_compatible": 63,
+        "reading_mismatch": 0,
+        "insufficient_readings": 0,
         "missing_candidate_for_reading": 0,
         "phrase_length_or_segmentation_gap": 0,
         "protected_token_alignment": 0
       },
-      "problematic_cases": 6,
-      "problem_case_ids_by_category": {
-        "reading_mismatch": [
-          "hg-punct-003",
-          "hg-punct-006",
-          "hg-stress-008",
-          "hg-stress-009",
-          "hg-stress-010"
-        ],
-        "insufficient_readings": [
-          "hg-stress-001"
-        ]
-      }
+      "problematic_cases": 0,
+      "problem_case_ids_by_category": {}
     },
     {
       "fixture": "taiwan_ambiguous",
@@ -91,11 +80,11 @@
   "verification": [
     "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --self-test",
     "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --fixtures all",
-    "deterministic heldout with --candidate-diagnostics: 57/63",
+    "deterministic heldout with --candidate-diagnostics: 63/63",
     "deterministic canonical with --candidate-diagnostics: 100/100, 50/50, 84/84"
   ],
   "next_steps": [
-    "Use exact_reading_compatible cases for scorer and tiny-LLM promotion gates",
-    "Fix or isolate reading-mismatch cases before treating them as model failures"
+    "Use all heldout_generalization cases for scorer and tiny-LLM promotion gates",
+    "Keep fixture_hygiene_audit.py in CI so reading mismatches cannot re-enter the clean gate"
   ]
 }
