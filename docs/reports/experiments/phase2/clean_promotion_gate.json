@@ -1,8 +1,8 @@
 {
   "report": "clean_promotion_gate",
-  "date": "2026-06-22T21:37:49+08:00",
+  "date": "2026-06-22T21:47:36+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "pending",
+  "commit": "1ecc813",
   "content_policy": {
     "raw_case_strings_in_report": false,
     "raw_clean_jsonl_location": "/tmp/"
@@ -152,6 +152,7 @@
     "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/heldout_generalization.jsonl",
     "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/taiwan_ambiguous.jsonl",
     "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/english_mixed.jsonl",
-    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl"
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl",
+    "gh run watch 27957371891 --exit-status"
   ]
 }

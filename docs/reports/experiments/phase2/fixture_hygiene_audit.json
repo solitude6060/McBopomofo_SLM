@@ -1,8 +1,8 @@
 {
   "audit": "fixture_hygiene_audit",
-  "date": "2026-06-22T21:37:49+08:00",
+  "date": "2026-06-22T21:47:36+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "pending",
+  "commit": "1ecc813",
   "content_policy": {
     "raw_case_strings_in_report": false,
     "raw_debug_output_location": "/tmp/"
@@ -81,7 +81,8 @@
     "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --self-test",
     "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --fixtures all",
     "deterministic heldout with --candidate-diagnostics: 63/63",
-    "deterministic canonical with --candidate-diagnostics: 100/100, 50/50, 84/84"
+    "deterministic canonical with --candidate-diagnostics: 100/100, 50/50, 84/84",
+    "gh run watch 27957371891 --exit-status"
   ],
   "next_steps": [
     "Use all heldout_generalization cases for scorer and tiny-LLM promotion gates",

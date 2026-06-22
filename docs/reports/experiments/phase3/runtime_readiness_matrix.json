@@ -2,7 +2,7 @@
   "id": "phase3-runtime-readiness-matrix",
   "name": "Phase 3 Runtime Readiness Matrix",
   "status": "partial",
-  "date": "2026-06-22T21:10:13+08:00",
+  "date": "2026-06-22T21:47:36+08:00",
   "branch": "slm-phase2-learnable",
   "protocol_version": "1.0",
   "privacy": {
@@ -40,7 +40,7 @@
     },
     {
       "area": "linux verification coverage",
-      "state": "heldout_export_character_smoke_and_readiness_evidence_ci_verified_with_63_case_hygiene_pending_ci",
+      "state": "heldout_export_character_smoke_readiness_and_63_case_hygiene_ci_verified",
       "evidence": "docs/reports/experiments/phase3/linux_verification_coverage_gate.json; docs/reports/experiments/phase3/heldout_fixture_hygiene_repair_gate.json"
     },
     {
@@ -96,7 +96,7 @@
     {
       "gate": "deterministic Linux regression",
       "required_evidence": "experiment-reports.yml builds the evaluator and validate_deterministic_gate.py passes canonical 234/234 and heldout clean 63/63 with p95 under 2000us",
-      "status": "pending_63_case_ci_local_pass_63_of_63"
+      "status": "pass_github_run_27957371891"
     },
     {
       "gate": "SLM runtime",
@@ -137,6 +137,7 @@
     "gh run watch 27952280884 --exit-status",
     "gh run watch 27950784933 --exit-status",
     "gh run watch 27949662127 --exit-status",
+    "gh run watch 27957371891 --exit-status",
     "git diff --check"
   ],
   "next_steps": [

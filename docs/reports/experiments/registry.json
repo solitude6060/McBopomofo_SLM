@@ -753,9 +753,9 @@
       "id": "fixture-hygiene-audit",
       "name": "Fixture Hygiene Audit",
       "status": "verified",
-      "date": "2026-06-22T01:32:34+08:00",
+      "date": "2026-06-22T21:47:36+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "37b5bcc6625766ef87b26fb45515e9d365196fc1",
+      "commit": "1ecc813",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase2/",
@@ -780,7 +780,8 @@
         "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --self-test",
         "python3 Tools/ContextualEvaluation/fixture_hygiene_audit.py --fixtures all",
         "deterministic heldout with --candidate-diagnostics: 63/63",
-        "deterministic canonical with --candidate-diagnostics: 100/100, 50/50, 84/84"
+        "deterministic canonical with --candidate-diagnostics: 100/100, 50/50, 84/84",
+        "gh run watch 27957371891 --exit-status"
       ],
       "next_steps": [
         "Use all heldout_generalization cases for scorer and tiny-LLM promotion gates",
@@ -791,9 +792,9 @@
       "id": "clean-promotion-gate",
       "name": "Clean Promotion Gate for Heldout Generalization",
       "status": "verified",
-      "date": "2026-06-22T21:37:49+08:00",
+      "date": "2026-06-22T21:47:36+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "pending",
+      "commit": "1ecc813",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase2/",
@@ -816,7 +817,8 @@
         "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/heldout_generalization.jsonl",
         "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/taiwan_ambiguous.jsonl",
         "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/english_mixed.jsonl",
-        "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl"
+        "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl",
+        "gh run watch 27957371891 --exit-status"
       ],
       "next_steps": [
         "Use Tests/fixtures/contextual_bopomofo/heldout_generalization_clean.jsonl (63 cases) as the promotion gate fixture for scorer/tiny-LLM benchmarking",
@@ -1321,10 +1323,10 @@
     {
       "id": "phase3-heldout-fixture-hygiene-repair-gate",
       "name": "Phase 3 Heldout Fixture Hygiene Repair Gate",
-      "status": "local_verified_pending_ci",
-      "date": "2026-06-22T21:37:49+08:00",
+      "status": "verified",
+      "date": "2026-06-22T21:47:36+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "pending",
+      "commit": "1ecc813",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1332,7 +1334,7 @@
       "result_files": [
         "docs/reports/experiments/phase3/heldout_fixture_hygiene_repair_gate.json"
       ],
-      "description": "Repairs six heldout_generalization fixture hygiene issues without recording raw case text in the report: five reading mismatches and one insufficient-reading case. After repair, fixture_hygiene_audit.py reports 297/297 contextual fixture cases exact-reading-compatible, heldout_generalization_clean contains all 63 heldout cases, and deterministic heldout clean passes 63/63 locally with zero candidate diagnostics failures. GitHub-hosted Experiment reports evidence is pending the next push.",
+      "description": "Repairs six heldout_generalization fixture hygiene issues without recording raw case text in the report: five reading mismatches and one insufficient-reading case. After repair, fixture_hygiene_audit.py reports 297/297 contextual fixture cases exact-reading-compatible, heldout_generalization_clean contains all 63 heldout cases, and deterministic heldout clean passes 63/63 with zero candidate diagnostics failures in GitHub-hosted Experiment reports run 27957371891.",
       "privacy": {
         "content_free": true,
         "raw_text_recorded": false,
@@ -1340,33 +1342,31 @@
         "candidate_text_recorded": false,
         "committed_text_recorded": false
       },
-      "gate_result": "PENDING_CI",
+      "gate_result": "PASS",
       "verification": [
         "fixture_hygiene_audit.py --fixtures heldout_generalization: 63 exact_reading_compatible, 0 problematic",
         "fixture_hygiene_audit.py --fixtures all: 297 exact_reading_compatible, 0 problematic",
         "wc -l heldout_generalization_clean.jsonl: 63",
         "validate_deterministic_gate.py --self-test",
         "validate_deterministic_gate.py --heldout: 63/63, max_p95=1048us",
-        "deterministic evaluator on full heldout_generalization: 63/63, candidate_diagnostics failing_cases=0"
+        "deterministic evaluator on full heldout_generalization: 63/63, candidate_diagnostics failing_cases=0",
+        "gh run watch 27957371891 --exit-status"
       ],
       "not_tested": [
-        "GitHub-hosted Experiment reports workflow for this new 63-case gate is pending until the next push",
         "manual IMK dogfood",
         "a real SLM model passing the promotion gate"
       ],
       "next_steps": [
-        "Push the fixture and gate updates and verify Experiment reports passes",
-        "Update this report with the GitHub run id after CI passes",
         "Use the 63-case clean heldout fixture for future learned scorer promotion checks"
       ]
     },
     {
       "id": "phase3-heldout-generalization-clean-ci-gate",
       "name": "Phase 3 Heldout Generalization Clean CI Gate",
-      "status": "ci_pending",
-      "date": "2026-06-22T21:37:49+08:00",
+      "status": "verified",
+      "date": "2026-06-22T21:47:36+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "pending",
+      "commit": "1ecc813",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1378,7 +1378,7 @@
       "description": "Adds a repository-native clean heldout regression gate for the deterministic contextual reranker. The committed 63-case heldout_generalization_clean fixture now includes all heldout cases after fixture hygiene repair, and validate_deterministic_gate.py --heldout requires 63/63 exact matches, zero candidate diagnostics failures, and p95 latency under 2000us.",
       "runtime_default": "Off",
       "typing_behavior_changed_by_default": false,
-      "gate_result": "PENDING_CI",
+      "gate_result": "PASS",
       "privacy": {
         "content_free": true,
         "raw_text_recorded": false,
@@ -1392,15 +1392,14 @@
         "wc -l Tests/fixtures/contextual_bopomofo/heldout_generalization_clean.jsonl: 63",
         "python3 -m py_compile Tools/ContextualEvaluation/validate_deterministic_gate.py",
         "validate_deterministic_gate.py --self-test",
-        "validate_deterministic_gate.py --heldout: 63/63, max_p95=1048us"
+        "validate_deterministic_gate.py --heldout: 63/63, max_p95=1048us",
+        "gh run watch 27957371891 --exit-status"
       ],
       "not_tested": [
-        "GitHub-hosted Experiment reports workflow for the 63-case gate is pending until the next push",
         "manual IMK dogfood",
         "SLM Prototype runtime"
       ],
       "next_steps": [
-        "Push the 63-case heldout clean gate and verify Experiment reports passes",
         "Use the clean heldout gate as regression coverage for deterministic and learned scorer promotion",
         "Keep raw per-case evaluator output out of committed artifacts"
       ]
@@ -1538,7 +1537,7 @@
       "result_files": [
         "docs/reports/experiments/phase3/runtime_readiness_matrix.json"
       ],
-            "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local validator and generator, Linux deterministic canonical and 63-case heldout clean regression gates pending CI, SLM promotion validation, dynamic heldout export coverage, character candidate smoke coverage, Linux engine GTest CI coverage, readiness evidence validation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
+            "description": "Current content-free Phase 3 readiness matrix. Runtime preference, deterministic hook, content-free counters, dogfood/privacy artifacts with a local validator and generator, Linux deterministic canonical and 63-case heldout clean regression gates, SLM promotion validation, dynamic heldout export coverage, character candidate smoke coverage, Linux engine GTest CI coverage, readiness evidence validation, and GitHub-hosted macOS build/test evidence are present. Manual IMK dogfood remains the open runtime behavior gate. SLM Prototype remains intentionally unwired until a local-only constrained model path passes the promotion gate.",
       "gate_result": "PARTIAL",
       "verification": [
         "gh run watch 27949662127 --exit-status",

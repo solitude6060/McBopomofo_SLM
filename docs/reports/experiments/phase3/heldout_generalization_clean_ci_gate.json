@@ -1,10 +1,10 @@
 {
   "id": "phase3-heldout-generalization-clean-ci-gate",
   "name": "Phase 3 Heldout Generalization Clean CI Gate",
-  "status": "ci_pending",
-  "date": "2026-06-22T21:37:49+08:00",
+  "status": "verified",
+  "date": "2026-06-22T21:47:36+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "pending",
+  "commit": "1ecc813",
   "protocol_version": "1.0",
   "model": null,
   "results_dir": "docs/reports/experiments/phase3/",
@@ -13,8 +13,8 @@
     "docs/reports/experiments/phase3/heldout_generalization_clean_ci_gate.json"
   ],
   "ci_workflow": ".github/workflows/experiment-reports.yml",
-  "github_run_id": null,
-  "github_run_url": null,
+  "github_run_id": 27957371891,
+  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27957371891",
   "gate_script": "Tools/ContextualEvaluation/validate_deterministic_gate.py --heldout",
   "fixture": {
     "name": "heldout_generalization_clean",
@@ -35,7 +35,7 @@
     "max_latency_p95_us": 1048,
     "candidate_diagnostics_failing_cases": 0
   },
-  "gate_result": "PENDING_CI",
+  "gate_result": "PASS",
   "privacy": {
     "content_free": true,
     "raw_text_recorded": false,
@@ -49,15 +49,14 @@
     "wc -l Tests/fixtures/contextual_bopomofo/heldout_generalization_clean.jsonl: 63",
     "python3 -m py_compile Tools/ContextualEvaluation/validate_deterministic_gate.py",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --self-test",
-    "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --heldout: 63/63, max_p95=1048us"
+    "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --heldout: 63/63, max_p95=1048us",
+    "gh run watch 27957371891 --exit-status: Experiment reports passed the 63-case heldout clean gate"
   ],
   "not_tested": [
-    "GitHub-hosted Experiment reports workflow for the 63-case gate is pending until the next push",
     "manual IMK dogfood",
     "SLM Prototype runtime"
   ],
   "next_steps": [
-    "Push the 63-case heldout clean gate and verify Experiment reports passes",
     "Keep the clean heldout gate as regression coverage for deterministic and learned scorer promotion",
     "Keep raw per-case evaluator output out of committed artifacts"
   ]

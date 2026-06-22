@@ -1,10 +1,10 @@
 {
   "id": "phase3-heldout-fixture-hygiene-repair-gate",
   "name": "Phase 3 Heldout Fixture Hygiene Repair Gate",
-  "status": "local_verified_pending_ci",
-  "date": "2026-06-22T21:37:49+08:00",
+  "status": "verified",
+  "date": "2026-06-22T21:47:36+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "pending",
+  "commit": "1ecc813",
   "protocol_version": "1.0",
   "model": null,
   "results_dir": "docs/reports/experiments/phase3/",
@@ -18,9 +18,9 @@
     "Tools/ContextualEvaluation/validate_deterministic_gate.py"
   ],
   "ci_workflow": ".github/workflows/experiment-reports.yml",
-  "github_run_id": null,
-  "github_run_url": null,
-  "gate_result": "PENDING_CI",
+  "github_run_id": 27957371891,
+  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27957371891",
+  "gate_result": "PASS",
   "scope": "Correct heldout fixture reading hygiene so all 63 heldout cases can participate in clean promotion and deterministic regression gates",
   "privacy": {
     "content_free": true,
@@ -63,16 +63,14 @@
     "wc -l Tests/fixtures/contextual_bopomofo/heldout_generalization_clean.jsonl: 63",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --self-test",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --heldout: 63/63, max_p95=1048us",
-    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/heldout_generalization.jsonl: 63/63, candidate_diagnostics failing_cases=0"
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --candidate-diagnostics Tests/fixtures/contextual_bopomofo/heldout_generalization.jsonl: 63/63, candidate_diagnostics failing_cases=0",
+    "gh run watch 27957371891 --exit-status: Experiment reports passed, including heldout clean export, engine GTests, deterministic heldout gate, benchmark smokes, and runtime readiness matrix"
   ],
   "not_tested": [
-    "GitHub-hosted Experiment reports workflow for this new 63-case gate is pending until the next push",
     "manual IMK dogfood",
     "a real SLM model passing the promotion gate"
   ],
   "next_steps": [
-    "Push the fixture and gate updates and verify Experiment reports passes.",
-    "Update this report with the GitHub run id after CI passes.",
     "Use the 63-case clean heldout fixture for future learned scorer promotion checks."
   ]
 }
