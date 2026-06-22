@@ -1,15 +1,15 @@
 {
   "suite": "slm-qwen2.5-0.5b-clean-gate",
-  "date": "2026-06-22T01:59:18+08:00",
+  "date": "2026-06-22T22:39:42+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "faf46519ae2ebcacef970b14b57f20df8ea99b73",
+  "commit": "76b99a8420392c436fade13edef2fc13f030e3e2",
   "content_policy": {
     "raw_case_strings_in_report": false,
     "raw_benchmark_outputs_location": "/tmp/"
   },
   "fixture": {
     "name": "heldout_generalization_clean",
-    "total_cases": 57,
+    "total_cases": 63,
     "source": "fixture_hygiene_audit.py --export-clean heldout_generalization"
   },
   "scorer": {
@@ -29,57 +29,58 @@
   },
   "reference": {
     "baseline": {
-      "exact_matches": 39,
-      "total_cases": 57,
-      "exact_accuracy": 68.4211,
-      "latency_microseconds_p95": 2
+      "exact_matches": 44,
+      "total_cases": 63,
+      "exact_accuracy": 69.8413,
+      "latency_microseconds_p95": 4
     },
     "deterministic": {
-      "exact_matches": 57,
-      "total_cases": 57,
+      "exact_matches": 63,
+      "total_cases": 63,
       "exact_accuracy": 100.0,
-      "latency_microseconds_p95": 705
+      "latency_microseconds_p95": 805
     }
   },
   "slm": {
-    "exact_matches": 12,
-    "total_cases": 57,
-    "exact_accuracy": 21.0526,
-    "fallbacks": 41,
-    "errors": 45,
+    "exact_matches": 11,
+    "total_cases": 63,
+    "exact_accuracy": 17.4603,
+    "fallbacks": 51,
+    "errors": 52,
     "latency_microseconds": {
-      "p50": 282780,
-      "p95": 668875,
-      "p99": 1104754
+      "p50": 269707,
+      "p95": 513010,
+      "p99": 681103
     },
     "candidate_validation": {
       "protocol_available": true,
       "exercised": true,
-      "cases_with_candidates": 16,
+      "cases_with_candidates": 12,
       "non_candidate_violations": 0
     },
     "fallback_breakdown": {
-      "indices_length_mismatch": 41
+      "indices_length_mismatch": 51
     },
     "relative_error_reduction_pct": {
-      "vs_baseline": -150.0,
+      "vs_baseline": -173.6842,
       "vs_deterministic": 0.0
     }
   },
   "gate_result": "FAIL",
   "gate_reasons": [
-    "qwen2.5:0.5b scores 12/57, below baseline 39/57 and deterministic 57/57",
-    "fallbacks 41 > threshold 0, all from indices_length_mismatch",
-    "SLM p95 latency 668875us exceeds the 20000us prototype target",
+    "qwen2.5:0.5b scores 11/63, below baseline 44/63 and deterministic 63/63",
+    "fallbacks 51 > threshold 0, all from indices_length_mismatch",
+    "SLM p95 latency 513010us exceeds the 20000us prototype target",
     "candidate validation has 0 non-candidate violations, so the failure mode is instruction-following reliability rather than unsafe output"
   ],
   "decision": "Do not promote qwen2.5:0.5b prompt-only candidate-index scoring for the clean heldout gate. The 0.5B local model cannot reliably emit one candidate index per non-empty slot, and its latency is far above a synchronous typing path budget.",
   "verification": [
     "python3 Tools/SLMRerankerExperiment/local_llm_scorer.py --self-test",
     "python3 -m json.tool Models/qwen2_5_0_5b_manifest.json",
-    "run_benchmark_suite.py qwen2.5:0.5b on heldout_generalization_clean with escalated localhost Ollama HTTP access",
-    "python3 -m json.tool /tmp/slm_clean_qwen2_5_0_5b.json",
-    "python3 -m json.tool /tmp/slm_clean_qwen2_5_0_5b/slm_summary_slm_heldout_generalization_clean.json"
+    "python3 Tools/SLMRerankerExperiment/run_benchmark_suite.py --persistent-scorer-command \"python3 Tools/SLMRerankerExperiment/local_llm_scorer.py --provider ollama-http --model qwen2.5:0.5b --prompt-style indices --model-manifest Models/qwen2_5_0_5b_manifest.json --persistent\" --model-manifest Models/qwen2_5_0_5b_manifest.json --fixtures heldout_generalization_clean --slm-candidate-granularity character --work-dir /tmp/slm_clean_qwen2_5_0_5b_63_gate --output /tmp/slm_clean_qwen2_5_0_5b_63_gate.json --timeout-ms 10000",
+    "python3 -m json.tool /tmp/slm_clean_qwen2_5_0_5b_63_gate.json",
+    "python3 -m json.tool /tmp/slm_clean_qwen2_5_0_5b_63_gate/slm_summary_slm_heldout_generalization_clean.json",
+    "python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --report /tmp/slm_clean_qwen2_5_0_5b_63_gate.json --required-fixture heldout_generalization_clean --expect-fail"
   ],
   "next_steps": [
     "Do not spend more cycles on prompt-only index-array generation for qwen2.5:0.5b",

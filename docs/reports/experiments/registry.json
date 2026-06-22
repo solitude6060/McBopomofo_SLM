@@ -869,9 +869,9 @@
       "id": "slm-qwen2-5-0-5b-clean-gate",
       "name": "qwen2.5:0.5b Clean Gate Benchmark",
       "status": "benchmarked",
-      "date": "2026-06-22T01:59:18+08:00",
+      "date": "2026-06-22T22:39:42+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "faf46519ae2ebcacef970b14b57f20df8ea99b73",
+      "commit": "76b99a8",
       "protocol_version": "1.2",
       "model": {
         "model_name": "qwen2.5-0.5b",
@@ -888,27 +888,28 @@
       "result_files": [
         "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_clean_gate_benchmark.json"
       ],
-      "description": "Content-free clean gate benchmark for qwen2.5:0.5b through the persistent Ollama HTTP scorer using character-granularity candidate requests and candidate-index prompting. The model scores 12/57 with 41 fallbacks from indices_length_mismatch, p95 latency 668875us, and 0 non-candidate violations on the 16 cases where candidate validation was exercised. It fails the clean heldout gate against baseline 39/57 and deterministic 57/57.",
+      "description": "Content-free clean gate benchmark for qwen2.5:0.5b through the persistent Ollama HTTP scorer using character-granularity candidate requests and candidate-index prompting. After the heldout fixture hygiene repair, the current 63-case clean gate scores 11/63 with 51 fallbacks from indices_length_mismatch, p95 latency 513010us, and 0 non-candidate violations on the 12 cases where candidate validation was exercised. It fails the clean heldout gate against baseline 44/63 and deterministic 63/63.",
       "fixture": "heldout_generalization_clean",
-      "total_cases": 57,
+      "total_cases": 63,
       "real_model_benchmarked": true,
       "result": {
-        "exact_matches": 12,
-        "total_cases": 57,
-        "exact_accuracy": 21.0526,
-        "fallbacks": 41,
-        "latency_p95_us": 668875,
-        "slm_vs_baseline_rer_pct": -150.0,
-        "candidate_validation_cases": 16,
+        "exact_matches": 11,
+        "total_cases": 63,
+        "exact_accuracy": 17.4603,
+        "fallbacks": 51,
+        "latency_p95_us": 513010,
+        "slm_vs_baseline_rer_pct": -173.6842,
+        "candidate_validation_cases": 12,
         "non_candidate_violations": 0
       },
       "gate_result": "FAIL",
       "verification": [
         "local_llm_scorer.py --self-test",
         "json.tool Models/qwen2_5_0_5b_manifest.json",
-        "run_benchmark_suite.py qwen2.5:0.5b on heldout_generalization_clean with escalated localhost Ollama HTTP access",
-        "json.tool /tmp/slm_clean_qwen2_5_0_5b.json",
-        "json.tool /tmp/slm_clean_qwen2_5_0_5b/slm_summary_slm_heldout_generalization_clean.json"
+        "run_benchmark_suite.py qwen2.5:0.5b on heldout_generalization_clean 63-case clean gate with escalated localhost Ollama HTTP access",
+        "json.tool /tmp/slm_clean_qwen2_5_0_5b_63_gate.json",
+        "json.tool /tmp/slm_clean_qwen2_5_0_5b_63_gate/slm_summary_slm_heldout_generalization_clean.json",
+        "validate_slm_promotion_gate.py --report /tmp/slm_clean_qwen2_5_0_5b_63_gate.json --required-fixture heldout_generalization_clean --expect-fail"
       ],
       "next_steps": [
         "Do not promote qwen2.5:0.5b prompt-only candidate-index scoring",
@@ -920,9 +921,9 @@
       "id": "slm-qwen2-5-0-5b-indices-repair-clean-gate",
       "name": "qwen2.5:0.5b Index-Repair Clean Gate Benchmark",
       "status": "benchmarked",
-      "date": "2026-06-22T02:07:00+08:00",
+      "date": "2026-06-22T22:44:39+08:00",
       "branch": "slm-phase2-learnable",
-      "base_commit": "1bc960d7614b5fc463d32b16b1c8d203a3c905ac",
+      "base_commit": "76b99a8",
       "protocol_version": "1.2",
       "model": {
         "model_name": "qwen2.5-0.5b",
@@ -940,27 +941,27 @@
       "result_files": [
         "docs/reports/experiments/phase2/slm_qwen2_5_0_5b_indices_repair_clean_gate_benchmark.json"
       ],
-      "description": "Content-free clean gate benchmark for qwen2.5:0.5b with the local scorer's optional --indices-repair baseline-fill mode. Repair reduces fallbacks from 41 to 34 by converting wrong-length arrays into candidate-bounded outputs when possible, but exact matches stay at 12/57 and p95 latency remains 518524us. The prompt-only tiny LLM path still fails baseline 39/57 and deterministic 57/57.",
+      "description": "Content-free clean gate benchmark for qwen2.5:0.5b with the local scorer's optional --indices-repair baseline-fill mode on the current 63-case clean heldout fixture. Repair reduces fallbacks from 51 to 40 by converting wrong-length arrays into candidate-bounded outputs when possible, but exact matches stay at 11/63 and p95 latency remains 481597us. The prompt-only tiny LLM path still fails baseline 44/63 and deterministic 63/63.",
       "fixture": "heldout_generalization_clean",
-      "total_cases": 57,
+      "total_cases": 63,
       "real_model_benchmarked": true,
       "result": {
-        "exact_matches": 12,
-        "total_cases": 57,
-        "exact_accuracy": 21.0526,
-        "fallbacks": 34,
-        "latency_p95_us": 518524,
-        "slm_vs_baseline_rer_pct": -150.0,
+        "exact_matches": 11,
+        "total_cases": 63,
+        "exact_accuracy": 17.4603,
+        "fallbacks": 40,
+        "latency_p95_us": 481597,
+        "slm_vs_baseline_rer_pct": -173.6842,
         "candidate_validation_cases": 23,
         "non_candidate_violations": 0
       },
       "gate_result": "FAIL",
       "verification": [
         "local_llm_scorer.py --self-test",
-        "run_benchmark_suite.py qwen2.5:0.5b with --indices-repair baseline-fill on heldout_generalization_clean",
-        "json.tool /tmp/slm_clean_qwen2_5_0_5b_repair.json",
-        "json.tool /tmp/slm_clean_qwen2_5_0_5b_repair/slm_summary_slm_heldout_generalization_clean.json",
-        "git diff --check"
+        "run_benchmark_suite.py qwen2.5:0.5b with --indices-repair baseline-fill on heldout_generalization_clean 63-case clean gate",
+        "json.tool /tmp/slm_clean_qwen2_5_0_5b_repair_63_gate.json",
+        "json.tool /tmp/slm_clean_qwen2_5_0_5b_repair_63_gate/slm_summary_slm_heldout_generalization_clean.json",
+        "validate_slm_promotion_gate.py --report /tmp/slm_clean_qwen2_5_0_5b_repair_63_gate.json --required-fixture heldout_generalization_clean --expect-fail"
       ],
       "next_steps": [
         "Keep --indices-repair baseline-fill as a diagnostic hardening mode only",

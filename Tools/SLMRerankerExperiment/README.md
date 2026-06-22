@@ -186,6 +186,10 @@ checks: raw text/readings/candidate/committed-text flags must be false, raw
 content-bearing fields must be absent, and raw artifact locations must point
 under `/tmp`.
 
+Real-model benchmark runs do not update the registry automatically. Publish a
+curated content-free summary under `docs/reports/experiments/` first, then add
+that stable report path to the registry.
+
 ## External Scoring Protocol
 
 ### Invocation

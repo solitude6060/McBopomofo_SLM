@@ -1382,6 +1382,26 @@ def run_self_test():
                 f"'heldout_generalization', got {src!r}"
             )
 
+    # -- 17. Registry update guard --
+    registry_args = argparse.Namespace(
+        dry_run_local_wrapper=True,
+        no_gate=False,
+        ci_smoke=False,
+    )
+    if not should_update_registry(registry_args):
+        errors.append("registry guard: expected dry-run smoke to update registry")
+    registry_args.dry_run_local_wrapper = False
+    if should_update_registry(registry_args):
+        errors.append("registry guard: real-model run must not update registry")
+    registry_args.dry_run_local_wrapper = True
+    registry_args.no_gate = True
+    if should_update_registry(registry_args):
+        errors.append("registry guard: --no-gate run must not update registry")
+    registry_args.no_gate = False
+    registry_args.ci_smoke = True
+    if should_update_registry(registry_args):
+        errors.append("registry guard: CI smoke must not update registry")
+
     # -- Report --
     if errors:
         for e in errors:
@@ -1461,6 +1481,16 @@ def register_experiment(report):
         f.write("\n")
 
     return REGISTRY_PATH
+
+
+def should_update_registry(args):
+    """Return true only for the curated dry-run smoke report.
+
+    Real-model benchmark reports need human-written, content-free summaries
+    before they are added to the registry. The raw suite output can point at
+    /tmp work dirs and should not overwrite the stable suite-runner entry.
+    """
+    return args.dry_run_local_wrapper and not args.no_gate and not args.ci_smoke
 
 
 # ---------------------------------------------------------------------------
@@ -1730,14 +1760,18 @@ def main():
         )
 
     # -- Register in experiment registry --
-    if not args.no_gate:
+    if should_update_registry(args):
         try:
             registry_path = register_experiment(report)
             print(f"Registry updated: {registry_path}", file=sys.stderr)
         except OSError as exc:
             print(f"WARN: registry update failed: {exc}", file=sys.stderr)
     else:
-        print("Registry not updated because --no-gate was used", file=sys.stderr)
+        print(
+            "Registry not updated; publish a curated report for registry "
+            "evidence",
+            file=sys.stderr,
+        )
 
 
 def _check_manifest(manifest_path):
