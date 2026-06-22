@@ -1,10 +1,10 @@
 {
   "id": "phase3-candidate-ranker-e2e-ci-gate",
   "name": "Phase 3 Candidate Ranker E2E CI Gate",
-  "status": "local_verified_pending_ci",
-  "date": "2026-06-22T22:12:38+08:00",
+  "status": "verified",
+  "date": "2026-06-22T22:22:41+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "pending",
+  "commit": "63f6f7c",
   "protocol_version": "1.0",
   "model": "candidate-ranker-v1-seed-char",
   "results_dir": "docs/reports/experiments/phase3/",
@@ -22,9 +22,9 @@
     ".github/workflows/experiment-reports.yml"
   ],
   "ci_workflow": ".github/workflows/experiment-reports.yml",
-  "github_run_id": null,
-  "github_run_url": null,
-  "gate_result": "PENDING_CI",
+  "github_run_id": 27959649945,
+  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27959649945",
+  "gate_result": "PASS",
   "scope": "Protect the non-generative learned candidate-ranker path end to end on both canonical and heldout fixtures: C++ evaluator request export, persistent Python scorer protocol, model schema loading, candidate validation, and content-free aggregate analysis.",
   "privacy": {
     "content_free": true,
@@ -54,21 +54,21 @@
   },
   "observed": {
     "canonical": {
-    "canonical_requests": 234,
-    "deterministic_exact": "234/234",
-    "candidate_ranker_exact": "182/234",
-    "candidate_ranker_p95_us": 147,
-    "candidate_ranker_fallbacks": 0,
-    "candidate_validation_cases": 234,
-    "candidate_validation_non_candidate_violations": 0,
-    "analysis_changed_cases": 1,
-    "analysis_non_baseline_evidence_cases": 1,
-    "analysis_ranker_in_candidates": 234,
-    "analysis_feature_coverage_cases": {
-      "candidate": 144,
-      "transition": 50,
-      "reading_candidate": 59
-    }
+      "canonical_requests": 234,
+      "deterministic_exact": "234/234",
+      "candidate_ranker_exact": "182/234",
+      "candidate_ranker_p95_us": 147,
+      "candidate_ranker_fallbacks": 0,
+      "candidate_validation_cases": 234,
+      "candidate_validation_non_candidate_violations": 0,
+      "analysis_changed_cases": 1,
+      "analysis_non_baseline_evidence_cases": 1,
+      "analysis_ranker_in_candidates": 234,
+      "analysis_feature_coverage_cases": {
+        "candidate": 144,
+        "transition": 50,
+        "reading_candidate": 59
+      }
     },
     "heldout": {
       "heldout_requests": 63,
@@ -89,10 +89,10 @@
     "python3 -m py_compile Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py",
     "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --self-test",
     "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e_gate --suite-report /tmp/candidate_ranker_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_e2e_gate_analysis.json",
-    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_gate --suite-report /tmp/candidate_ranker_heldout_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_heldout_e2e_gate_analysis.json"
+    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_gate --suite-report /tmp/candidate_ranker_heldout_e2e_gate_report.json --analysis-report /tmp/candidate_ranker_heldout_e2e_gate_analysis.json",
+    "gh run watch 27959649945 --exit-status"
   ],
   "not_tested": [
-    "GitHub-hosted Experiment reports workflow for the heldout E2E extension is pending until the next push",
     "manual IMK dogfood",
     "a real SLM model passing the promotion gate"
   ],

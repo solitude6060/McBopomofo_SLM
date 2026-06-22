@@ -2,7 +2,7 @@
   "id": "phase3-runtime-readiness-matrix",
   "name": "Phase 3 Runtime Readiness Matrix",
   "status": "partial",
-  "date": "2026-06-22T22:12:38+08:00",
+  "date": "2026-06-22T22:22:41+08:00",
   "branch": "slm-phase2-learnable",
   "protocol_version": "1.0",
   "privacy": {
@@ -40,7 +40,7 @@
     },
     {
       "area": "linux verification coverage",
-      "state": "heldout_export_character_smoke_readiness_63_case_hygiene_and_candidate_ranker_canonical_heldout_e2e_pending_ci",
+      "state": "heldout_export_character_smoke_readiness_63_case_hygiene_and_candidate_ranker_canonical_heldout_e2e_ci_verified",
       "evidence": "docs/reports/experiments/phase3/linux_verification_coverage_gate.json; docs/reports/experiments/phase3/heldout_fixture_hygiene_repair_gate.json; docs/reports/experiments/phase3/candidate_ranker_e2e_ci_gate.json"
     },
     {
@@ -142,7 +142,7 @@
     "gh run watch 27950784933 --exit-status",
     "gh run watch 27949662127 --exit-status",
     "gh run watch 27957371891 --exit-status",
-    "gh run watch 27958551143 --exit-status",
+    "gh run watch 27959649945 --exit-status",
     "git diff --check"
   ],
   "next_steps": [
