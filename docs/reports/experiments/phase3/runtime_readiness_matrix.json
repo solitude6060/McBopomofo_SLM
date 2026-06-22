@@ -2,7 +2,7 @@
   "id": "phase3-runtime-readiness-matrix",
   "name": "Phase 3 Runtime Readiness Matrix",
   "status": "partial",
-  "date": "2026-06-22T18:31:21+08:00",
+  "date": "2026-06-22T18:35:53+08:00",
   "branch": "slm-phase2-learnable",
   "protocol_version": "1.0",
   "privacy": {
@@ -40,20 +40,37 @@
     },
     {
       "area": "macOS build and IMK validation",
-      "state": "not_verified_in_linux",
-      "evidence": "xcodebuild and swift are unavailable in this environment"
+      "state": "ci_path_defined_pending_run",
+      "evidence": ".github/workflows/continuous-integration-workflow-xcode-latest.yml is the authoritative macOS build and test path on macos-15 and macos-26; this Linux environment still cannot run xcodebuild or swift locally"
     }
   ],
+  "ci_verification_path": {
+    "workflow": ".github/workflows/continuous-integration-workflow-xcode-latest.yml",
+    "runner_matrix": [
+      "macos-15",
+      "macos-26"
+    ],
+    "required_steps": [
+      "Source/Engine McBopomofoLMLibTest CMake build and run",
+      "Source/Engine/Mandarin MandarinTest CMake build and run",
+      "Source/Engine/gramambular2 Gramambular2Test CMake build and run",
+      "Swift package tests for CandidateUI, OpenCCBridge, BopomofoBraille, NSStringUtils, ChineseNumbers, and RomanNumbers",
+      "xcodebuild Debug clean and test for McBopomofo",
+      "xcodebuild Release build for McBopomofo and McBopomofoInstaller",
+      "Source/Data make check"
+    ],
+    "current_branch_status": "needs_passing_ci_run"
+  },
   "promotion_gates": [
     {
       "gate": "macOS compile",
-      "required_evidence": "xcodebuild succeeds for app and test targets",
-      "status": "missing"
+      "required_evidence": "continuous-integration-workflow-xcode-latest.yml passes on this branch, including xcodebuild Debug test and Release builds",
+      "status": "pending_ci_run"
     },
     {
       "gate": "PreferencesTests",
-      "required_evidence": "ContextualRerankerMode and diagnostics report tests pass on macOS",
-      "status": "missing"
+      "required_evidence": "continuous-integration-workflow-xcode-latest.yml passes on this branch, including the McBopomofo Debug test step that exercises PreferencesTests",
+      "status": "pending_ci_run"
     },
     {
       "gate": "manual IMK dogfood",
@@ -71,18 +88,13 @@
       "status": "not_ready"
     }
   ],
-  "opencode_status": {
-    "ordinary_sandbox": "fails because opencode's SQLite DB and lock directory are readonly",
-    "escalated": "starts successfully, but the latest read-only ultrawork audit was interrupted after noisy internal event logging produced no concise findings",
-    "next_prompt_guidance": "use ultrawork prefix, avoid --print-logs, and keep prompts narrowly bounded"
-  },
   "verification": [
     "python3 -m json.tool docs/reports/experiments/phase3/runtime_readiness_matrix.json",
     "python3 -m json.tool docs/reports/experiments/registry.json",
     "git diff --check"
   ],
   "next_steps": [
-    "Run macOS xcodebuild and PreferencesTests.",
+    "Get a passing continuous-integration-workflow-xcode-latest.yml run for this branch.",
     "Execute the macOS dogfood runbook for Off and Deterministic modes.",
     "Keep SLM Prototype unwired until a local-only constrained model path beats deterministic under the latency budget."
   ]

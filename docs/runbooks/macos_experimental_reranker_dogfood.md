@@ -13,6 +13,8 @@ private text, or user phrase files.
 ## Preconditions
 
 - Build and install a macOS development build from the active branch.
+- Confirm `.github/workflows/continuous-integration-workflow-xcode-latest.yml`
+  passes for the active branch before dogfooding runtime behavior.
 - Confirm the input menu exposes `Experimental Contextual Reranker`.
 - Confirm the default mode is `Off` after a clean preferences reset.
 - Confirm the current branch has passing evaluator benchmarks for the intended
