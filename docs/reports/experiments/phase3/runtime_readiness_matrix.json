@@ -2,7 +2,7 @@
   "id": "phase3-runtime-readiness-matrix",
   "name": "Phase 3 Runtime Readiness Matrix",
   "status": "partial",
-  "date": "2026-06-22T19:52:59+08:00",
+  "date": "2026-06-22T19:56:26+08:00",
   "branch": "slm-phase2-learnable",
   "protocol_version": "1.0",
   "privacy": {
@@ -86,7 +86,7 @@
     {
       "gate": "deterministic Linux regression",
       "required_evidence": "experiment-reports.yml builds the evaluator and validate_deterministic_gate.py passes canonical 234/234 and heldout clean 57/57 with p95 under 2000us",
-      "status": "canonical_pass_github_run_27949159665_heldout_pass_local_pending_github_run"
+      "status": "pass_github_run_27950784933"
     },
     {
       "gate": "SLM runtime",
@@ -102,6 +102,7 @@
     "python3 -m json.tool docs/reports/experiments/registry.json",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py",
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --heldout",
+    "gh run watch 27950784933 --exit-status",
     "gh run watch 27949662127 --exit-status",
     "git diff --check"
   ],
