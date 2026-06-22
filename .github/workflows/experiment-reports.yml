@@ -33,6 +33,9 @@ jobs:
         run: |
           python3 -m py_compile Tools/SLMRerankerExperiment/*.py
           python3 -m py_compile Tools/ContextualEvaluation/*.py
+      - name: Build language model data
+        run: make data.txt
+        working-directory: Source/Data
       - name: Validate experiment registry
         run: python3 Tools/SLMRerankerExperiment/validate_experiment_reports.py
       - name: Self-test report validator
