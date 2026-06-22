@@ -21,8 +21,9 @@ private text, or user phrase files.
   scorer mode.
 - Keep a rollback build or installer available.
 - Start from
-  `docs/reports/experiments/phase3/dogfood_evidence_template.json` and validate
-  the filled copy with
+  `python3 Tools/ContextualEvaluation/generate_dogfood_evidence.py --interactive --output <path>`
+  or copy `docs/reports/experiments/phase3/dogfood_evidence_template.json`,
+  then validate the filled evidence with
   `python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --dogfood <path>`.
 
 ## Modes
@@ -67,9 +68,11 @@ Use buckets or counts only.
 - Crash or hang count.
 - User-disabled-due-to-latency count.
 
-Record these fields in a copy of
-`docs/reports/experiments/phase3/dogfood_evidence_template.json`. The template
-is intentionally content-free and must continue to validate with
+Record these fields with
+`Tools/ContextualEvaluation/generate_dogfood_evidence.py --interactive --output <path>`
+or in a copy of
+`docs/reports/experiments/phase3/dogfood_evidence_template.json`. The generated
+or copied evidence is intentionally content-free and must continue to validate with
 `Tools/ContextualEvaluation/validate_dogfood_evidence.py`.
 
 ## Issue Template
