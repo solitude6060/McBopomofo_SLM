@@ -1140,10 +1140,10 @@
     {
       "id": "phase3-slm-promotion-gate-static-gate",
       "name": "Phase 3 SLM Promotion Gate Static Gate",
-      "status": "partial",
-      "date": "2026-06-22T20:34:16+08:00",
+      "status": "verified",
+      "date": "2026-06-22T20:37:24+08:00",
       "branch": "slm-phase2-learnable",
-      "commit": "PENDING",
+      "commit": "382c033",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1159,7 +1159,10 @@
       "description": "Adds a reusable promotion validator for SLM benchmark reports. The validator requires a real local model manifest, candidate validation with zero non-candidate violations, no excess fallbacks, p95 latency under budget, fewer aggregate errors than deterministic, positive relative error reduction versus deterministic, and requested heldout fixtures before any SLM runtime promotion claim.",
       "runtime_default": "Off",
       "typing_behavior_changed_by_default": false,
-      "gate_result": "PENDING_CI",
+      "gate_result": "PASS",
+      "ci_workflow": ".github/workflows/experiment-reports.yml",
+      "github_run_id": "27953106360",
+      "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27953106360",
       "privacy": {
         "content_free": true,
         "raw_text_recorded": false,
@@ -1174,16 +1177,15 @@
         "validate_slm_promotion_gate.py --self-test",
         "validate_slm_promotion_gate.py --report slm_qwen2_5_0_5b_index_taiwan_ambiguous.json --required-fixture heldout_generalization_clean --expect-fail",
         "validate_experiment_reports.py",
-        "git diff --check"
+        "git diff --check",
+        "gh run watch 27953106360 --exit-status"
       ],
       "not_tested": [
         "a real SLM model passing the promotion gate",
         "SLM Prototype runtime wiring",
-        "manual IMK dogfood",
-        "GitHub-hosted promotion gate"
+        "manual IMK dogfood"
       ],
       "next_steps": [
-        "Push and verify experiment-reports.yml runs the promotion validator",
         "Keep SLM Prototype unwired until a real model report passes this validator",
         "Run future real-model reports through this validator with heldout_generalization_clean required"
       ]
@@ -1390,7 +1392,7 @@
             "id": "phase3-runtime-readiness-matrix",
             "name": "Phase 3 Runtime Readiness Matrix",
             "status": "partial",
-            "date": "2026-06-22T20:34:16+08:00",
+            "date": "2026-06-22T20:37:24+08:00",
       "branch": "slm-phase2-learnable",
       "protocol_version": "1.0",
       "model": null,
@@ -1403,6 +1405,7 @@
       "gate_result": "PARTIAL",
       "verification": [
         "gh run watch 27949662127 --exit-status",
+        "gh run watch 27953106360 --exit-status",
         "gh run watch 27951356566 --exit-status",
         "gh run watch 27952280884 --exit-status",
         "gh run watch 27950784933 --exit-status",

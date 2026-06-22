@@ -2,7 +2,7 @@
   "id": "phase3-runtime-readiness-matrix",
   "name": "Phase 3 Runtime Readiness Matrix",
   "status": "partial",
-  "date": "2026-06-22T20:34:16+08:00",
+  "date": "2026-06-22T20:37:24+08:00",
   "branch": "slm-phase2-learnable",
   "protocol_version": "1.0",
   "privacy": {
@@ -35,7 +35,7 @@
     },
     {
       "area": "tiny LLM runtime",
-      "state": "intentionally_unwired_with_promotion_gate_pending_ci",
+      "state": "intentionally_unwired_with_promotion_gate",
       "evidence": "qwen2.5:0.5b prompt-only clean gate failed accuracy, fallback, and latency targets; docs/reports/experiments/phase3/slm_promotion_gate_static_gate.json"
     },
     {
@@ -91,7 +91,7 @@
     {
       "gate": "SLM runtime",
       "required_evidence": "local-only model path with timeout, fallback, constrained output, and a benchmark win over deterministic",
-      "status": "not_ready_promotion_validator_pending_github_run"
+      "status": "not_ready_promotion_validator_pass_github_run_27953106360"
     }
   ],
   "verification": [
@@ -110,6 +110,7 @@
     "python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --dogfood /tmp/test_det.json",
     "python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --self-test",
     "python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --report docs/reports/experiments/phase2/slm_qwen2_5_0_5b_index_taiwan_ambiguous.json --required-fixture heldout_generalization_clean --expect-fail",
+    "gh run watch 27953106360 --exit-status",
     "gh run watch 27951356566 --exit-status",
     "gh run watch 27952280884 --exit-status",
     "gh run watch 27950784933 --exit-status",

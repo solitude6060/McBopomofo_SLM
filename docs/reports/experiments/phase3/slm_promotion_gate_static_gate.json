@@ -1,10 +1,10 @@
 {
   "id": "phase3-slm-promotion-gate-static-gate",
   "name": "Phase 3 SLM Promotion Gate Static Gate",
-  "status": "partial",
-  "date": "2026-06-22T20:34:16+08:00",
+  "status": "verified",
+  "date": "2026-06-22T20:37:24+08:00",
   "branch": "slm-phase2-learnable",
-  "commit": "PENDING",
+  "commit": "382c033",
   "protocol_version": "1.0",
   "model": null,
   "results_dir": "docs/reports/experiments/phase3/",
@@ -18,11 +18,11 @@
     ".github/workflows/experiment-reports.yml"
   ],
   "ci_workflow": ".github/workflows/experiment-reports.yml",
-  "github_run_id": "PENDING",
-  "github_run_url": "PENDING",
+  "github_run_id": "27953106360",
+  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27953106360",
   "gate_script": "Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py",
   "scope": "Reusable validator for deciding whether an SLM benchmark report is promotable to runtime",
-  "gate_result": "PENDING_CI",
+  "gate_result": "PASS",
   "privacy": {
     "content_free": true,
     "raw_text_recorded": false,
@@ -48,7 +48,9 @@
     "python3 Tools/SLMRerankerExperiment/validate_slm_promotion_gate.py --self-test",
     "validate_slm_promotion_gate.py --report slm_qwen2_5_0_5b_index_taiwan_ambiguous.json --required-fixture heldout_generalization_clean --expect-fail",
     "python3 Tools/SLMRerankerExperiment/validate_experiment_reports.py",
-    "git diff --check"
+    "git diff --check",
+    "gh run watch 27953106360 --exit-status",
+    "GitHub experiment-reports.yml run 27953106360 passed Validate SLM promotion gate"
   ],
   "not_tested": [
     "a real SLM model passing the promotion gate",
