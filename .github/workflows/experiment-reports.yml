@@ -121,4 +121,5 @@ jobs:
       - name: Validate runtime readiness matrix
         run: |
           python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py --self-test
-          python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py
+          python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py --summary-output /tmp/runtime_gate_health.json
+          python3 -m json.tool /tmp/runtime_gate_health.json

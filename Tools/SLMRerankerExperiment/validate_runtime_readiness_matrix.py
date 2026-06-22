@@ -26,6 +26,18 @@ EXPECTED_OPEN_GATES = {
 }
 
 
+def classify_gate_status(status):
+    if not isinstance(status, str):
+        return "invalid"
+    if status == "missing" or status.startswith("not_ready"):
+        return "open"
+    if status.startswith("pass_"):
+        return "pass"
+    if status.startswith("ready_"):
+        return "ready"
+    return "other"
+
+
 def load_json(path):
     with open(path, "r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -69,6 +81,12 @@ def iter_verification_json_paths(matrix):
             continue
         for match in pattern.findall(command):
             yield f"verification[{idx}]", match
+
+
+def extract_json_paths(value):
+    if not isinstance(value, str):
+        return []
+    return sorted(set(re.findall(r"docs/reports/experiments/[^ ;]+\.json", value)))
 
 
 def validate_json_path(errors, label, raw_path):
@@ -136,6 +154,57 @@ def validate_matrix(matrix):
     return errors
 
 
+def build_gate_health(matrix):
+    gates = []
+    counts = {
+        "pass": 0,
+        "ready": 0,
+        "open": 0,
+        "other": 0,
+        "invalid": 0,
+    }
+    for gate in matrix.get("promotion_gates", []):
+        if not isinstance(gate, dict):
+            counts["invalid"] += 1
+            continue
+        status = gate.get("status")
+        classification = classify_gate_status(status)
+        counts[classification] += 1
+        gates.append({
+            "gate": gate.get("gate"),
+            "status": status,
+            "classification": classification,
+            "required_evidence": gate.get("required_evidence"),
+        })
+
+    current_state = []
+    for entry in matrix.get("current_state", []):
+        if not isinstance(entry, dict):
+            continue
+        current_state.append({
+            "area": entry.get("area"),
+            "state": entry.get("state"),
+            "evidence_paths": extract_json_paths(entry.get("evidence")),
+        })
+
+    open_gates = [
+        gate for gate in gates
+        if gate.get("classification") == "open"
+    ]
+    return {
+        "id": "phase3-runtime-gate-health",
+        "source_matrix_id": matrix.get("id"),
+        "source_matrix_date": matrix.get("date"),
+        "source_matrix_status": matrix.get("status"),
+        "content_free": True,
+        "gate_counts": counts,
+        "promotion_gates": gates,
+        "open_gates": open_gates,
+        "current_state": current_state,
+        "next_steps": matrix.get("next_steps", []),
+    }
+
+
 def run_self_test():
     with tempfile.TemporaryDirectory() as tmp:
         report = os.path.join(tmp, "report.json")
@@ -162,6 +231,22 @@ def run_self_test():
         if errors:
             print(f"SELF-TEST FAIL: valid matrix rejected: {errors}", file=sys.stderr)
             return 1
+        health = build_gate_health(good)
+        if health["gate_counts"]["open"] != 2:
+            print(
+                "SELF-TEST FAIL: expected two open gates in health summary",
+                file=sys.stderr,
+            )
+            return 1
+        if [gate["gate"] for gate in health["open_gates"]] != [
+            "manual IMK dogfood",
+            "SLM runtime",
+        ]:
+            print(
+                f"SELF-TEST FAIL: unexpected open gates {health['open_gates']}",
+                file=sys.stderr,
+            )
+            return 1
 
         bad_missing = json.loads(json.dumps(good))
         bad_missing["current_state"][0]["evidence"] = "docs/reports/nope.json"
@@ -187,6 +272,10 @@ def main():
     )
     parser.add_argument("--matrix", default=DEFAULT_MATRIX)
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument(
+        "--summary-output",
+        help="Optional path for a content-free runtime gate health JSON summary",
+    )
     args = parser.parse_args()
 
     if args.self_test:
@@ -201,6 +290,10 @@ def main():
         for error in errors:
             print(f"VALIDATION FAIL: {error}", file=sys.stderr)
         return 1
+    if args.summary_output:
+        with open(args.summary_output, "w", encoding="utf-8") as handle:
+            json.dump(build_gate_health(matrix), handle, ensure_ascii=False, indent=2)
+            handle.write("\n")
     print("VALIDATION PASSED: runtime readiness matrix", file=sys.stderr)
     return 0
 
