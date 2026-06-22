@@ -1292,8 +1292,8 @@ def run_self_test():
                 "path": "/tmp/heldout_generalization_clean.jsonl",
                 "fixture": "heldout_generalization",
                 "total": 63,
-                "clean": 57,
-                "blocked": 6,
+                "clean": 63,
+                "blocked": 0,
             },
         ],
     })

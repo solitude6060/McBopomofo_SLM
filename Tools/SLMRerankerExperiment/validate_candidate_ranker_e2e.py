@@ -37,12 +37,26 @@ DEFAULT_SCHEMA_MODELS = [
     os.path.join(PROJECT_ROOT, "Models", "candidate_ranker_heldout_clean.json"),
 ]
 
-CANONICAL_REQUESTS = [
-    ("taiwan_ambiguous", 100),
-    ("english_mixed", 50),
-    ("taiwan_specific", 84),
-]
-CANONICAL_TOTAL = sum(count for _, count in CANONICAL_REQUESTS)
+E2E_SUITES = {
+    "canonical": {
+        "fixtures": [
+            ("taiwan_ambiguous", 100),
+            ("english_mixed", 50),
+            ("taiwan_specific", 84),
+        ],
+        "candidate_granularity": None,
+        "deterministic_exact_required": True,
+        "require_non_baseline_evidence": True,
+    },
+    "heldout": {
+        "fixtures": [
+            ("heldout_generalization_clean", 63),
+        ],
+        "candidate_granularity": "character",
+        "deterministic_exact_required": True,
+        "require_non_baseline_evidence": False,
+    },
+}
 
 FEATURE_TABLES = [
     "reading_candidate",
@@ -193,14 +207,19 @@ def run_command(cmd, timeout=120):
     return result
 
 
-def validate_suite_report(report):
+def suite_total(suite):
+    return sum(count for _, count in suite["fixtures"])
+
+
+def validate_suite_report(report, suite):
     errors = []
+    total = suite_total(suite)
     fixtures = report.get("fixtures", {})
-    if fixtures.get("total") != CANONICAL_TOTAL:
+    if fixtures.get("total") != total:
         errors.append(
-            f"fixtures.total expected {CANONICAL_TOTAL}, got {fixtures.get('total')}"
+            f"fixtures.total expected {total}, got {fixtures.get('total')}"
         )
-    for name, expected_count in CANONICAL_REQUESTS:
+    for name, expected_count in suite["fixtures"]:
         if fixtures.get(name) != expected_count:
             errors.append(
                 f"fixtures.{name} expected {expected_count}, got {fixtures.get(name)}"
@@ -213,14 +232,17 @@ def validate_suite_report(report):
         errors.append("real_model_benchmarked must be false for in-tree ranker gate")
 
     deterministic = report.get("deterministic", {}).get("aggregate", {})
-    if deterministic.get("total_cases") != CANONICAL_TOTAL:
-        errors.append("deterministic aggregate did not cover canonical total")
-    if deterministic.get("exact_matches") != CANONICAL_TOTAL:
-        errors.append("deterministic aggregate must remain 234/234")
+    if deterministic.get("total_cases") != total:
+        errors.append("deterministic aggregate did not cover expected total")
+    if (
+        suite["deterministic_exact_required"]
+        and deterministic.get("exact_matches") != total
+    ):
+        errors.append(f"deterministic aggregate must remain {total}/{total}")
 
     slm = report.get("slm", {}).get("aggregate", {})
-    if slm.get("total_cases") != CANONICAL_TOTAL:
-        errors.append("candidate ranker aggregate did not cover canonical total")
+    if slm.get("total_cases") != total:
+        errors.append("candidate ranker aggregate did not cover expected total")
     if slm.get("fallbacks") != 0:
         errors.append(f"candidate ranker fallbacks expected 0, got {slm.get('fallbacks')}")
     latency = slm.get("latency_us", {})
@@ -234,10 +256,10 @@ def validate_suite_report(report):
     cv = slm.get("candidate_validation", {})
     if cv.get("exercised") is not True:
         errors.append("candidate validation must be exercised")
-    if cv.get("cases_with_candidates") != CANONICAL_TOTAL:
+    if cv.get("cases_with_candidates") != total:
         errors.append(
             "candidate validation cases_with_candidates expected "
-            f"{CANONICAL_TOTAL}, got {cv.get('cases_with_candidates')}"
+            f"{total}, got {cv.get('cases_with_candidates')}"
         )
     if cv.get("non_candidate_violations") != 0:
         errors.append(
@@ -247,23 +269,27 @@ def validate_suite_report(report):
     return errors
 
 
-def validate_analysis_report(report):
+def validate_analysis_report(report, suite):
     errors = []
+    total = suite_total(suite)
     aggregate = report.get("aggregate", {})
-    if aggregate.get("total_cases") != CANONICAL_TOTAL:
+    if aggregate.get("total_cases") != total:
         errors.append(
-            f"analysis total_cases expected {CANONICAL_TOTAL}, "
+            f"analysis total_cases expected {total}, "
             f"got {aggregate.get('total_cases')}"
         )
-    if aggregate.get("cases_with_candidates") != CANONICAL_TOTAL:
-        errors.append("analysis must see candidates for every canonical case")
-    if aggregate.get("ranker_in_candidates") != CANONICAL_TOTAL:
+    if aggregate.get("cases_with_candidates") != total:
+        errors.append("analysis must see candidates for every expected case")
+    if aggregate.get("ranker_in_candidates") != total:
         errors.append("analysis ranker_in_candidates must cover every case")
     if aggregate.get("fallbacks") != 0:
         errors.append(f"analysis fallbacks expected 0, got {aggregate.get('fallbacks')}")
-    if aggregate.get("changed_cases", 0) <= 0:
+    if suite["require_non_baseline_evidence"] and aggregate.get("changed_cases", 0) <= 0:
         errors.append("analysis changed_cases must be > 0 to cover override path")
-    if aggregate.get("non_baseline_evidence_cases", 0) <= 0:
+    if (
+        suite["require_non_baseline_evidence"]
+        and aggregate.get("non_baseline_evidence_cases", 0) <= 0
+    ):
         errors.append(
             "analysis non_baseline_evidence_cases must be > 0 to cover "
             "learned evidence path"
@@ -276,16 +302,16 @@ def validate_analysis_report(report):
     return errors
 
 
-def request_paths(work_dir):
+def request_paths(work_dir, suite):
     return [
         os.path.join(work_dir, f"slm_{name}.jsonl")
-        for name, _ in CANONICAL_REQUESTS
+        for name, _ in suite["fixtures"]
     ]
 
 
-def validate_request_files(paths):
+def validate_request_files(paths, suite):
     errors = []
-    for (name, expected_count), path in zip(CANONICAL_REQUESTS, paths):
+    for (name, expected_count), path in zip(suite["fixtures"], paths):
         if not os.path.isfile(path):
             errors.append(f"missing request export for {name}: {path}")
             continue
@@ -299,6 +325,8 @@ def validate_request_files(paths):
 
 
 def run_e2e(args):
+    suite_name = "heldout" if args.heldout else "canonical"
+    suite_profile = E2E_SUITES[suite_name]
     schema_errors = validate_schema_models(args.schema_model)
     schema_errors.extend(validate_schema_models([args.model], require_full_schema=True))
     if schema_errors:
@@ -324,7 +352,7 @@ def run_e2e(args):
         f"{sys.executable} {CANDIDATE_RANKER_SCORER} "
         f"--model {os.path.abspath(args.model)} --persistent"
     )
-    run_command([
+    benchmark_cmd = [
         sys.executable,
         RUN_BENCHMARK_SUITE,
         "--persistent-scorer-command",
@@ -336,11 +364,19 @@ def run_e2e(args):
         "--no-gate",
         "--timeout-ms",
         str(args.timeout_ms),
-    ], timeout=180)
+        "--fixtures",
+        *[name for name, _ in suite_profile["fixtures"]],
+    ]
+    if suite_profile["candidate_granularity"]:
+        benchmark_cmd.extend([
+            "--slm-candidate-granularity",
+            suite_profile["candidate_granularity"],
+        ])
+    run_command(benchmark_cmd, timeout=180)
 
     errors = []
-    req_paths = request_paths(work_dir)
-    errors.extend(validate_request_files(req_paths))
+    req_paths = request_paths(work_dir, suite_profile)
+    errors.extend(validate_request_files(req_paths, suite_profile))
     if errors:
         return errors
 
@@ -356,19 +392,20 @@ def run_e2e(args):
     ], timeout=120)
 
     try:
-        suite = load_json(suite_report)
+        generated_suite_report = load_json(suite_report)
         analysis = load_json(analysis_report)
     except (OSError, json.JSONDecodeError) as exc:
         return [f"cannot load generated report: {exc}"]
 
-    errors.extend(validate_suite_report(suite))
-    errors.extend(validate_analysis_report(analysis))
+    errors.extend(validate_suite_report(generated_suite_report, suite_profile))
+    errors.extend(validate_analysis_report(analysis, suite_profile))
     if errors:
         return errors
 
     print(
         "VALIDATION PASSED: candidate ranker E2E "
-        f"requests={CANONICAL_TOTAL} model={project_relpath(args.model)} "
+        f"suite={suite_name} requests={suite_total(suite_profile)} "
+        f"model={project_relpath(args.model)} "
         f"suite_report={suite_report} analysis_report={analysis_report}",
         file=sys.stderr,
     )
@@ -400,7 +437,8 @@ def run_self_test():
         print("SELF-TEST FAIL: missing transition table accepted", file=sys.stderr)
         return 1
 
-    suite = {
+    canonical = E2E_SUITES["canonical"]
+    suite_report = {
         "fixtures": {
             "taiwan_ambiguous": 100,
             "english_mixed": 50,
@@ -425,16 +463,16 @@ def run_self_test():
             }
         },
     }
-    suite_errors = validate_suite_report(suite)
+    suite_errors = validate_suite_report(suite_report, canonical)
     if suite_errors:
         print(f"SELF-TEST FAIL: valid suite rejected: {suite_errors}", file=sys.stderr)
         return 1
 
-    bad_suite = json.loads(json.dumps(suite))
+    bad_suite = json.loads(json.dumps(suite_report))
     bad_suite["slm"]["aggregate"]["candidate_validation"][
         "non_candidate_violations"
     ] = 1
-    if not validate_suite_report(bad_suite):
+    if not validate_suite_report(bad_suite, canonical):
         print("SELF-TEST FAIL: bad suite accepted", file=sys.stderr)
         return 1
 
@@ -449,7 +487,7 @@ def run_self_test():
             "feature_coverage_cases": {"candidate": 1, "transition": 1},
         }
     }
-    analysis_errors = validate_analysis_report(analysis)
+    analysis_errors = validate_analysis_report(analysis, canonical)
     if analysis_errors:
         print(
             f"SELF-TEST FAIL: valid analysis rejected: {analysis_errors}",
@@ -458,8 +496,61 @@ def run_self_test():
         return 1
     bad_analysis = json.loads(json.dumps(analysis))
     bad_analysis["aggregate"]["changed_cases"] = 0
-    if not validate_analysis_report(bad_analysis):
+    if not validate_analysis_report(bad_analysis, canonical):
         print("SELF-TEST FAIL: bad analysis accepted", file=sys.stderr)
+        return 1
+
+    heldout = E2E_SUITES["heldout"]
+    heldout_report = {
+        "fixtures": {
+            "heldout_generalization_clean": 63,
+            "total": 63,
+        },
+        "scorer": {"mode": "persistent"},
+        "real_model_benchmarked": False,
+        "deterministic": {
+            "aggregate": {"total_cases": 63, "exact_matches": 63}
+        },
+        "slm": {
+            "aggregate": {
+                "total_cases": 63,
+                "fallbacks": 0,
+                "latency_us": {"p95": 100},
+                "candidate_validation": {
+                    "exercised": True,
+                    "cases_with_candidates": 63,
+                    "non_candidate_violations": 0,
+                },
+            }
+        },
+    }
+    heldout_suite_errors = validate_suite_report(heldout_report, heldout)
+    if heldout_suite_errors:
+        print(
+            "SELF-TEST FAIL: valid heldout suite rejected: "
+            f"{heldout_suite_errors}",
+            file=sys.stderr,
+        )
+        return 1
+
+    heldout_analysis = {
+        "aggregate": {
+            "total_cases": 63,
+            "cases_with_candidates": 63,
+            "ranker_in_candidates": 63,
+            "fallbacks": 0,
+            "changed_cases": 0,
+            "non_baseline_evidence_cases": 0,
+            "feature_coverage_cases": {"candidate": 1, "transition": 1},
+        }
+    }
+    heldout_analysis_errors = validate_analysis_report(heldout_analysis, heldout)
+    if heldout_analysis_errors:
+        print(
+            "SELF-TEST FAIL: valid heldout analysis rejected: "
+            f"{heldout_analysis_errors}",
+            file=sys.stderr,
+        )
         return 1
 
     print("SELF-TEST PASSED: candidate ranker E2E validator", file=sys.stderr)
@@ -485,6 +576,12 @@ def build_arg_parser():
     parser.add_argument("--suite-report", help="Generated suite report path")
     parser.add_argument("--analysis-report", help="Generated analysis report path")
     parser.add_argument("--timeout-ms", type=int, default=500)
+    parser.add_argument(
+        "--heldout",
+        action="store_true",
+        help="Run the E2E contract on heldout_generalization_clean instead of "
+             "the canonical 234-case suite",
+    )
     parser.add_argument("--self-test", action="store_true")
     return parser
 

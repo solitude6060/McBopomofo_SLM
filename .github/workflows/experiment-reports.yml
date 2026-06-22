@@ -116,6 +116,7 @@ jobs:
         run: |
           python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --self-test
           python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --work-dir /tmp/candidate_ranker_e2e --suite-report /tmp/candidate_ranker_e2e_report.json --analysis-report /tmp/candidate_ranker_e2e_analysis.json
+          python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e --suite-report /tmp/candidate_ranker_heldout_e2e_report.json --analysis-report /tmp/candidate_ranker_heldout_e2e_analysis.json
       - name: Validate runtime readiness matrix
         run: |
           python3 Tools/SLMRerankerExperiment/validate_runtime_readiness_matrix.py --self-test
