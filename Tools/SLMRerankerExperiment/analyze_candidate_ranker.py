@@ -258,6 +258,48 @@ def finalize_bucket(bucket):
     return result
 
 
+def compute_feature_sparsity(model):
+    """Compute per-feature-table count distribution to diagnose data sparsity.
+
+    Returns a dict with:
+      - per_table: {table_name: {total_keys, count_1, count_gt_1, pct_count_1}}
+      - aggregate: {total_keys, count_1, count_gt_1, pct_count_1}
+    """
+    counts = model.get("counts", {})
+    per_table = {}
+    total_keys = 0
+    total_count_1 = 0
+    for table_name, table in sorted(counts.items()):
+        n_keys = len(table)
+        n_count_1 = sum(1 for v in table.values() if v == 1)
+        per_table[table_name] = {
+            "total_keys": n_keys,
+            "count_1": n_count_1,
+            "count_gt_1": n_keys - n_count_1,
+            "pct_count_1": round(n_count_1 / n_keys * 100, 2) if n_keys else 0.0,
+        }
+        total_keys += n_keys
+        total_count_1 += n_count_1
+    return {
+        "per_table": per_table,
+        "aggregate": {
+            "total_keys": total_keys,
+            "count_1": total_count_1,
+            "count_gt_1": total_keys - total_count_1,
+            "pct_count_1": round(total_count_1 / total_keys * 100, 2) if total_keys else 0.0,
+        },
+        "note": (
+            "When pct_count_1 approaches 100%, nearly all observed features "
+            "appear exactly once. This means the model must rely on feature-"
+            "type combination weights rather than frequency: overrides require "
+            "a candidate to hit multiple distinct feature types to accumulate "
+            "enough evidence. Heldout generalization typically remains "
+            "flat or negative until repeated (reading, context, token) "
+            "combinations appear in the training data."
+        ),
+    }
+
+
 def build_report(model, request_paths):
     aggregate = empty_bucket()
     by_fixture = {}
@@ -271,6 +313,7 @@ def build_report(model, request_paths):
         "report": "candidate-ranker-analysis",
         "model_type": model.get("model_type"),
         "model_training": model.get("training", {}),
+        "feature_sparsity": compute_feature_sparsity(model),
         "aggregate": finalize_bucket(aggregate),
         "by_fixture": {
             fixture: finalize_bucket(bucket)
@@ -326,6 +369,16 @@ def run_self_test():
         errors.append("expected one ranker exact match")
     if final["feature_coverage_cases"]["baseline_window_candidate"] != 1:
         errors.append("expected baseline window coverage")
+    sparsity = compute_feature_sparsity(model)
+    if sparsity["aggregate"] != {
+        "total_keys": 6,
+        "count_1": 6,
+        "count_gt_1": 0,
+        "pct_count_1": 100.0,
+    }:
+        errors.append("expected feature sparsity aggregate")
+    if "baseline_window_candidate" not in sparsity["per_table"]:
+        errors.append("expected per-table sparsity details")
     if errors:
         for error in errors:
             print(f"SELF-TEST FAIL: {error}", file=sys.stderr)

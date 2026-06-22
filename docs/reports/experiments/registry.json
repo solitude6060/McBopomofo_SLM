@@ -866,6 +866,42 @@
       ]
     },
     {
+      "id": "candidate-ranker-combined-sparsity",
+      "name": "Candidate Ranker Combined Sparsity Benchmark",
+      "status": "benchmarked",
+      "date": "2026-06-22T23:50:57+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit": "eddc459",
+      "protocol_version": "1.2",
+      "model": "/tmp/candidate_ranker_combined.json",
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/candidate_ranker_combined_sparsity_benchmark.json",
+      "result_files": [
+        "docs/reports/experiments/phase2/candidate_ranker_combined_sparsity_benchmark.json"
+      ],
+      "description": "Content-free combined candidate-ranker-v1 benchmark with feature sparsity diagnostics. The model improves the canonical 234-case contract suite from 181/234 to 188/234, but regresses heldout_generalization_clean from 44/63 to 43/63. The report records that 82.94% of feature keys appear exactly once, confirming sparse count overlap remains the main learned-ranker bottleneck.",
+      "canonical_exact": "188/234",
+      "heldout_clean_exact": "43/63",
+      "heldout_clean_baseline_exact": "44/63",
+      "feature_count_1_pct": 82.94,
+      "gate_result": "FAIL",
+      "verification": [
+        "analyze_candidate_ranker.py --self-test",
+        "train_candidate_ranker.py combined canonical plus ranker_training_seed request export",
+        "analyze_candidate_ranker.py combined training and heldout request exports",
+        "validate_candidate_ranker_e2e.py combined model canonical contract",
+        "validate_candidate_ranker_e2e.py combined model heldout contract",
+        "validate_candidate_ranker_e2e.py --require-no-regression rejects combined heldout regression with --expect-fail",
+        "validate_candidate_ranker_e2e.py --require-no-regression passes default heldout no-change model",
+        "json.tool candidate_ranker_combined_sparsity_benchmark.json"
+      ],
+      "next_steps": [
+        "Use --require-no-regression or --require-improvement for future candidate-ranker promotion checks",
+        "Increase repeated feature observations before retraining candidate-ranker-v1",
+        "Keep deterministic reranker as the promotion baseline"
+      ]
+    },
+    {
       "id": "slm-qwen2-5-0-5b-clean-gate",
       "name": "qwen2.5:0.5b Clean Gate Benchmark",
       "status": "benchmarked",

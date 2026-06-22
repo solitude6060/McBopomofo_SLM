@@ -1,0 +1,141 @@
+{
+  "report": "candidate_ranker_combined_sparsity_benchmark",
+  "date": "2026-06-22T23:50:57+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "eddc4594e3c768cd5d206641af7f65e4aa879d78",
+  "protocol_version": "1.2",
+  "content_policy": {
+    "raw_case_strings_in_report": false,
+    "raw_benchmark_outputs_location": "/tmp/"
+  },
+  "model": {
+    "name": "candidate_ranker_combined",
+    "model_type": "candidate-ranker-v1",
+    "model_path": "/tmp/candidate_ranker_combined.json",
+    "real_model_benchmarked": false,
+    "selection": {
+      "prefer_baseline_on_weak_override": true,
+      "min_non_baseline_feature_hits": 2,
+      "min_reading_candidate_count_for_override": 2,
+      "override_margin": 0.1
+    }
+  },
+  "training": {
+    "source_request_files": [
+      "/tmp/slm_taiwan_ambiguous.jsonl",
+      "/tmp/slm_english_mixed.jsonl",
+      "/tmp/slm_taiwan_specific.jsonl",
+      "/tmp/slm_ranker_training_seed.jsonl"
+    ],
+    "input_cases": 258,
+    "usable_cases": 251,
+    "excluded_cases": 0,
+    "skipped_expected_not_candidate": 7,
+    "contamination_note": "heldout_generalization_clean was not used for training"
+  },
+  "feature_sparsity": {
+    "aggregate": {
+      "total_keys": 7677,
+      "count_1": 6367,
+      "count_gt_1": 1310,
+      "pct_count_1": 82.94
+    },
+    "per_table": {
+      "baseline_next_candidate": {
+        "total_keys": 1499,
+        "count_1": 1310,
+        "count_gt_1": 189,
+        "pct_count_1": 87.39
+      },
+      "baseline_prev_candidate": {
+        "total_keys": 1453,
+        "count_1": 1281,
+        "count_gt_1": 172,
+        "pct_count_1": 88.16
+      },
+      "baseline_window_candidate": {
+        "total_keys": 1669,
+        "count_1": 1573,
+        "count_gt_1": 96,
+        "pct_count_1": 94.25
+      },
+      "candidate": {
+        "total_keys": 636,
+        "count_1": 333,
+        "count_gt_1": 303,
+        "pct_count_1": 52.36
+      },
+      "reading_candidate": {
+        "total_keys": 870,
+        "count_1": 576,
+        "count_gt_1": 294,
+        "pct_count_1": 66.21
+      },
+      "transition": {
+        "total_keys": 1550,
+        "count_1": 1294,
+        "count_gt_1": 256,
+        "pct_count_1": 83.48
+      }
+    }
+  },
+  "results": {
+    "canonical_contract": {
+      "fixture": "canonical_234",
+      "total_cases": 234,
+      "baseline_exact_matches": 181,
+      "baseline_exact_accuracy": 77.3504,
+      "ranker_exact_matches": 188,
+      "ranker_exact_accuracy": 80.3419,
+      "delta_percentage_points": 2.9915,
+      "changed_cases": 7,
+      "improved_cases": 7,
+      "regressed_cases": 0,
+      "fallbacks": 0,
+      "non_baseline_evidence_cases": 7
+    },
+    "heldout_clean_gate": {
+      "fixture": "heldout_generalization_clean",
+      "total_cases": 63,
+      "baseline_exact_matches": 44,
+      "baseline_exact_accuracy": 69.8413,
+      "ranker_exact_matches": 43,
+      "ranker_exact_accuracy": 68.254,
+      "delta_percentage_points": -1.5873,
+      "changed_cases": 3,
+      "improved_cases": 1,
+      "regressed_cases": 2,
+      "fallbacks": 0,
+      "non_baseline_evidence_cases": 3
+    }
+  },
+  "gate_result": "FAIL",
+  "gate_reasons": [
+    "candidate ranker improves the canonical contract suite but regresses heldout_generalization_clean by one exact match",
+    "heldout clean has 2 regressed cases and only 1 improved case",
+    "82.94% of feature keys appear exactly once, indicating sparse count overlap remains the main learned-ranker bottleneck",
+    "deterministic reranker remains 63/63 on the heldout clean gate"
+  ],
+  "decision": "Do not promote the combined candidate-ranker-v1 model. Keep the feature_sparsity diagnostic as the benchmark signal for whether future training data has enough repeated feature observations to justify another learned-ranker gate attempt.",
+  "verification": [
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --slm-request-output /tmp/slm_taiwan_ambiguous.jsonl --slm-candidate-granularity character Tests/fixtures/contextual_bopomofo/taiwan_ambiguous.jsonl",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --slm-request-output /tmp/slm_english_mixed.jsonl --slm-candidate-granularity character Tests/fixtures/contextual_bopomofo/english_mixed.jsonl",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --slm-request-output /tmp/slm_taiwan_specific.jsonl --slm-candidate-granularity character Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --slm-request-output /tmp/slm_ranker_training_seed.jsonl --slm-candidate-granularity character Tests/fixtures/contextual_bopomofo/ranker_training_seed.jsonl",
+    "Tools/ContextualEvaluation/build/evaluator Source/Data/data.txt --scorer deterministic --slm-request-output /tmp/slm_heldout_generalization.jsonl --slm-candidate-granularity character Tests/fixtures/contextual_bopomofo/heldout_generalization.jsonl",
+    "python3 Tools/SLMRerankerExperiment/train_candidate_ranker.py --input /tmp/slm_taiwan_ambiguous.jsonl /tmp/slm_english_mixed.jsonl /tmp/slm_taiwan_specific.jsonl /tmp/slm_ranker_training_seed.jsonl --output /tmp/candidate_ranker_combined.json",
+    "python3 Tools/SLMRerankerExperiment/analyze_candidate_ranker.py --model /tmp/candidate_ranker_combined.json --requests /tmp/slm_taiwan_ambiguous.jsonl /tmp/slm_english_mixed.jsonl /tmp/slm_taiwan_specific.jsonl /tmp/slm_ranker_training_seed.jsonl --output /tmp/analysis_combined_v2.json",
+    "python3 Tools/SLMRerankerExperiment/analyze_candidate_ranker.py --model /tmp/candidate_ranker_combined.json --requests /tmp/slm_heldout_generalization.jsonl --output /tmp/analysis_heldout.json",
+    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --model /tmp/candidate_ranker_combined.json --work-dir /tmp/e2e_canonical",
+    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --model /tmp/candidate_ranker_combined.json --heldout --work-dir /tmp/e2e_heldout",
+    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --model /tmp/candidate_ranker_combined.json --heldout --work-dir /tmp/e2e_combined_no_regression --suite-report /tmp/e2e_combined_no_regression_report.json --analysis-report /tmp/e2e_combined_no_regression_analysis.json --require-no-regression --expect-fail",
+    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --heldout --work-dir /tmp/candidate_ranker_heldout_e2e_default --suite-report /tmp/default_heldout_report.json --analysis-report /tmp/default_heldout_analysis.json --require-no-regression",
+    "python3 Tools/SLMRerankerExperiment/validate_candidate_ranker_e2e.py --self-test",
+    "python3 Tools/SLMRerankerExperiment/analyze_candidate_ranker.py --self-test"
+  ],
+  "next_steps": [
+    "Use validate_candidate_ranker_e2e.py --require-no-regression or --require-improvement for future candidate-ranker promotion checks",
+    "Generate more repeated training observations before retraining candidate-ranker-v1",
+    "Keep SLM runtime not_ready until a real local model or learned scorer passes the heldout clean promotion criteria"
+  ]
+}

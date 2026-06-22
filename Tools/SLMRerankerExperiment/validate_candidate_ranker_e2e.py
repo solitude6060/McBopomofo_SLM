@@ -269,7 +269,12 @@ def validate_suite_report(report, suite):
     return errors
 
 
-def validate_analysis_report(report, suite):
+def validate_analysis_report(
+    report,
+    suite,
+    require_no_regression=False,
+    require_improvement=False,
+):
     errors = []
     total = suite_total(suite)
     aggregate = report.get("aggregate", {})
@@ -299,6 +304,41 @@ def validate_analysis_report(report, suite):
         errors.append("analysis feature_coverage_cases.candidate must be > 0")
     if feature_coverage.get("transition", 0) <= 0:
         errors.append("analysis feature_coverage_cases.transition must be > 0")
+    baseline_matches = aggregate.get("baseline_exact_matches")
+    ranker_matches = aggregate.get("ranker_exact_matches")
+    if require_no_regression:
+        if not isinstance(baseline_matches, int) or not isinstance(
+            ranker_matches, int
+        ):
+            errors.append(
+                "analysis baseline_exact_matches and ranker_exact_matches "
+                "must be integers for no-regression validation"
+            )
+        elif ranker_matches < baseline_matches:
+            errors.append(
+                "analysis ranker_exact_matches must be >= "
+                f"baseline_exact_matches, got {ranker_matches} < "
+                f"{baseline_matches}"
+            )
+        if aggregate.get("regressed_cases", 0) > 0:
+            errors.append(
+                "analysis regressed_cases must be 0 for no-regression "
+                f"validation, got {aggregate.get('regressed_cases')}"
+            )
+    if require_improvement:
+        if not isinstance(baseline_matches, int) or not isinstance(
+            ranker_matches, int
+        ):
+            errors.append(
+                "analysis baseline_exact_matches and ranker_exact_matches "
+                "must be integers for improvement validation"
+            )
+        elif ranker_matches <= baseline_matches:
+            errors.append(
+                "analysis ranker_exact_matches must be > "
+                f"baseline_exact_matches, got {ranker_matches} <= "
+                f"{baseline_matches}"
+            )
     return errors
 
 
@@ -398,7 +438,23 @@ def run_e2e(args):
         return [f"cannot load generated report: {exc}"]
 
     errors.extend(validate_suite_report(generated_suite_report, suite_profile))
-    errors.extend(validate_analysis_report(analysis, suite_profile))
+    errors.extend(
+        validate_analysis_report(
+            analysis,
+            suite_profile,
+            require_no_regression=args.require_no_regression,
+            require_improvement=args.require_improvement,
+        )
+    )
+    if args.expect_fail:
+        if errors:
+            print(
+                "VALIDATION EXPECTED FAIL: candidate ranker E2E "
+                f"suite={suite_name} errors={len(errors)}",
+                file=sys.stderr,
+            )
+            return []
+        return ["expected candidate ranker E2E validation to fail"]
     if errors:
         return errors
 
@@ -479,6 +535,8 @@ def run_self_test():
     analysis = {
         "aggregate": {
             "total_cases": 234,
+            "baseline_exact_matches": 0,
+            "ranker_exact_matches": 1,
             "cases_with_candidates": 234,
             "ranker_in_candidates": 234,
             "fallbacks": 0,
@@ -498,6 +556,41 @@ def run_self_test():
     bad_analysis["aggregate"]["changed_cases"] = 0
     if not validate_analysis_report(bad_analysis, canonical):
         print("SELF-TEST FAIL: bad analysis accepted", file=sys.stderr)
+        return 1
+    no_regression_errors = validate_analysis_report(
+        analysis,
+        canonical,
+        require_no_regression=True,
+    )
+    if no_regression_errors:
+        print(
+            "SELF-TEST FAIL: no-regression analysis rejected: "
+            f"{no_regression_errors}",
+            file=sys.stderr,
+        )
+        return 1
+    improvement_errors = validate_analysis_report(
+        analysis,
+        canonical,
+        require_improvement=True,
+    )
+    if improvement_errors:
+        print(
+            "SELF-TEST FAIL: improving analysis rejected: "
+            f"{improvement_errors}",
+            file=sys.stderr,
+        )
+        return 1
+    regressing_analysis = json.loads(json.dumps(analysis))
+    regressing_analysis["aggregate"]["baseline_exact_matches"] = 2
+    regressing_analysis["aggregate"]["ranker_exact_matches"] = 1
+    regressing_analysis["aggregate"]["regressed_cases"] = 1
+    if not validate_analysis_report(
+        regressing_analysis,
+        canonical,
+        require_no_regression=True,
+    ):
+        print("SELF-TEST FAIL: regressing analysis accepted", file=sys.stderr)
         return 1
 
     heldout = E2E_SUITES["heldout"]
@@ -581,6 +674,23 @@ def build_arg_parser():
         action="store_true",
         help="Run the E2E contract on heldout_generalization_clean instead of "
              "the canonical 234-case suite",
+    )
+    parser.add_argument(
+        "--require-no-regression",
+        action="store_true",
+        help="Fail if the candidate ranker has fewer exact matches than "
+             "baseline or records any regressed cases.",
+    )
+    parser.add_argument(
+        "--require-improvement",
+        action="store_true",
+        help="Fail unless the candidate ranker has more exact matches than "
+             "baseline.",
+    )
+    parser.add_argument(
+        "--expect-fail",
+        action="store_true",
+        help="Invert validation result. Intended for negative gate fixtures.",
     )
     parser.add_argument("--self-test", action="store_true")
     return parser
