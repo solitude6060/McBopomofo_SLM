@@ -1,9 +1,10 @@
 {
   "id": "phase3-dogfood-evidence-validator-static-gate",
   "name": "Phase 3 Dogfood Evidence Validator Static Gate",
-  "status": "partial",
-  "date": "2026-06-22T20:03:50+08:00",
+  "status": "verified",
+  "date": "2026-06-22T20:07:05+08:00",
   "branch": "slm-phase2-learnable",
+  "commit": "c0f2224",
   "protocol_version": "1.0",
   "model": null,
   "results_dir": "docs/reports/experiments/phase3/",
@@ -14,9 +15,11 @@
     "docs/reports/experiments/phase3/dogfood_evidence_template.json"
   ],
   "ci_workflow": ".github/workflows/experiment-reports.yml",
+  "github_run_id": "27951356566",
+  "github_run_url": "https://github.com/solitude6060/McBopomofo_SLM/actions/runs/27951356566",
   "gate_script": "Tools/ContextualEvaluation/validate_dogfood_evidence.py",
   "scope": "Content-free schema, template, and validator for manual macOS IMK dogfood evidence",
-  "gate_result": "PASS_LOCAL_PENDING_CI",
+  "gate_result": "PASS",
   "privacy": {
     "content_free": true,
     "raw_text_recorded": false,
@@ -34,15 +37,15 @@
     "python3 -m json.tool docs/reports/experiments/phase3/dogfood_evidence_template.json",
     "negative validation: /tmp/bad_dogfood_raw.json rejected raw content field $.readings",
     "negative validation: /tmp/bad_dogfood_privacy.json rejected privacy.content_free=false",
-    "negative validation: /tmp/bad_dogfood_incomplete.json rejected missing required fields"
+    "negative validation: /tmp/bad_dogfood_incomplete.json rejected missing required fields",
+    "gh run watch 27951356566 --exit-status",
+    "GitHub experiment-reports.yml run 27951356566 passed Validate dogfood evidence template"
   ],
   "not_tested": [
-    "GitHub-hosted experiment-reports.yml execution for the new dogfood evidence validator step",
     "manual IMK dogfood",
     "filled dogfood session evidence from a real operator"
   ],
   "next_steps": [
-    "Monitor the next experiment-reports.yml run after pushing this validator",
     "Use the template for actual Off and Deterministic dogfood sessions",
     "Commit only validator-approved content-free dogfood evidence"
   ]

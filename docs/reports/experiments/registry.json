@@ -1036,9 +1036,10 @@
     {
       "id": "phase3-dogfood-evidence-validator-static-gate",
       "name": "Phase 3 Dogfood Evidence Validator Static Gate",
-      "status": "partial",
-      "date": "2026-06-22T20:03:50+08:00",
+      "status": "verified",
+      "date": "2026-06-22T20:07:05+08:00",
       "branch": "slm-phase2-learnable",
+      "commit": "c0f2224",
       "protocol_version": "1.0",
       "model": null,
       "results_dir": "docs/reports/experiments/phase3/",
@@ -1051,7 +1052,7 @@
       "description": "Adds a content-free dogfood evidence schema, template, and validator for future manual macOS IMK dogfood sessions. The validator enforces required session/checklist/metric fields, privacy flags, valid enumerations, non-negative aggregate counters, and rejects raw content field names such as readings, candidates, committed_text, expected, input, and output.",
       "runtime_default": "Off",
       "typing_behavior_changed_by_default": false,
-      "gate_result": "PASS_LOCAL_PENDING_CI",
+      "gate_result": "PASS",
       "privacy": {
         "content_free": true,
         "raw_text_recorded": false,
@@ -1069,15 +1070,14 @@
         "json.tool dogfood_evidence_template.json",
         "negative validation rejects raw content field $.readings",
         "negative validation rejects privacy.content_free=false",
-        "negative validation rejects missing required fields"
+        "negative validation rejects missing required fields",
+        "gh run watch 27951356566 --exit-status"
       ],
       "not_tested": [
-        "GitHub-hosted experiment-reports.yml execution for the new dogfood evidence validator step",
         "manual IMK dogfood",
         "filled dogfood session evidence from a real operator"
       ],
       "next_steps": [
-        "Monitor experiment-reports.yml after pushing this validator",
         "Use the template for actual Off and Deterministic dogfood sessions",
         "Commit only validator-approved content-free dogfood evidence"
       ]
@@ -1284,7 +1284,7 @@
             "id": "phase3-runtime-readiness-matrix",
             "name": "Phase 3 Runtime Readiness Matrix",
             "status": "partial",
-            "date": "2026-06-22T20:03:50+08:00",
+            "date": "2026-06-22T20:07:05+08:00",
       "branch": "slm-phase2-learnable",
       "protocol_version": "1.0",
       "model": null,
@@ -1297,6 +1297,7 @@
       "gate_result": "PARTIAL",
       "verification": [
         "gh run watch 27949662127 --exit-status",
+        "gh run watch 27951356566 --exit-status",
         "gh run watch 27950784933 --exit-status",
         "json.tool runtime readiness matrix",
         "json.tool dogfood evidence validator report",

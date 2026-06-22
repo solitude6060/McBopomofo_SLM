@@ -2,7 +2,7 @@
   "id": "phase3-runtime-readiness-matrix",
   "name": "Phase 3 Runtime Readiness Matrix",
   "status": "partial",
-  "date": "2026-06-22T20:03:50+08:00",
+  "date": "2026-06-22T20:07:05+08:00",
   "branch": "slm-phase2-learnable",
   "protocol_version": "1.0",
   "privacy": {
@@ -81,7 +81,7 @@
     {
       "gate": "runtime privacy",
       "required_evidence": "dogfood artifacts contain only aggregate counters and categories",
-      "status": "ready_for_dogfood_with_validator_pending_github_run"
+      "status": "ready_for_dogfood_with_validator_pass_github_run_27951356566"
     },
     {
       "gate": "deterministic Linux regression",
@@ -105,6 +105,7 @@
     "python3 Tools/ContextualEvaluation/validate_deterministic_gate.py --heldout",
     "python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --self-test",
     "python3 Tools/ContextualEvaluation/validate_dogfood_evidence.py --dogfood docs/reports/experiments/phase3/dogfood_evidence_template.json",
+    "gh run watch 27951356566 --exit-status",
     "gh run watch 27950784933 --exit-status",
     "gh run watch 27949662127 --exit-status",
     "git diff --check"
