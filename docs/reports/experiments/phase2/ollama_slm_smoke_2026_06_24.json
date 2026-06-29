@@ -1,0 +1,191 @@
+{
+  "id": "phase2-ollama-slm-smoke-2026-06-24",
+  "name": "Phase 2 Ollama SLM smoke benchmark",
+  "status": "failed_promotion_gate",
+  "date": "2026-06-24T03:32:54+08:00",
+  "branch": "slm-phase2-learnable",
+  "commit": "1ede8a3d4316f56bc6fe470abb73336cf6ddbdf8",
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false
+  },
+  "scorer": {
+    "provider": "ollama-http",
+    "transport": "persistent",
+    "prompt_style": "indices",
+    "indices_repair": "baseline-fill",
+    "candidate_limit": 4,
+    "candidate_granularity": "character",
+    "ollama_format_json": true,
+    "ollama_think": false,
+    "implementation_note": "Ollama HTTP payload now sends think=false by default. Qwen3.5 thinking models otherwise put generated tokens in the thinking field and return an empty response field, causing empty_output or timeout failures."
+  },
+  "baseline_reference": {
+    "fixture": "heldout_generalization_clean",
+    "total_cases": 63,
+    "baseline_exact_matches": 44,
+    "baseline_exact_accuracy_pct": 69.8413,
+    "deterministic_exact_matches": 63,
+    "deterministic_exact_accuracy_pct": 100.0,
+    "promotion_requirement": "Any local SLM path must beat deterministic accuracy, preserve candidate validity, avoid excessive fallback, and meet interactive latency before runtime wiring."
+  },
+  "model_results": [
+    {
+      "model": "qwen2.5:0.5b",
+      "manifest": "Models/qwen2_5_0_5b_manifest.json",
+      "scope": "63-case heldout clean limit4",
+      "total_cases": 63,
+      "exact_matches": 15,
+      "exact_accuracy_pct": 23.8095,
+      "fallbacks": 40,
+      "fallback_breakdown": {
+        "index_out_of_range": 40
+      },
+      "latency_us": {
+        "p50": 411887,
+        "p95": 992413,
+        "p99": 1678667
+      },
+      "candidate_validation": {
+        "exercised": true,
+        "cases_with_candidates": 23,
+        "non_candidate_violations": 0
+      },
+      "verdict": "fail_accuracy_and_fallback"
+    },
+    {
+      "model": "qwen3.5:0.8b",
+      "manifest": "Models/qwen3_5_0_8b_manifest.json",
+      "scope": "63-case heldout clean limit4",
+      "total_cases": 63,
+      "exact_matches": 10,
+      "exact_accuracy_pct": 15.873,
+      "fallbacks": 46,
+      "fallback_breakdown": {
+        "index_out_of_range": 46
+      },
+      "latency_us": {
+        "p50": 1615294,
+        "p95": 2430753,
+        "p99": 12935473
+      },
+      "candidate_validation": {
+        "exercised": true,
+        "cases_with_candidates": 17,
+        "non_candidate_violations": 0
+      },
+      "verdict": "fail_accuracy_fallback_and_latency"
+    },
+    {
+      "model": "qwen3.5:2b",
+      "manifest": "Models/qwen3_5_2b_manifest.json",
+      "scope": "10-case heldout clean limit4 sample",
+      "total_cases": 10,
+      "exact_matches": 3,
+      "exact_accuracy_pct": 30.0,
+      "fallbacks": 4,
+      "fallback_breakdown": {
+        "index_out_of_range": 4
+      },
+      "latency_us": {
+        "p50": 2485210,
+        "p95": 12028224,
+        "p99": 12028224
+      },
+      "candidate_validation": {
+        "exercised": true,
+        "cases_with_candidates": 6,
+        "non_candidate_violations": 0
+      },
+      "verdict": "fail_sample_accuracy_fallback_and_latency"
+    },
+    {
+      "model": "qwen3.5:9b",
+      "manifest": "Models/qwen3_5_9b_manifest.json",
+      "scope": "single-case heldout clean limit4 smoke",
+      "total_cases": 1,
+      "exact_matches": 0,
+      "exact_accuracy_pct": 0.0,
+      "fallbacks": 0,
+      "latency_us": {
+        "p50": 20126451,
+        "p95": 20126451,
+        "p99": 20126451
+      },
+      "candidate_validation": {
+        "exercised": true,
+        "cases_with_candidates": 1,
+        "non_candidate_violations": 0
+      },
+      "verdict": "fail_latency_and_smoke_accuracy"
+    },
+    {
+      "model": "gemma4:e2b",
+      "manifest": "Models/gemma4_e2b_manifest.json",
+      "scope": "single-case heldout clean limit4 smoke",
+      "total_cases": 1,
+      "exact_matches": 0,
+      "exact_accuracy_pct": 0.0,
+      "fallbacks": 0,
+      "latency_us": {
+        "p50": 13678413,
+        "p95": 13678413,
+        "p99": 13678413
+      },
+      "candidate_validation": {
+        "exercised": true,
+        "cases_with_candidates": 1,
+        "non_candidate_violations": 0
+      },
+      "verdict": "fail_latency_and_smoke_accuracy"
+    },
+    {
+      "model": "gemma4:e4b",
+      "manifest": "Models/gemma4_e4b_manifest.json",
+      "scope": "single-case heldout clean limit4 smoke",
+      "total_cases": 1,
+      "exact_matches": 0,
+      "exact_accuracy_pct": 0.0,
+      "fallbacks": 0,
+      "latency_us": {
+        "p50": 19200810,
+        "p95": 19200810,
+        "p99": 19200810
+      },
+      "candidate_validation": {
+        "exercised": true,
+        "cases_with_candidates": 1,
+        "non_candidate_violations": 0
+      },
+      "verdict": "fail_latency_and_smoke_accuracy"
+    }
+  ],
+  "root_cause": [
+    "Qwen3.5 Ollama thinking mode must be disabled for this protocol; otherwise the response field can be empty while generated tokens are reported as thinking.",
+    "Prompt-only index generation remains weakly constrained. Most small-model failures are index_out_of_range, not transport failures.",
+    "Larger local models can return candidate-valid responses but single-case latency is seconds to tens of seconds, which is not compatible with synchronous typing correction."
+  ],
+  "gate_result": "FAIL",
+  "recommendation": {
+    "runtime_wiring": "do_not_wire_slm_to_ubuntu_or_macos_hot_path",
+    "next_experiment": "Replace prompt-only JSON generation with a constrained ranker path: score candidate choices directly, clamp or mask candidate indices before decode, or train a small task-specific classifier/ranker on exported candidate slots.",
+    "acceptable_use": "Use Ollama models only for offline analysis or batch labeling until a constrained path beats deterministic with interactive latency."
+  },
+  "verification": [
+    "ollama pull qwen3.5:0.8b",
+    "ollama pull qwen3.5:2b",
+    "ollama pull gemma4:e2b",
+    "ollama list",
+    "python3 Tools/SLMRerankerExperiment/local_llm_scorer.py --self-test",
+    "python3 -m py_compile Tools/SLMRerankerExperiment/local_llm_scorer.py",
+    "run_experiment.py qwen2.5:0.5b 63-case heldout clean limit4 via ollama-http",
+    "run_experiment.py qwen3.5:0.8b 63-case heldout clean limit4 via ollama-http",
+    "run_experiment.py qwen3.5:2b 10-case heldout clean limit4 via ollama-http",
+    "run_experiment.py qwen3.5:9b single-case heldout clean limit4 via ollama-http",
+    "run_experiment.py gemma4:e2b single-case heldout clean limit4 via ollama-http",
+    "run_experiment.py gemma4:e4b single-case heldout clean limit4 via ollama-http"
+  ]
+}

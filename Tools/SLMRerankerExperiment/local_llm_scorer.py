@@ -401,13 +401,15 @@ def run_ollama_provider(prompt, model_name, format_json=True, keepalive="5m"):
 
 
 def run_ollama_http_provider(prompt, model_name, base_url,
-                             format_json=True, keepalive="5m"):
+                             format_json=True, keepalive="5m",
+                             think=False):
     """Run an Ollama model through the local HTTP API."""
     payload = {
         "model": model_name,
         "prompt": prompt,
         "stream": False,
         "keep_alive": keepalive,
+        "think": bool(think),
     }
     if format_json:
         payload["format"] = "json"
@@ -577,7 +579,8 @@ def process_request(request, provider, command_template, model_name,
                     manifest, allow_out_of_range, dry_run_baseline,
                     ollama_format_json=True, ollama_keepalive="5m",
                     ollama_url="http://127.0.0.1:11434",
-                    prompt_style="output", indices_repair="none"):
+                    prompt_style="output", indices_repair="none",
+                    ollama_think=False):
     """Process a single request and return a response dict.
 
     When the model cannot produce valid output the response **omits** the
@@ -612,6 +615,7 @@ def process_request(request, provider, command_template, model_name,
             prompt, model_name, ollama_url,
             format_json=ollama_format_json,
             keepalive=ollama_keepalive,
+            think=ollama_think,
         )
 
     elapsed = int((time.perf_counter() - start) * 1_000_000)
@@ -748,6 +752,16 @@ def build_arg_parser():
         default="http://127.0.0.1:11434",
         metavar="URL",
         help="Ollama HTTP base URL for --provider ollama-http",
+    )
+    parser.add_argument(
+        "--ollama-think",
+        action="store_true",
+        default=False,
+        help=(
+            "Enable Ollama thinking mode for --provider ollama-http. "
+            "By default thinking is disabled so reasoning models return "
+            "the parseable answer in the response field."
+        ),
     )
     parser.add_argument("--self-test", action="store_true")
     return parser
@@ -919,6 +933,7 @@ def main():
             ollama_url=args.ollama_url,
             prompt_style=args.prompt_style,
             indices_repair=args.indices_repair,
+            ollama_think=args.ollama_think,
         )
 
     if args.persistent:

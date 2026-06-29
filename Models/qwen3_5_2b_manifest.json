@@ -1,0 +1,11 @@
+{
+  "model_name": "qwen3.5-2b",
+  "provider": "ollama",
+  "ollama_model": "qwen3.5:2b",
+  "parameter_count": 2000000000,
+  "quantization": "ollama-default",
+  "license": "apache-2.0",
+  "redistributable": true,
+  "local_only": true,
+  "description": "Local Ollama qwen3.5:2b model used for candidate-index SLM reranker benchmarks."
+}

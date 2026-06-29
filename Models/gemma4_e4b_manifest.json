@@ -1,0 +1,11 @@
+{
+  "model_name": "gemma4-e4b",
+  "provider": "ollama",
+  "ollama_model": "gemma4:e4b",
+  "parameter_count": 4000000000,
+  "quantization": "ollama-default",
+  "license": "apache-2.0",
+  "redistributable": true,
+  "local_only": true,
+  "description": "Local Ollama gemma4:e4b model used as a larger Q4-class comparison for candidate-index SLM reranker benchmarks."
+}

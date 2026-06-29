@@ -1726,6 +1726,37 @@
                 "Record content-free aggregate runtime counters from dogfood",
                 "Keep SLM Prototype unwired until a real model report passes the SLM promotion gate"
       ]
+    },
+    {
+      "id": "phase2-ollama-slm-smoke-2026-06-24",
+      "name": "Phase 2 Ollama SLM smoke benchmark",
+      "status": "failed_promotion_gate",
+      "date": "2026-06-24T03:32:54+08:00",
+      "branch": "slm-phase2-learnable",
+      "commit": "1ede8a3d4316f56bc6fe470abb73336cf6ddbdf8",
+      "protocol_version": "1.2",
+      "model": "qwen2.5:0.5b, qwen3.5:0.8b, qwen3.5:2b, qwen3.5:9b, gemma4:e2b, gemma4:e4b",
+      "results_dir": "docs/reports/experiments/phase2/",
+      "summary_file": "docs/reports/experiments/phase2/ollama_slm_smoke_2026_06_24.json",
+      "result_files": [
+        "docs/reports/experiments/phase2/ollama_slm_smoke_2026_06_24.json"
+      ],
+      "description": "Content-free local Ollama smoke benchmark for Qwen2.5, Qwen3.5, and Gemma4 candidate-index SLM rerankers. Adds evidence that Ollama thinking models require think=false for parseable response output, but prompt-only index generation still fails accuracy/fallback/latency gates.",
+      "gate_result": "FAIL",
+      "gate_reason": "No tested local Ollama model beats deterministic heldout clean accuracy; small models emit many index_out_of_range fallbacks, and larger models have seconds-to-tens-of-seconds single-case latency.",
+      "verification": [
+        "ollama pull qwen3.5:0.8b",
+        "ollama pull qwen3.5:2b",
+        "ollama pull gemma4:e2b",
+        "local_llm_scorer.py --self-test",
+        "python3 -m py_compile Tools/SLMRerankerExperiment/local_llm_scorer.py",
+        "run_experiment.py local Ollama smoke runs recorded in summary_file"
+      ],
+      "next_steps": [
+        "Keep SLM Prototype unwired from Ubuntu and macOS hot paths",
+        "Replace prompt-only JSON index generation with a constrained candidate ranker path before further runtime integration",
+        "Use Ollama models only for offline analysis or batch labeling until a constrained path passes the SLM promotion gate"
+      ]
     }
   ]
 }
