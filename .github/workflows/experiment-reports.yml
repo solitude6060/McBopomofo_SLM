@@ -6,6 +6,7 @@ on:
       - 'Tools/SLMRerankerExperiment/**'
       - 'Tools/ContextualEvaluation/**'
       - 'Source/Engine/**'
+      - 'Linux/Fcitx5Addon/**'
       - 'docs/reports/experiments/**'
       - 'Tests/fixtures/contextual_bopomofo/**'
       - 'Models/*.json'
@@ -15,6 +16,7 @@ on:
       - 'Tools/SLMRerankerExperiment/**'
       - 'Tools/ContextualEvaluation/**'
       - 'Source/Engine/**'
+      - 'Linux/Fcitx5Addon/**'
       - 'docs/reports/experiments/**'
       - 'Tests/fixtures/contextual_bopomofo/**'
       - 'Models/*.json'
@@ -29,6 +31,10 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - name: Install Linux addon build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends extra-cmake-modules libfcitx5core-dev
       - name: Compile experiment Python tools
         run: |
           python3 -m py_compile Tools/SLMRerankerExperiment/*.py
@@ -101,6 +107,10 @@ jobs:
       - name: Run engine GTests
         run: ctest --test-dir build --output-on-failure
         working-directory: Source/Engine
+      - name: Configure Fcitx5 addon
+        run: cmake -DCMAKE_BUILD_TYPE=Release -S Linux/Fcitx5Addon -B /tmp/mcbopomofo_fcitx5_addon_build
+      - name: Build Fcitx5 addon
+        run: cmake --build /tmp/mcbopomofo_fcitx5_addon_build --target mcbopomofo
       - name: Configure contextual evaluator
         run: cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
         working-directory: Tools/ContextualEvaluation

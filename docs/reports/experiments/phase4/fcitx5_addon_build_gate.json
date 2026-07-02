@@ -1,0 +1,53 @@
+{
+  "id": "phase4-fcitx5-addon-build-gate",
+  "name": "Phase 4 Fcitx5 Addon Build Gate",
+  "status": "verified_local_pending_ci",
+  "date": "2026-07-03T00:00:00+08:00",
+  "branch": "slm-phase2-learnable",
+  "protocol_version": "1.0",
+  "model": null,
+  "results_dir": "docs/reports/experiments/phase4/",
+  "summary_file": "docs/reports/experiments/phase4/fcitx5_addon_build_gate.json",
+  "result_files": [
+    "docs/reports/experiments/phase4/fcitx5_addon_build_gate.json"
+  ],
+  "privacy": {
+    "content_free": true,
+    "raw_text_recorded": false,
+    "readings_recorded": false,
+    "candidate_text_recorded": false,
+    "committed_text_recorded": false,
+    "screenshots_with_private_text": false,
+    "user_phrase_files_recorded": false
+  },
+  "scope": "Build the Linux Fcitx5 addon against the existing engine static libraries and Fcitx5Core headers as part of the experiment-reports Ubuntu CI workflow.",
+  "ci_changes": [
+    ".github/workflows/experiment-reports.yml now triggers on Linux/Fcitx5Addon/** changes",
+    "The workflow installs extra-cmake-modules and libfcitx5core-dev",
+    "The workflow configures Linux/Fcitx5Addon after Source/Engine static libraries are built",
+    "The workflow builds the mcbopomofo Fcitx5 module target"
+  ],
+  "local_environment": {
+    "fcitx5_core_pkg_config_version": "5.0.14",
+    "ubuntu_packages_verified": [
+      "extra-cmake-modules",
+      "libfcitx5core-dev"
+    ]
+  },
+  "local_verification": [
+    "cmake -DCMAKE_BUILD_TYPE=Release -S Linux/Fcitx5Addon -B /tmp/mcbopomofo_fcitx5_addon_build",
+    "cmake --build /tmp/mcbopomofo_fcitx5_addon_build --target mcbopomofo -j2"
+  ],
+  "gate_result": "PASS_LOCAL_PENDING_CI",
+  "not_tested": [
+    "GitHub Actions run containing the new Fcitx5 addon build steps",
+    "installed .deb package",
+    "real Ubuntu desktop Fcitx5 dogfood",
+    "runtime candidate selection behavior inside a live Fcitx5 session"
+  ],
+  "next_steps": [
+    "Push this branch and verify the Experiment reports workflow passes the new Fcitx5 addon build steps",
+    "Add a package/install/uninstall smoke gate for Ubuntu",
+    "Run a content-free live Fcitx5 dogfood session with deterministic reranker enabled"
+  ]
+}
