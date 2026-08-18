@@ -5,6 +5,8 @@
 // --key/--memory are replay-only experimental arms. KeyHandler is unchanged.
 // --persist=path writes after observe and loads into the restart instance.
 // --oneshot accepts one engine multi-character candidate after the full probe.
+// --halflife=<seconds> is replay-only (default 5400). Production stays 5400.
+// --suggest-delay=<seconds> is added to suggest timestamps only.
 
 #include <cstdio>
 #include <cstdlib>
@@ -715,7 +717,8 @@ int main(int argc, char* argv[]) {
             "Usage: %s <data.txt> <fixture.jsonl> "
             "[--key=three_node|head_reading|head_next] "
             "[--memory=isolated|shared] "
-            "[--persist=path] [--candidates] [--oneshot]\n",
+            "[--persist=path] [--candidates] [--oneshot] "
+            "[--halflife=<seconds>] [--suggest-delay=<seconds>]\n",
             argv[0]);
     return 1;
   }
@@ -733,6 +736,8 @@ int main(int argc, char* argv[]) {
   std::string persistPath;
   bool dumpCandidates = false;
   bool oneshot = false;
+  double halfLife = kHalfLife;
+  double suggestDelay = 0.0;
   for (int i = 3; i < argc; ++i) {
     if (std::strncmp(argv[i], "--key=", 6) == 0) {
       const char* value = argv[i] + 6;
@@ -766,12 +771,25 @@ int main(int argc, char* argv[]) {
       dumpCandidates = true;
     } else if (std::strcmp(argv[i], "--oneshot") == 0) {
       oneshot = true;
+    } else if (std::strncmp(argv[i], "--halflife=", 11) == 0) {
+      halfLife = std::atof(argv[i] + 11);
+      if (!(halfLife > 0.0)) {
+        fprintf(stderr, "FATAL: --halflife= must be > 0\n");
+        return 1;
+      }
+    } else if (std::strncmp(argv[i], "--suggest-delay=", 16) == 0) {
+      suggestDelay = std::atof(argv[i] + 16);
+      if (suggestDelay < 0.0) {
+        fprintf(stderr, "FATAL: --suggest-delay= must be >= 0\n");
+        return 1;
+      }
     } else {
       fprintf(stderr, "FATAL: unknown argument %s\n", argv[i]);
       return 1;
     }
   }
   const bool resuggest = style == KeyStyle::HeadNext;
+  const double suggestNow = kNow + suggestDelay;
 
   auto lm = std::make_shared<McBopomofo::McBopomofoLM>();
   lm->loadLanguageModel(argv[1]);
@@ -804,7 +822,7 @@ int main(int argc, char* argv[]) {
   int oneshotHits = 0;
   int oneshotTransferHits = 0;
   int oneshotExtra = 0;
-  McBopomofo::UserOverrideModel sharedUom(kCapacity, kHalfLife);
+  McBopomofo::UserOverrideModel sharedUom(kCapacity, halfLife);
 
   const char* keyName = "three_node";
   if (style == KeyStyle::HeadReading) {
@@ -835,7 +853,7 @@ int main(int argc, char* argv[]) {
                        row.prefixAfter, &baselinePrefix);
     const bool baselineExact = baseline == row.expected;
 
-    McBopomofo::UserOverrideModel isolated(kCapacity, kHalfLife);
+    McBopomofo::UserOverrideModel isolated(kCapacity, halfLife);
     McBopomofo::UserOverrideModel* uom = shared ? &sharedUom : &isolated;
     const bool observed = observeCommitted(lm, uom, row.observeReadings,
                                            row.committed, kNow, style);
@@ -852,7 +870,7 @@ int main(int argc, char* argv[]) {
     }
     std::string afterPrefix;
     const std::string after =
-        convertWithUom(lm, uom, row.probeReadings, kNow, style, resuggest,
+        convertWithUom(lm, uom, row.probeReadings, suggestNow, style, resuggest,
                        row.prefixAfter, &afterPrefix);
     const bool afterExact = after == row.expected;
     std::string oneshotValue;
@@ -862,7 +880,7 @@ int main(int argc, char* argv[]) {
     bool oneshotHit = false;
     bool oneshotExtraRow = false;
     if (oneshot) {
-      oneshotOut = convertWithUom(lm, uom, row.probeReadings, kNow,
+      oneshotOut = convertWithUom(lm, uom, row.probeReadings, suggestNow,
                                   KeyStyle::ThreeNode, false, -1, nullptr, true,
                                   &oneshotValue);
       oneshotOfferedRow = !oneshotValue.empty();
@@ -877,7 +895,7 @@ int main(int argc, char* argv[]) {
         baselinePrefix == row.prefixExpected &&
         afterPrefix != row.prefixExpected;
 
-    McBopomofo::UserOverrideModel restarted(kCapacity, kHalfLife);
+    McBopomofo::UserOverrideModel restarted(kCapacity, halfLife);
     if (!persistPath.empty()) {
       if (!restarted.load(persistPath)) {
         fprintf(stderr, "FATAL: persist load failed: %s\n",
@@ -886,7 +904,7 @@ int main(int argc, char* argv[]) {
       }
     }
     const std::string restartOut =
-        convertWithUom(lm, &restarted, row.probeReadings, kNow, style,
+        convertWithUom(lm, &restarted, row.probeReadings, suggestNow, style,
                        resuggest, -1, nullptr);
     const bool restartExact = restartOut == row.expected && !baselineExact;
 
@@ -986,11 +1004,12 @@ int main(int argc, char* argv[]) {
       "\"transfer_rows\":%d,\"transfer_hits\":%d,"
       "\"transfer_baseline_exact\":%d,\"transfer_after_exact\":%d,"
       "\"harmful_overrides\":%d,\"prefix_harms\":%d,\"restart_hits\":%d,"
-      "\"key\":\"%s\",\"memory\":\"%s\",\"persist\":%s",
+      "\"key\":\"%s\",\"memory\":\"%s\",\"persist\":%s,"
+      "\"halflife\":%.17g,\"suggest_delay\":%.17g",
       total, sameKeyRows, sameKeyHits, sameKeyBaselineExact, sameKeyAfterExact,
       transferRows, transferHits, transferBaselineExact, transferAfterExact,
       harmful, prefixHarms, restartHits, keyName, memoryName,
-      persistPath.empty() ? "false" : "true");
+      persistPath.empty() ? "false" : "true", halfLife, suggestDelay);
   if (dumpCandidates) {
     printf(
         ",\"expected_in_candidates\":%d,"

@@ -23,19 +23,25 @@
 
 ## Half-life
 
-### Why not now
+### Measurement status (2026-08-18)
 
-Persist just started writing timestamps to disk. Overnight recall is unmeasured on a real Mac. Changing 5400 s in the same era as persist would confound “file missing” with “score decayed”. No paper in the repo derives 5400; the comment is only `// 1.5 hr.` The persist TSV does not store half-life. Replay uses one `kNow` for observe and suggest, so changing `kHalfLife` alone does not move current replay counts.
+Replay measurement exists. `uom_replay` accepts `--halflife=<seconds>` (default 5400) and `--suggest-delay=<seconds>` added to suggest timestamps only. Observe stays at `kNow`. Report: `docs/reports/experiments/adaptation/uom_halflife_2026_08_18.md`.
 
-`Score = (count/total) * exp((now-ts)*ln(0.5)/5400)`. Twenty half-lives (~30 h) reach the coded zero threshold (`kDecayThreshold = 1/1048576`). Twelve hours is already ~8 half-lives.
+On `adaptation_replay.jsonl`, delay 0 / 28800 / 108000 at half-life 5400, and delay 28800 at 86400 and 604800, all have `same_key_hits` 2, `transfer_hits` 0, `harmful_overrides` 0, `prefix_harms` 0. Delay 113400 at 5400 (21 half-lives) has `same_key_hits` 0. Production `kObservedOverrideHalflife` stays 5400. Public n-gram stays closed.
+
+### Why production stays 5400
+
+Persist just started writing timestamps to disk. Overnight recall is unmeasured on a real Mac. Changing 5400 s in the same era as persist would confound “file missing” with “score decayed”. No paper in the repo derives 5400; the comment is only `// 1.5 hr.` The persist TSV does not store half-life.
+
+`Score = (count/total) * exp((now-ts)*ln(0.5)/halflife)`. Score is zero when `decay < 1/1048576`. `UserOverrideModelTest.BasicOperation` still hits at exactly 20 half-lives and is empty at 21.
 
 Tokunaga, Kazama, and Torisawa, WTIM 2011: personalization can make conversion worse. Forgetting stays until dogfood shows harmless overnight misses.
 
-### When to open
+### When to change production
 
 1. Persist dogfood on macOS: a same-key pair still works after a restart **in the same hour**.
 2. Repeat the pair after ≥8 h. If the file still contains the row and `suggest` is empty, decay is the cause.
-3. Only then add replay `--halflife=5400|86400|604800` with a timestamp offset, same fixture, require `harmful_overrides` 0 and `prefix_harms` 0.
+3. Replay flags already exist. Any later arm still requires `harmful_overrides` 0 and `prefix_harms` 0.
 4. User gate before changing `LanguageModelManager.mm`.
 
 ### Out of scope until that gate

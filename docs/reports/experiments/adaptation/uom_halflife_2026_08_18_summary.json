@@ -1,0 +1,103 @@
+{
+  "id": "uom-halflife-2026-08-18",
+  "date": "2026-08-18T11:40:00+08:00",
+  "runner": "Tools/ContextualEvaluation/build/uom_replay",
+  "data": "Source/Data/data.txt",
+  "fixture": "Tests/fixtures/contextual_bopomofo/adaptation_replay.jsonl",
+  "raw_canonical": "docs/reports/experiments/adaptation/uom_halflife_2026_08_18.jsonl",
+  "report": "docs/reports/experiments/adaptation/uom_halflife_2026_08_18.md",
+  "flags": {
+    "halflife": "Replay-only seconds passed to UserOverrideModel. Default 5400. Observe timestamps stay at kNow.",
+    "suggest_delay": "Seconds added to suggest timestamps only."
+  },
+  "threshold": {
+    "score": "(count/total) * exp((now-ts)*ln(0.5)/halflife)",
+    "zero_when": "decay < 1/1048576",
+    "exact_20_half_lives_seconds_at_5400": 108000,
+    "empty_at_21_half_lives_seconds_at_5400": 113400
+  },
+  "arms": [
+    {
+      "id": "d0_hl5400",
+      "halflife": 5400,
+      "suggest_delay": 0,
+      "artifact": "docs/reports/experiments/adaptation/uom_halflife_d0_hl5400_2026_08_18.jsonl",
+      "same_key_hits": 2,
+      "transfer_hits": 0,
+      "prefix_harms": 0,
+      "harmful_overrides": 0,
+      "restart_hits": 0
+    },
+    {
+      "id": "d28800_hl5400",
+      "halflife": 5400,
+      "suggest_delay": 28800,
+      "artifact": "docs/reports/experiments/adaptation/uom_halflife_d28800_hl5400_2026_08_18.jsonl",
+      "same_key_hits": 2,
+      "transfer_hits": 0,
+      "prefix_harms": 0,
+      "harmful_overrides": 0,
+      "restart_hits": 0
+    },
+    {
+      "id": "d108000_hl5400",
+      "halflife": 5400,
+      "suggest_delay": 108000,
+      "artifact": "docs/reports/experiments/adaptation/uom_halflife_d108000_hl5400_2026_08_18.jsonl",
+      "same_key_hits": 2,
+      "transfer_hits": 0,
+      "prefix_harms": 0,
+      "harmful_overrides": 0,
+      "restart_hits": 0
+    },
+    {
+      "id": "d28800_hl86400",
+      "halflife": 86400,
+      "suggest_delay": 28800,
+      "artifact": "docs/reports/experiments/adaptation/uom_halflife_d28800_hl86400_2026_08_18.jsonl",
+      "same_key_hits": 2,
+      "transfer_hits": 0,
+      "prefix_harms": 0,
+      "harmful_overrides": 0,
+      "restart_hits": 0
+    },
+    {
+      "id": "d28800_hl604800",
+      "halflife": 604800,
+      "suggest_delay": 28800,
+      "artifact": "docs/reports/experiments/adaptation/uom_halflife_d28800_hl604800_2026_08_18.jsonl",
+      "same_key_hits": 2,
+      "transfer_hits": 0,
+      "prefix_harms": 0,
+      "harmful_overrides": 0,
+      "restart_hits": 0
+    }
+  ],
+  "threshold_check": {
+    "id": "d113400_hl5400",
+    "halflife": 5400,
+    "suggest_delay": 113400,
+    "artifact": "docs/reports/experiments/adaptation/uom_halflife_d113400_hl5400_2026_08_18.jsonl",
+    "same_key_hits": 0,
+    "transfer_hits": 0,
+    "prefix_harms": 0,
+    "harmful_overrides": 0,
+    "restart_hits": 0
+  },
+  "harm_gate": {
+    "required_harmful_overrides": 0,
+    "required_prefix_harms": 0,
+    "violations": 0
+  },
+  "production": {
+    "kObservedOverrideHalflife": 5400.0,
+    "file": "Source/LanguageModelManager.mm",
+    "changed": false
+  },
+  "notes": [
+    "Replay measurement only. Production half-life stays 5400.",
+    "Public n-gram stays closed.",
+    "UserOverrideModelTest.BasicOperation still hits at 20 half-lives and is empty at 21.",
+    "User gate still required before LanguageModelManager.mm."
+  ]
+}
