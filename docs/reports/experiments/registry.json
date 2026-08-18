@@ -1897,7 +1897,26 @@
       "exit_gate_result": "MEASURED",
       "exit_gate_criterion": "oneshot_transfer_hits >= 1, prefix_harms 0, no invented text",
       "exit_gate_actual": "oneshot_transfer_hits 3, oneshot_extra 3, oneshot_offered 4, prefix_harms 0, harmful_overrides 0",
-      "conclusion": "Accepting 再說 or 做事 once fixed 別再說, 不要再說, and 別做事. 再說一遍 stayed 再說一變. Do not wire silent per-key re-suggest. KeyHandler UI is a later slice."
+      "conclusion": "Accepting 再說 or 做事 once fixed 別再說, 不要再說, and 別做事. 再說一遍 stayed 再說一變. Do not wire silent per-key re-suggest. KeyHandler intercept is written on slm-phase2-learnable; macOS dogfood was not run."
+    },
+    {
+      "id": "uom-candidates-2026-08-18",
+      "name": "Engine candidate existence on adaptation replay",
+      "status": "measured",
+      "date": "2026-08-18T00:00:00+08:00",
+      "branch": "slm-phase2-learnable",
+      "model": null,
+      "results_dir": "docs/reports/experiments/adaptation/",
+      "summary_file": null,
+      "result_files": [
+        "docs/reports/experiments/adaptation/uom_candidates_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_candidates_2026_08_18.md"
+      ],
+      "description": "Report-only --candidates: whether expected text or a multi-character engine candidate inside it exists in ReadingGrid::candidatesAt.",
+      "exit_gate_result": "MEASURED",
+      "exit_gate_criterion": "Record whether informative transfer misses already have an engine multi-character candidate",
+      "exit_gate_actual": "transfer_misses_with_multichar 4; 別再說 is not a whole-phrase candidate",
+      "conclusion": "The four informative transfer misses already have 別再 / 再說 / 再說 / 做事 in the engine list. A one-shot offer can use those values. It cannot invent 別再說."
     },
     {
       "id": "uom-halflife-2026-08-18",
