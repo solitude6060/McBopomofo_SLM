@@ -62,6 +62,11 @@ class UserOverrideModel {
 
   Suggestion suggest(const std::string& key, double timestamp);
 
+  // Local persist for product recall after restart. Not a training corpus.
+  // Rejects paths under /tmp or /var/tmp.
+  bool save(const std::string& path) const;
+  bool load(const std::string& path);
+
  private:
   struct Override {
     size_t count = 0;

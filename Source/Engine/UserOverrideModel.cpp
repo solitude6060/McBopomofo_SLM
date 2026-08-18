@@ -26,8 +26,12 @@
 
 #include <cassert>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <list>
+#include <sstream>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -217,6 +221,160 @@ UserOverrideModel::Suggestion UserOverrideModel::suggest(const std::string& key,
     }
   }
   return UserOverrideModel::Suggestion{candidate, forceHighScoreOverride};
+}
+
+static bool persistPathAllowed(const std::string& path) {
+  if (path.empty()) {
+    return false;
+  }
+  std::error_code error;
+  auto resolved = std::filesystem::weakly_canonical(std::filesystem::absolute(path),
+                                                    error);
+  if (error) {
+    resolved = std::filesystem::absolute(path, error);
+    if (error) {
+      return false;
+    }
+  }
+  const std::string text = resolved.string();
+  if (text == "/tmp" || text.rfind("/tmp/", 0) == 0) {
+    return false;
+  }
+  if (text == "/var/tmp" || text.rfind("/var/tmp/", 0) == 0) {
+    return false;
+  }
+  return true;
+}
+
+static bool hasForbiddenSeparator(const std::string& s) {
+  return s.find('\t') != std::string::npos || s.find('\n') != std::string::npos;
+}
+
+bool UserOverrideModel::save(const std::string& path) const {
+  if (!persistPathAllowed(path)) {
+    return false;
+  }
+  const std::filesystem::path dest(path);
+  std::filesystem::path staging = dest;
+  staging += ".writing";
+  if (!persistPathAllowed(staging.string())) {
+    return false;
+  }
+  {
+    std::ofstream out(staging, std::ios::binary | std::ios::trunc);
+    if (!out) {
+      return false;
+    }
+    out << "# McBopomofo-UserOverrideModel 1\n";
+    for (auto it = lruList_.rbegin(); it != lruList_.rend(); ++it) {
+      const std::string& key = it->first;
+      const Observation& observation = it->second;
+      if (hasForbiddenSeparator(key)) {
+        std::filesystem::remove(staging);
+        return false;
+      }
+      for (const auto& pair : observation.overrides) {
+        if (hasForbiddenSeparator(pair.first)) {
+          std::filesystem::remove(staging);
+          return false;
+        }
+        out << key << '\t' << pair.first << '\t' << pair.second.count << '\t'
+            << pair.second.timestamp << '\t'
+            << (pair.second.forceHighScoreOverride ? 1 : 0) << '\t'
+            << observation.count << '\n';
+      }
+    }
+    if (!out) {
+      std::filesystem::remove(staging);
+      return false;
+    }
+  }
+  std::error_code error;
+  std::filesystem::rename(staging, dest, error);
+  if (error) {
+    std::filesystem::remove(staging);
+    return false;
+  }
+  return true;
+}
+
+bool UserOverrideModel::load(const std::string& path) {
+  if (!persistPathAllowed(path)) {
+    return false;
+  }
+  std::ifstream in(path);
+  if (!in) {
+    return false;
+  }
+  lruList_.clear();
+  lruMap_.clear();
+
+  std::string line;
+  while (std::getline(in, line)) {
+    if (line.empty() || line[0] == '#') {
+      continue;
+    }
+    std::istringstream row(line);
+    std::string key;
+    std::string candidate;
+    std::string countText;
+    std::string timestampText;
+    std::string forceText;
+    std::string observationText;
+    if (!std::getline(row, key, '\t') || !std::getline(row, candidate, '\t') ||
+        !std::getline(row, countText, '\t') ||
+        !std::getline(row, timestampText, '\t') ||
+        !std::getline(row, forceText, '\t') ||
+        !std::getline(row, observationText, '\t')) {
+      return false;
+    }
+    if (key.empty() || candidate.empty()) {
+      return false;
+    }
+    size_t overrideCount = 0;
+    double timestamp = 0;
+    int force = 0;
+    size_t observationCount = 0;
+    try {
+      overrideCount = static_cast<size_t>(std::stoull(countText));
+      timestamp = std::stod(timestampText);
+      force = std::stoi(forceText);
+      observationCount = static_cast<size_t>(std::stoull(observationText));
+    } catch (...) {
+      return false;
+    }
+    auto mapIter = lruMap_.find(key);
+    if (mapIter == lruMap_.end()) {
+      Observation observation;
+      observation.count = observationCount;
+      Override override;
+      override.count = overrideCount;
+      override.timestamp = timestamp;
+      override.forceHighScoreOverride = force != 0;
+      observation.overrides[candidate] = override;
+      lruList_.push_front(KeyObservationPair(key, observation));
+      lruMap_[key] = lruList_.begin();
+      if (lruList_.size() > capacity_) {
+        auto last = lruList_.end();
+        --last;
+        lruMap_.erase(last->first);
+        lruList_.pop_back();
+      }
+    } else {
+      auto listIter = mapIter->second;
+      lruList_.splice(lruList_.begin(), lruList_, listIter);
+      Observation& observation = listIter->second;
+      if (observationCount > observation.count) {
+        observation.count = observationCount;
+      }
+      Override override;
+      override.count = overrideCount;
+      override.timestamp = timestamp;
+      override.forceHighScoreOverride = force != 0;
+      observation.overrides[candidate] = override;
+    }
+  }
+  return true;
 }
 
 void UserOverrideModel::Observation::update(const std::string& candidate,

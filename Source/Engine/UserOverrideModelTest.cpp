@@ -21,6 +21,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
+#include <filesystem>
 #include <string>
 
 #include "UserOverrideModel.h"
@@ -117,6 +118,41 @@ TEST(UserOverrideModelTest, LRUBehavior) {
   // def evicted.
   v = uom.suggest("def", kFakeNow + kHalflife * 7);
   ASSERT_TRUE(v.empty());
+}
+
+TEST(UserOverrideModelTest, SaveLoadRoundTrip) {
+  const auto path =
+      std::filesystem::current_path() / "UserOverrideModelTest_persist.txt";
+  const std::string resolved = std::filesystem::weakly_canonical(path).string();
+  ASSERT_EQ(resolved.find("/tmp"), std::string::npos);
+  ASSERT_EQ(resolved.find("/var/tmp"), std::string::npos);
+
+  UserOverrideModel saved(kCapacity, kHalflife);
+  saved.observe("abc", "再", kFakeNow, true);
+  saved.observe("def", "做", kFakeNow + 1.0);
+  ASSERT_TRUE(saved.save(path.string()));
+
+  UserOverrideModel loaded(kCapacity, kHalflife);
+  ASSERT_TRUE(loaded.load(path.string()));
+  auto v = loaded.suggest("abc", kFakeNow);
+  ASSERT_EQ(v.candidate, "再");
+  ASSERT_TRUE(v.forceHighScoreOverride);
+  v = loaded.suggest("def", kFakeNow + 1.0);
+  ASSERT_EQ(v.candidate, "做");
+  ASSERT_FALSE(v.forceHighScoreOverride);
+
+  std::filesystem::remove(path);
+}
+
+TEST(UserOverrideModelTest, SaveRejectsTemporaryPath) {
+  UserOverrideModel uom(kCapacity, kHalflife);
+  uom.observe("abc", "v", kFakeNow);
+  ASSERT_FALSE(uom.save("/tmp/uom_persist_forbidden.txt"));
+}
+
+TEST(UserOverrideModelTest, LoadRejectsTemporaryPath) {
+  UserOverrideModel uom(kCapacity, kHalflife);
+  ASSERT_FALSE(uom.load("/tmp/uom_persist_forbidden.txt"));
 }
 
 }  // namespace McBopomofo
