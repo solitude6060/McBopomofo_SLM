@@ -135,6 +135,7 @@ static void LTLoadVariantAnnotatorData()
     gLanguageModelMcBopomofo.loadUserPhrases([self userPhrasesDataPathMcBopomofo].UTF8String, [self excludedPhrasesDataPathMcBopomofo].UTF8String);
     gLanguageModelPlainBopomofo.loadUserPhrases(userPhraseForPlainBopomofo ? [self userPhrasesDataPathPlainBopomofo].UTF8String : NULL,
         [self excludedPhrasesDataPathPlainBopomofo].UTF8String);
+    [self loadUserOverrideModel];
 }
 
 + (void)loadUserPhraseReplacement
@@ -448,6 +449,35 @@ static void LTLoadVariantAnnotatorData()
 + (NSString *)phraseReplacementDataPathMcBopomofo
 {
     return [[self dataFolderPath] stringByAppendingPathComponent:@"phrases-replacement.txt"];
+}
+
++ (NSString *)userOverrideModelDataPath
+{
+    return [[self dataFolderPath] stringByAppendingPathComponent:@"user-override-model.txt"];
+}
+
++ (void)loadUserOverrideModel
+{
+    NSString *path = [self userOverrideModelDataPath];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:path]) {
+        return;
+    }
+    if (!gUserOverrideModel.load(path.UTF8String)) {
+        NSLog(@"Failed to load user override model from %@", path);
+    }
+}
+
++ (BOOL)saveUserOverrideModel
+{
+    if (![self checkIfUserDataFolderExists]) {
+        return NO;
+    }
+    NSString *path = [self userOverrideModelDataPath];
+    if (!gUserOverrideModel.save(path.UTF8String)) {
+        NSLog(@"Failed to save user override model to %@", path);
+        return NO;
+    }
+    return YES;
 }
 
 + (McBopomofo::McBopomofoLM *)languageModelMcBopomofo

@@ -33,6 +33,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)loadUserPhraseReplacement;
 + (void)setupDataModelValueConverter;
 + (BOOL)checkIfUserLanguageModelFilesExist;
++ (void)loadUserOverrideModel;
++ (BOOL)saveUserOverrideModel;
 
 + (BOOL)checkIfUserPhraseExist:(NSString *)userPhrase key:(NSString *)key NS_SWIFT_NAME(checkIfExist(userPhrase:key:));
 + (BOOL)writeUserPhrase:(NSString *)userPhrase;
@@ -46,6 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (class, readonly, nonatomic) NSString *excludedPhrasesDataPathMcBopomofo;
 @property (class, readonly, nonatomic) NSString *excludedPhrasesDataPathPlainBopomofo;
 @property (class, readonly, nonatomic) NSString *phraseReplacementDataPathMcBopomofo;
+@property (class, readonly, nonatomic) NSString *userOverrideModelDataPath;
 @property (class, assign, nonatomic) BOOL phraseReplacementEnabled;
 
 @end
