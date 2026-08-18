@@ -103,6 +103,14 @@ extension McBopomofoInputMethodController: CandidateControllerDelegate {
             default:
                 break
             }
+        case let state as InputState.OneShotSuggestion:
+            let candidate = state.candidates[Int(index)]
+            keyHandler.applyOneShotOverride(
+                at: Int(state.loc), reading: candidate.reading, value: candidate.value)
+            guard let inputting = keyHandler.buildInputtingState() as? InputState.Inputting else {
+                return
+            }
+            handle(state: inputting, client: client)
         case let state as InputState.AssociatedPhrases:
             let candidate = state.candidates[Int(index)]
             keyHandler.fixNodeForAssociatedPhraseWithPrefix(

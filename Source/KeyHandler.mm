@@ -28,6 +28,7 @@
 #import "Mandarin.h"
 #import "McBopomofo-Swift.h"
 #import "McBopomofoLM.h"
+#import "OneShotOverride.h"
 #import "UTF8Helper.h"
 #import "UserOverrideModel.h"
 #import "reading_grid.h"
@@ -299,7 +300,14 @@ static constexpr NSInteger kContextualRerankerModeDeterministic = 1;
     }
     Formosa::Gramambular2::ReadingGrid::NodePtr currentNode = *nodeIter;
     if (currentNode != nullptr && currentNode->currentUnigram().score() > -8) {
-        _userOverrideModel->observe(prevWalk, _latestWalk, self.actualCandidateCursorIndex, [NSDate date].timeIntervalSince1970);
+        const double timestamp = [NSDate date].timeIntervalSince1970;
+        _userOverrideModel->observe(prevWalk, _latestWalk, self.actualCandidateCursorIndex, timestamp);
+        const McBopomofo::HeadNextObservation headNext =
+            McBopomofo::FormHeadNextObservation(*_grid, prevWalk, _latestWalk);
+        if (!headNext.empty()) {
+            _userOverrideModel->observe(headNext.key, headNext.candidate, timestamp,
+                headNext.forceHighScoreOverride);
+        }
         [LanguageModelManager saveUserOverrideModel];
     }
 
@@ -308,6 +316,42 @@ static constexpr NSInteger kContextualRerankerModeDeterministic = 1;
     } else {
         _grid->setCursor(originalCursorIndex);
     }
+}
+
+- (void)applyOneShotOverrideAt:(size_t)loc reading:(NSString *)reading value:(NSString *)value
+{
+    Formosa::Gramambular2::ReadingGrid::Candidate candidate(reading.UTF8String, value.UTF8String);
+    const auto type = Formosa::Gramambular2::ReadingGrid::Node::OverrideType::kOverrideValueWithHighScore;
+    if (!_grid->overrideCandidate(loc, candidate, type)) {
+        _grid->overrideCandidate(loc, value.UTF8String, type);
+    }
+    [self _walk];
+}
+
+- (BOOL)_offerOneShotSuggestionFromInputting:(InputStateInputting *)inputting
+                             useVerticalMode:(BOOL)useVerticalMode
+                               stateCallback:(void (^)(InputState *))stateCallback
+{
+    if (_inputMode != InputModeBopomofo) {
+        return NO;
+    }
+    if (!Preferences.oneShotSuggestionEnabled) {
+        return NO;
+    }
+    if (!_bpmfReadingBuffer->isEmpty() || _grid->length() == 0) {
+        return NO;
+    }
+    const McBopomofo::OneShotOverride pick = McBopomofo::PickOneShotOverride(
+        *_grid, _userOverrideModel, [NSDate date].timeIntervalSince1970);
+    if (pick.empty()) {
+        return NO;
+    }
+    NSString *reading = [NSString stringWithUTF8String:pick.reading.c_str()];
+    NSString *value = [NSString stringWithUTF8String:pick.value.c_str()];
+    InputStateCandidate *candidate = [[InputStateCandidate alloc] initWithReading:reading value:value displayText:value rawValue:value];
+    InputStateOneShotSuggestion *suggestion = [[InputStateOneShotSuggestion alloc] initWithPreviousState:inputting loc:pick.loc candidates:@[ candidate ] useVerticalMode:useVerticalMode];
+    stateCallback(suggestion);
+    return YES;
 }
 
 - (void)fixNodeForAssociatedPhraseWithPrefixAt:(size_t)prefixCursorIndex prefixReading:(NSString *)pfxReading prefixValue:(NSString *)pfxValue associatedPhraseReading:(NSString *)phraseReading associatedPhraseValue:(NSString *)phraseValue
@@ -540,6 +584,15 @@ static constexpr NSInteger kContextualRerankerModeDeterministic = 1;
         }
     }
 
+    if ([state isKindOfClass:[InputStateOneShotSuggestion class]]) {
+        BOOL result = [self _handleCandidateState:state input:input stateCallback:stateCallback errorCallback:errorCallback];
+        if (result) {
+            return YES;
+        }
+        state = [self buildInputtingState];
+        stateCallback(state);
+    }
+
     // MARK: Handle Candidates
     if ([state isKindOfClass:[InputStateChoosingCandidate class]]) {
         return [self _handleCandidateState:state input:input stateCallback:stateCallback errorCallback:errorCallback];
@@ -709,6 +762,11 @@ static constexpr NSInteger kContextualRerankerModeDeterministic = 1;
                 if (_grid->cursor() >= _grid->length()) {
                     NSString *composingBuffer = ((InputStateNotEmpty *)state).composingBuffer;
                     if (composingBuffer.length) {
+                        if (_bpmfReadingBuffer->isEmpty() &&
+                            [state isKindOfClass:[InputStateInputting class]] &&
+                            [self _offerOneShotSuggestionFromInputting:(InputStateInputting *)state useVerticalMode:input.useVerticalMode stateCallback:stateCallback]) {
+                            return YES;
+                        }
                         InputStateCommitting *committing = [[InputStateCommitting alloc] initWithPoppedText:composingBuffer];
                         stateCallback(committing);
                     }
@@ -1342,6 +1400,11 @@ static constexpr NSInteger kContextualRerankerModeDeterministic = 1;
         return NO;
     }
 
+    if (_bpmfReadingBuffer->isEmpty() &&
+        [self _offerOneShotSuggestionFromInputting:(InputStateInputting *)state useVerticalMode:NO stateCallback:stateCallback]) {
+        return YES;
+    }
+
     [self clear];
 
     InputStateInputting *current = (InputStateInputting *)state;
@@ -1751,6 +1814,10 @@ static constexpr NSInteger kContextualRerankerModeDeterministic = 1;
             [self clear];
             InputStateEmptyIgnoringPreviousState *empty = [[InputStateEmptyIgnoringPreviousState alloc] init];
             stateCallback(empty);
+        } else if ([state isKindOfClass:[InputStateOneShotSuggestion class]]) {
+            InputStateInputting *inputting = (InputStateInputting *)[self buildInputtingState];
+            stateCallback(inputting);
+            return YES;
         } else if ([state isKindOfClass:[InputStateAssociatedPhrases class]]) {
             if ([(InputStateAssociatedPhrases *)state autoTriggered]) {
                 return NO;
@@ -1855,6 +1922,11 @@ static constexpr NSInteger kContextualRerankerModeDeterministic = 1;
     }
 
     // Handle space key
+    if (charCode == 32 && [state isKindOfClass:[InputStateOneShotSuggestion class]]) {
+        InputStateInputting *inputting = (InputStateInputting *)[self buildInputtingState];
+        stateCallback(inputting);
+        return YES;
+    }
     if (charCode == 32 && [state isKindOfClass:[InputStateAssociatedPhrases class]]) {
         if ([(InputStateAssociatedPhrases *)state autoTriggered]) {
             return NO;
