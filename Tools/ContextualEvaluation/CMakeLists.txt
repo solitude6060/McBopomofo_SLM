@@ -22,6 +22,10 @@ add_executable(evaluator
     evaluator.cpp
 )
 
+add_executable(uom_replay
+    uom_replay.cpp
+)
+
 # evaluator.cpp uses "Engine/..." and "Engine/gramambular2/..." includes,
 # so we add the directory above Engine/ (i.e. Source/) as an include root.
 get_filename_component(ENGINE_PARENT_DIR "${ENGINE_SRC_DIR}" DIRECTORY)
@@ -32,6 +36,20 @@ target_include_directories(evaluator PRIVATE
 )
 
 target_link_libraries(evaluator PRIVATE
+    "${MCBOPOMOFOLM_LIB}"
+    "${GRAMAMBULAR2_LIB}"
+    "${MANDARIN_LIB}"
+    pthread
+    dl
+)
+
+target_include_directories(uom_replay PRIVATE
+    "${ENGINE_PARENT_DIR}"
+    "${ENGINE_SRC_DIR}/gramambular2"
+    "${ENGINE_SRC_DIR}/Mandarin"
+)
+
+target_link_libraries(uom_replay PRIVATE
     "${MCBOPOMOFOLM_LIB}"
     "${GRAMAMBULAR2_LIB}"
     "${MANDARIN_LIB}"
