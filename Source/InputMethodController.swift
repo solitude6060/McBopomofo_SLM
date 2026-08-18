@@ -84,6 +84,10 @@ class McBopomofoInputMethodController: IMKInputController {
             withTitle: NSLocalizedString("Associated Phrases", comment: ""),
             action: #selector(toggleAssociatedPhrasesEnabled(_:)), keyEquivalent: "")
         associatedPhrasesItem.state = Preferences.associatedPhrasesEnabled.state
+        let oneShotSuggestionItem = menu.addItem(
+            withTitle: NSLocalizedString("One-Shot Suggestion", comment: ""),
+            action: #selector(toggleOneShotSuggestionEnabled(_:)), keyEquivalent: "")
+        oneShotSuggestionItem.state = Preferences.oneShotSuggestionEnabled.state
 
         let contextualRerankerItem = NSMenuItem(
             title: NSLocalizedString("Experimental Contextual Reranker", comment: ""),
@@ -320,6 +324,10 @@ class McBopomofoInputMethodController: IMKInputController {
         _ = Preferences.toggleAssociatedPhrasesEnabled()
     }
 
+    @objc func toggleOneShotSuggestionEnabled(_ sender: Any?) {
+        _ = Preferences.toggleOneShotSuggestionEnabled()
+    }
+
     private func addContextualRerankerModeItem(to menu: NSMenu, mode: ContextualRerankerMode) {
         let item = menu.addItem(
             withTitle: NSLocalizedString(mode.name, comment: ""),
@@ -447,6 +455,8 @@ extension McBopomofoInputMethodController {
         case let newState as InputState.ChoosingCandidate:
             handle(state: newState, previous: previous, client: client)
         case let newState as InputState.AssociatedPhrases:
+            handle(state: newState, previous: previous, client: client)
+        case let newState as InputState.OneShotSuggestion:
             handle(state: newState, previous: previous, client: client)
         case let newState as InputState.AssociatedPhrasesPlain:
             handle(state: newState, previous: previous, client: client)
@@ -655,6 +665,19 @@ extension McBopomofoInputMethodController {
         show(candidateWindowWith: state, client: client)
     }
 
+    private func handle(state: InputState.OneShotSuggestion, previous: InputState, client: Any?) {
+        hideTooltip()
+        guard let client = client as? IMKTextInput else {
+            gCurrentCandidateController?.visible = false
+            return
+        }
+
+        client.setMarkedText(
+            state.attributedString, selectionRange: NSMakeRange(Int(state.cursorIndex), 0),
+            replacementRange: NSMakeRange(NSNotFound, NSNotFound))
+        show(candidateWindowWith: state, client: client)
+    }
+
     private func handle(
         state: InputState.AssociatedPhrasesPlain, previous: InputState, client: Any?
     ) {
@@ -831,6 +854,9 @@ extension McBopomofoInputMethodController {
                 useVerticalMode = state.useVerticalMode
                 candidates = state.candidates
             case let state as InputState.AssociatedPhrases:
+                useVerticalMode = state.useVerticalMode
+                candidates = state.candidates
+            case let state as InputState.OneShotSuggestion:
                 useVerticalMode = state.useVerticalMode
                 candidates = state.candidates
             case is InputState.SelectingFeature,

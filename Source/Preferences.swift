@@ -49,6 +49,7 @@ private let kAllowMovingCursorWhenChoosingCandidates = "AllowMovingCursorWhenCho
 private let kPhraseReplacementEnabledKey = "PhraseReplacementEnabled"
 private let kChineseConversionStyleKey = "ChineseConversionStyle"
 private let kAssociatedPhrasesEnabledKey = "AssociatedPhrasesEnabled"
+private let kOneShotSuggestionEnabledKey = "OneShotSuggestionEnabled"
 private let kContextualRerankerModeKey = "ContextualRerankerMode"
 private let kLetterBehaviorKey = "LetterBehavior"
 private let kControlEnterOutputKey = "ControlEnterOutput"
@@ -248,6 +249,7 @@ class Preferences: NSObject {
             kPhraseReplacementEnabledKey,
             kChineseConversionStyleKey,
             kAssociatedPhrasesEnabledKey,
+            kOneShotSuggestionEnabledKey,
             kContextualRerankerModeKey,
             kControlEnterOutputKey,
             kShiftEnterEnabledKey,
@@ -274,6 +276,7 @@ class Preferences: NSObject {
         Preferences.chineseConversionStyle = Preferences.chineseConversionStyle
         Preferences.phraseReplacementEnabled = Preferences.phraseReplacementEnabled
         Preferences.associatedPhrasesEnabled = Preferences.associatedPhrasesEnabled
+        Preferences.oneShotSuggestionEnabled = Preferences.oneShotSuggestionEnabled
         Preferences.contextualRerankerMode = Preferences.contextualRerankerMode
         Preferences.letterBehavior = Preferences.letterBehavior
         Preferences.controlEnterOutput = Preferences.controlEnterOutput
@@ -467,6 +470,14 @@ extension Preferences {
     @objc static func toggleAssociatedPhrasesEnabled() -> Bool {
         associatedPhrasesEnabled = !associatedPhrasesEnabled
         return associatedPhrasesEnabled
+    }
+
+    @UserDefault(key: kOneShotSuggestionEnabledKey, defaultValue: true)
+    @objc static var oneShotSuggestionEnabled: Bool
+
+    @objc static func toggleOneShotSuggestionEnabled() -> Bool {
+        oneShotSuggestionEnabled = !oneShotSuggestionEnabled
+        return oneShotSuggestionEnabled
     }
 
     @EnumUserDefault(key: kContextualRerankerModeKey, defaultValue: .off)
@@ -672,6 +683,9 @@ extension Preferences {
         )
         lines.append(
             "  - Associated Phrases (McBopomofo): \(Preferences.associatedPhrasesEnabled ? "Enabled" : "Disabled")"
+        )
+        lines.append(
+            "  - One-Shot Suggestion: \(Preferences.oneShotSuggestionEnabled ? "Enabled" : "Disabled")"
         )
         lines.append(
             "  - Associated Phrases (Plain Bopomofo): \(Preferences.enableUserPhrasesInPlainBopomofo ? "Enabled" : "Disabled")"

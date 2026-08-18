@@ -31,6 +31,8 @@ add_library(McBopomofoLMLib
         UTF8Helper.cpp
         UserOverrideModel.h
         UserOverrideModel.cpp
+        OneShotOverride.h
+        OneShotOverride.cpp
         UserPhrasesLM.h
         UserPhrasesLM.cpp
         VariantAnnotator.h
@@ -103,7 +105,8 @@ if (ENABLE_TEST)
                 UTF8HelperTest.cpp
                 UserOverrideModelTest.cpp
                 UserPhrasesLMTest.cpp
-                VariantAnnotatorTest.cpp)
+                VariantAnnotatorTest.cpp
+                OneShotOverrideTest.cpp)
         target_include_directories(McBopomofoLMLibTest PRIVATE ..)
         target_link_libraries(McBopomofoLMLibTest GTest::gtest_main McBopomofoLMLib gramambular2_lib)
         include(GoogleTest)

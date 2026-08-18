@@ -61,6 +61,8 @@ import NSStringUtils
 ///   create a new user phrase.
 /// - Choosing Candidate: The candidate window is open to let the user to choose
 ///   one among the candidates.
+/// - One-Shot Suggestion: At most one engine multi-character candidate is
+///   offered before commit. Accept replaces a span; dismiss keeps the buffer.
 class InputState: NSObject {
 
     /// Represents that the input controller is deactivated.
@@ -590,6 +592,48 @@ class InputState: NSObject {
     }
 
     // MARK: -
+
+    /// Offers one engine multi-character candidate at commit time.
+    /// Accept replaces a span and returns to Inputting. Dismiss does not apply.
+    @objc(InputStateOneShotSuggestion)
+    class OneShotSuggestion: NotEmpty, CandidateProvider {
+        @objc private(set) var previousState: Inputting
+        @objc private(set) var loc: UInt
+        @objc private(set) var candidates: [Candidate]
+        @objc private(set) var useVerticalMode: Bool
+
+        @objc init(
+            previousState: Inputting, loc: UInt, candidates: [Candidate], useVerticalMode: Bool
+        ) {
+            self.previousState = previousState
+            self.loc = loc
+            self.candidates = candidates
+            self.useVerticalMode = useVerticalMode
+            super.init(
+                composingBuffer: previousState.composingBuffer,
+                cursorIndex: previousState.cursorIndex)
+        }
+
+        @objc var attributedString: NSAttributedString {
+            previousState.attributedString
+        }
+
+        override var description: String {
+            "<InputState.OneShotSuggestion, loc:\(loc), candidates:\(candidates), composingBuffer:\(composingBuffer), cursorIndex:\(cursorIndex)>"
+        }
+
+        var candidateCount: Int {
+            candidates.count
+        }
+
+        func candidate(at index: Int) -> String {
+            candidates[index].displayText
+        }
+
+        func reading(at index: Int) -> String? {
+            candidates[index].reading
+        }
+    }
 
     /// Represents that the user is choosing in a candidates list
     /// in the associated phrases mode.
