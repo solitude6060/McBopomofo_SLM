@@ -1,0 +1,50 @@
+{
+  "frozen_at": "2026-08-17T23:32:24+08:00",
+  "algorithm": "sha256",
+  "purpose": "Step 0 rule/fixture freeze. These files are regression-only. Do not add deterministic rules or edit these fixtures to chase accuracy.",
+  "regression_gate": {
+    "canonical": "234/234 exact, max_p95=1148us, 2026-08-17T23:32+08:00, validate_deterministic_gate.py",
+    "heldout_clean": "63/63 exact, max_p95=1047us, 2026-08-17T23:32+08:00, validate_deterministic_gate.py --heldout"
+  },
+  "notes": [
+    "heldout_generalization.jsonl and heldout_generalization_clean.jsonl are byte-identical at freeze time.",
+    "Unfreeze requires an explicit ADR and a new freeze snapshot."
+  ],
+  "files": [
+    {
+      "path": "Source/Engine/DeterministicContextualScorer.cpp",
+      "sha256": "9ce38467cb006f8ff33e7b61f36eb25aedcc75bb60e71f0fbb1508141fc77297",
+      "bytes": 29199
+    },
+    {
+      "path": "Source/Engine/DeterministicContextualScorer.h",
+      "sha256": "fee4c9e58c404be90986a4d9b9ed49b99bd976c197f61059e8429b62504be38c",
+      "bytes": 3371
+    },
+    {
+      "path": "Tests/fixtures/contextual_bopomofo/taiwan_ambiguous.jsonl",
+      "sha256": "70f0c81437ecf5e8bbd4ab64627946895fa199004e316ba8cbb06db95653def4",
+      "bytes": 31747
+    },
+    {
+      "path": "Tests/fixtures/contextual_bopomofo/english_mixed.jsonl",
+      "sha256": "3c446614c2aa4b0fab83b9447b3b4e42751fb3a5e4849ad49e3bf5e92e019a9a",
+      "bytes": 14942
+    },
+    {
+      "path": "Tests/fixtures/contextual_bopomofo/taiwan_specific.jsonl",
+      "sha256": "81f4c81ca22fb22994200e903e7ed7b4ddd01f70400e14da24233f464e47af90",
+      "bytes": 19967
+    },
+    {
+      "path": "Tests/fixtures/contextual_bopomofo/heldout_generalization.jsonl",
+      "sha256": "a2b5a4e58afd72ebc700e09863bf166ba46d7c4e6261b2b0ed0d257470dea80f",
+      "bytes": 21890
+    },
+    {
+      "path": "Tests/fixtures/contextual_bopomofo/heldout_generalization_clean.jsonl",
+      "sha256": "a2b5a4e58afd72ebc700e09863bf166ba46d7c4e6261b2b0ed0d257470dea80f",
+      "bytes": 21890
+    }
+  ]
+}
