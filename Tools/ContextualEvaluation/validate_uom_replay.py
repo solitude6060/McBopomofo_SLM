@@ -48,7 +48,21 @@ def parse_summary(stdout_text):
     return summary
 
 
-def validate_summary(summary, persist=False, oneshot=False):
+def format_seconds(value):
+    number = float(value)
+    if number.is_integer():
+        return str(int(number))
+    return repr(number)
+
+
+def validate_summary(
+    summary,
+    persist=False,
+    oneshot=False,
+    halflife=None,
+    suggest_delay=None,
+    fixture_name=None,
+):
     errors = []
     for key in REQUIRED_SUMMARY:
         if key not in summary:
@@ -103,6 +117,45 @@ def validate_summary(summary, persist=False, oneshot=False):
                 f"prefix_harms={summary.get('prefix_harms')}; "
                 "oneshot must not flip mid-input prefixes"
             )
+    if suggest_delay is not None and not persist and not oneshot:
+        replay_fixture = fixture_name in (None, "adaptation_replay.jsonl")
+        if replay_fixture and suggest_delay == 0:
+            if summary["same_key_hits"] != 2:
+                errors.append(
+                    f"same_key_hits={summary['same_key_hits']}; "
+                    "suggest-delay 0 must keep same-key 2"
+                )
+            if summary["transfer_hits"] != 0:
+                errors.append(
+                    f"transfer_hits={summary['transfer_hits']}; "
+                    "suggest-delay 0 must keep transfer 0"
+                )
+            if summary["restart_hits"] != 0:
+                errors.append(
+                    f"restart_hits={summary['restart_hits']}; "
+                    "suggest-delay 0 must keep restart 0 on default memory"
+                )
+        half_life_seconds = 5400.0 if halflife is None else float(halflife)
+        twenty = 20.0 * half_life_seconds
+        # Score is zero only when decay < 1/1048576, i.e. after 20 half-lives.
+        # BasicOperation still hits at exactly 20 and is empty at 21.
+        if replay_fixture and half_life_seconds > 0 and suggest_delay == twenty:
+            if summary["same_key_hits"] != 2:
+                errors.append(
+                    f"same_key_hits={summary['same_key_hits']}; "
+                    "exactly 20 half-lives must keep same-key 2"
+                )
+        if replay_fixture and half_life_seconds > 0 and suggest_delay > twenty:
+            if summary["same_key_hits"] != 0:
+                errors.append(
+                    f"same_key_hits={summary['same_key_hits']}; "
+                    "suggest-delay after 20 half-lives must drop same-key hits to 0"
+                )
+            if summary["restart_hits"] != 0:
+                errors.append(
+                    f"restart_hits={summary['restart_hits']}; "
+                    "suggest-delay after 20 half-lives must drop restart hits to 0"
+                )
     return errors
 
 
@@ -157,6 +210,43 @@ def run_self_test():
     if not validate_summary(oneshot_bad, oneshot=True):
         print("SELF-TEST FAIL: oneshot_transfer_hits error expected", file=sys.stderr)
         return 1
+    delay_zero = dict(good)
+    delay_zero["same_key_hits"] = 2
+    delay_zero["harmful_overrides"] = 0
+    if validate_summary(delay_zero, suggest_delay=0):
+        print("SELF-TEST FAIL: suggest-delay 0 summary rejected", file=sys.stderr)
+        return 1
+    delay_zero_bad = dict(delay_zero)
+    delay_zero_bad["same_key_hits"] = 0
+    if not validate_summary(delay_zero_bad, suggest_delay=0):
+        print("SELF-TEST FAIL: suggest-delay 0 same_key_hits error expected", file=sys.stderr)
+        return 1
+    exactly_twenty = dict(good)
+    exactly_twenty["same_key_hits"] = 2
+    if validate_summary(exactly_twenty, halflife=5400, suggest_delay=108000):
+        print("SELF-TEST FAIL: exact 20 half-life delay summary rejected", file=sys.stderr)
+        return 1
+    exactly_twenty_bad = dict(good)
+    exactly_twenty_bad["same_key_hits"] = 0
+    if not validate_summary(exactly_twenty_bad, halflife=5400, suggest_delay=108000):
+        print(
+            "SELF-TEST FAIL: exact 20 half-life delay same_key_hits error expected",
+            file=sys.stderr,
+        )
+        return 1
+    decayed = dict(good)
+    decayed["same_key_hits"] = 0
+    if validate_summary(decayed, halflife=5400, suggest_delay=113400):
+        print("SELF-TEST FAIL: 21 half-life delay summary rejected", file=sys.stderr)
+        return 1
+    decayed_bad = dict(good)
+    decayed_bad["same_key_hits"] = 2
+    if not validate_summary(decayed_bad, halflife=5400, suggest_delay=113400):
+        print(
+            "SELF-TEST FAIL: 21 half-life delay same_key_hits error expected",
+            file=sys.stderr,
+        )
+        return 1
     print("SELF-TEST PASSED: uom_replay summary schema", file=sys.stderr)
     return 0
 
@@ -192,6 +282,18 @@ def main():
         action="store_true",
         help="Accept one engine multi-character candidate after the full probe",
     )
+    parser.add_argument(
+        "--halflife",
+        type=float,
+        default=None,
+        help="Pass --halflife=<seconds> to the runner (default 5400)",
+    )
+    parser.add_argument(
+        "--suggest-delay",
+        type=float,
+        default=None,
+        help="Seconds added to suggest timestamps only; observe stays at kNow",
+    )
     args = parser.parse_args()
     if args.self_test:
         return run_self_test()
@@ -224,6 +326,10 @@ def main():
         cmd.append("--persist=" + args.persist)
     if args.oneshot:
         cmd.append("--oneshot")
+    if args.halflife is not None:
+        cmd.append("--halflife=" + format_seconds(args.halflife))
+    if args.suggest_delay is not None:
+        cmd.append("--suggest-delay=" + format_seconds(args.suggest_delay))
     try:
         result = subprocess.run(
             cmd, capture_output=True, text=True, timeout=120
@@ -261,7 +367,12 @@ def main():
             print(result.stderr, file=sys.stderr)
         return 1
     errors = validate_summary(
-        summary, persist=args.persist is not None, oneshot=args.oneshot
+        summary,
+        persist=args.persist is not None,
+        oneshot=args.oneshot,
+        halflife=args.halflife,
+        suggest_delay=args.suggest_delay,
+        fixture_name=os.path.basename(args.fixture),
     )
     if args.key in ("head_reading", "head_next") and args.memory == "isolated":
         fixture_name = os.path.basename(args.fixture)
@@ -277,6 +388,12 @@ def main():
         return 1
     prefix = summary.get("prefix_harms")
     prefix_text = f", prefix_harms {prefix}" if prefix is not None else ""
+    delay_text = ""
+    if args.halflife is not None or args.suggest_delay is not None:
+        delay_text = (
+            f", halflife {args.halflife if args.halflife is not None else 5400}, "
+            f"suggest_delay {args.suggest_delay if args.suggest_delay is not None else 0}"
+        )
     print(
         "REPLAY PASS: "
         f"key={args.key} memory={args.memory} "
@@ -286,7 +403,8 @@ def main():
         f"transfer {summary['transfer_hits']}/{summary['transfer_rows']}, "
         f"harmful {summary['harmful_overrides']}, "
         f"restart_hits {summary['restart_hits']}"
-        f"{prefix_text}",
+        f"{prefix_text}"
+        f"{delay_text}",
         file=sys.stderr,
     )
     return 0
