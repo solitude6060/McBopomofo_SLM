@@ -15,6 +15,12 @@ xcuserdata
 .swiftpm
 .vscode
 .omc/
+.omo/
+.sisyphus/
+task_plan.md
+Tools/ContextualEvaluation/build_fcitx_original/
+data/opendata/7307_orglist.big5.csv
+docs/reports/experiments/adaptation/uom_replay_2026_08_17.jsonl
 __pycache__
 Testing/
 codecov_comment.md
