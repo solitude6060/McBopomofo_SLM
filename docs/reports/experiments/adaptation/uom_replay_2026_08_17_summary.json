@@ -1,0 +1,35 @@
+{
+  "id": "uom-replay-current-2026-08-17",
+  "date": "2026-08-17T23:59:00+08:00",
+  "runner": "Tools/ContextualEvaluation/build/uom_replay",
+  "data": "Source/Data/data.txt",
+  "fixture": "Tests/fixtures/contextual_bopomofo/adaptation_replay.jsonl",
+  "raw_first_run_typo": "docs/reports/experiments/adaptation/uom_replay_2026_08_17.jsonl",
+  "raw_v2_ten_rows": "docs/reports/experiments/adaptation/uom_replay_2026_08_17_v2.jsonl",
+  "raw_canonical": "docs/reports/experiments/adaptation/uom_replay_2026_08_17_v3.jsonl",
+  "uom_constants": {
+    "capacity": 500,
+    "half_life_seconds": 5400,
+    "persist": false,
+    "key": "FormObservationKey three-node"
+  },
+  "summary": {
+    "total_rows": 13,
+    "same_key_rows": 5,
+    "same_key_hits": 2,
+    "same_key_baseline_exact": 3,
+    "same_key_after_exact": 5,
+    "transfer_rows": 8,
+    "transfer_hits": 0,
+    "transfer_baseline_exact": 4,
+    "transfer_after_exact": 4,
+    "informative_transfer_misses": 4,
+    "harmful_overrides": 0,
+    "restart_hits": 0
+  },
+  "notes": [
+    "hit means after_exact and not baseline_exact",
+    "informative transfer rows are those with baseline_exact=false: ar-xfer-001, ar-xfer-006, ar-xfer-007, ar-xfer-008",
+    "Do not change half-life, key, or persistence in the same step as this measurement"
+  ]
+}

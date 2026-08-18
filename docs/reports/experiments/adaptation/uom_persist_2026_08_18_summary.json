@@ -1,0 +1,35 @@
+{
+  "id": "uom-persist-2026-08-18",
+  "date": "2026-08-18T01:40:00+08:00",
+  "runner": "Tools/ContextualEvaluation/build/uom_replay",
+  "data": "Source/Data/data.txt",
+  "fixture": "Tests/fixtures/contextual_bopomofo/adaptation_replay.jsonl",
+  "raw_canonical": "docs/reports/experiments/adaptation/uom_persist_2026_08_18.jsonl",
+  "uom_constants": {
+    "capacity": 500,
+    "half_life_seconds": 5400,
+    "persist": true,
+    "key": "FormObservationKey three-node"
+  },
+  "summary": {
+    "total_rows": 13,
+    "same_key_rows": 5,
+    "same_key_hits": 2,
+    "same_key_baseline_exact": 3,
+    "same_key_after_exact": 5,
+    "transfer_rows": 8,
+    "transfer_hits": 0,
+    "transfer_baseline_exact": 4,
+    "transfer_after_exact": 4,
+    "harmful_overrides": 0,
+    "prefix_harms": 0,
+    "restart_hits": 2
+  },
+  "default_path_restart_hits": 0,
+  "notes": [
+    "hit means after_exact and not baseline_exact",
+    "persist restart_hits equals same_key_hits plus transfer_hits",
+    "Runtime file is user-override-model.txt next to data.txt",
+    "Do not treat the persist file as public n-gram or SLM training data"
+  ]
+}

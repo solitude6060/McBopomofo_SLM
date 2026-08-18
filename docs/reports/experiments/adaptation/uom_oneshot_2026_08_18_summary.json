@@ -1,0 +1,26 @@
+{
+  "id": "uom-oneshot-2026-08-18",
+  "date": "2026-08-18T01:55:00+08:00",
+  "runner": "Tools/ContextualEvaluation/build/uom_replay",
+  "data": "Source/Data/data.txt",
+  "fixture": "Tests/fixtures/contextual_bopomofo/adaptation_replay.jsonl",
+  "raw_canonical": "docs/reports/experiments/adaptation/uom_oneshot_2026_08_18.jsonl",
+  "harm_fixture_prefix_harms": 0,
+  "summary": {
+    "same_key_hits": 2,
+    "transfer_hits": 0,
+    "oneshot_offered": 4,
+    "oneshot_hits": 5,
+    "oneshot_transfer_hits": 3,
+    "oneshot_extra": 3,
+    "harmful_overrides": 0,
+    "prefix_harms": 0
+  },
+  "notes": [
+    "Typing path stays three-node and end-only",
+    "Oneshot stores head_next at observe and applies one high-score engine candidate after the full probe",
+    "ar-xfer-001 offered 再說 and the walk became 別再說",
+    "ar-xfer-007 became 再說一變; 遍 is a different homophone",
+    "KeyHandler unchanged"
+  ]
+}

@@ -1798,6 +1798,106 @@
         "Add Ubuntu install/uninstall packaging smoke coverage",
         "Run content-free Fcitx5 dogfood with deterministic reranker enabled"
       ]
+    },
+    {
+      "id": "uom-replay-current-2026-08-17",
+      "name": "Current UserOverrideModel walk replay",
+      "status": "measured",
+      "date": "2026-08-17T23:59:00+08:00",
+      "branch": "slm-phase2-learnable",
+      "model": null,
+      "results_dir": "docs/reports/experiments/adaptation/",
+      "summary_file": "docs/reports/experiments/adaptation/uom_replay_2026_08_17_summary.json",
+      "result_files": [
+        "docs/reports/experiments/adaptation/uom_replay_2026_08_17_v3.jsonl",
+        "docs/reports/experiments/adaptation/uom_replay_2026_08_17.md"
+      ],
+      "description": "Walk-based observe/suggest of the current UserOverrideModel (capacity 500, half-life 5400 s, three-node key, no serialize) on adaptation_replay.jsonl.",
+      "exit_gate_result": "MEASURED",
+      "exit_gate_criterion": "Report same-key hit, transfer hit, harmful overrides, restart hits without changing the model",
+      "exit_gate_actual": "same_key_hits 2/5, transfer_hits 0/8, informative transfer misses 4, harmful_overrides 0, restart_hits 0",
+      "conclusion": "Same-key probes that were wrong at baseline became exact after observe. None of the four transfer probes that were wrong at baseline changed. Do not persist or change the key in this step."
+    },
+    {
+      "id": "uom-key-arm-2026-08-18",
+      "name": "UserOverrideModel replay key arms K0/K1/K2",
+      "status": "measured",
+      "date": "2026-08-18T00:40:00+08:00",
+      "branch": "slm-phase2-learnable",
+      "model": null,
+      "results_dir": "docs/reports/experiments/adaptation/",
+      "summary_file": "docs/reports/experiments/adaptation/uom_key_arm_2026_08_18_summary.json",
+      "result_files": [
+        "docs/reports/experiments/adaptation/uom_key_k0_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_key_k1_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_key_k2_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_key_k1_harm_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_key_k2_harm_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_key_arm_2026_08_18.md"
+      ],
+      "description": "Replay-only key arms on UserOverrideModel. K0 is the current three-node key. K1 is a syllable head_reading key. K2 is head_next plus re-suggest. KeyHandler unchanged.",
+      "exit_gate_result": "K1_REJECTED_K2_NEEDS_USER",
+      "exit_gate_criterion": "Transfer without mid-input prefix harm; do not wire KeyHandler from replay alone",
+      "exit_gate_actual": "K0 same_key 2/5 transfer 0/8 prefix_harms 0; K1 same_key 1/5 transfer 1/8 prefix_harms 1; K2 same_key 2/5 transfer 2/8 prefix_harms 0",
+      "conclusion": "Do not promote K1. K2 is the only arm that transfers more than K0 without prefix harm on these fixtures. Wiring K2 needs a KeyHandler re-suggest protocol change. Do not train n-gram from this result."
+    },
+    {
+      "id": "opendata-name-heldout-2026-08-18",
+      "name": "New OGDL-name conversion held-out",
+      "status": "measured",
+      "date": "2026-08-18T00:50:00+08:00",
+      "branch": "slm-phase2-learnable",
+      "model": null,
+      "results_dir": "docs/reports/experiments/adaptation/",
+      "summary_file": "docs/reports/experiments/adaptation/heldout_opendata_names_2026_08_18.md",
+      "result_files": [
+        "docs/reports/experiments/adaptation/heldout_opendata_names_2026_08_18_baseline.jsonl",
+        "docs/reports/experiments/adaptation/heldout_opendata_names_2026_08_18_deterministic.jsonl",
+        "docs/reports/experiments/adaptation/lexicon_opendata_coverage_2026_08_18.md"
+      ],
+      "description": "14 hand-crafted MIT sentences mentioning Taiwan official names. Not in the Step 0 freeze. Readings hand-annotated. Coverage list from data.gov.tw dataset 7307 names only.",
+      "exit_gate_result": "MEASURED",
+      "exit_gate_criterion": "New held-out disjoint from frozen 234/63; label missing whole phrases separately from ranking",
+      "exit_gate_actual": "baseline and deterministic both 9/14 exact (64.2857%); same five failures; 3 of 5 missing_candidate rows were exact via composition",
+      "conclusion": "Deterministic rules did not change this set. Failures are 坐/作, 覆/復, 臺/台, 里/理. Do not add frozen rules from this file. Do not train n-gram on dataset 7307 while it is held-out."
+    },
+    {
+      "id": "uom-persist-2026-08-18",
+      "name": "UserOverrideModel persist replay",
+      "status": "measured",
+      "date": "2026-08-18T01:40:00+08:00",
+      "branch": "slm-phase2-learnable",
+      "model": null,
+      "results_dir": "docs/reports/experiments/adaptation/",
+      "summary_file": "docs/reports/experiments/adaptation/uom_persist_2026_08_18_summary.json",
+      "result_files": [
+        "docs/reports/experiments/adaptation/uom_persist_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_persist_2026_08_18.md"
+      ],
+      "description": "save/load of UserOverrideModel. Default replay still has restart_hits 0. --persist writes after observe and loads into a new instance. Runtime file is user-override-model.txt next to data.txt.",
+      "exit_gate_result": "MEASURED",
+      "exit_gate_criterion": "Persist restores same-key hits after a new instance; default path stays restart_hits 0",
+      "exit_gate_actual": "default restart_hits 0; persist same_key 2/5 transfer 0/8 restart_hits 2 prefix_harms 0",
+      "conclusion": "Persist restores the two same-key improvements. Transfer stays 0/8. The persist file is local product recall, not a public training corpus. macOS and Ubuntu dogfood still need the user."
+    },
+    {
+      "id": "uom-oneshot-2026-08-18",
+      "name": "One-shot multi-character accept replay",
+      "status": "measured",
+      "date": "2026-08-18T01:55:00+08:00",
+      "branch": "slm-phase2-learnable",
+      "model": null,
+      "results_dir": "docs/reports/experiments/adaptation/",
+      "summary_file": "docs/reports/experiments/adaptation/uom_oneshot_2026_08_18_summary.json",
+      "result_files": [
+        "docs/reports/experiments/adaptation/uom_oneshot_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_oneshot_2026_08_18.md"
+      ],
+      "description": "After a full probe, accept one engine multi-character candidate that contains a head_next suggestion. Typing path stays three-node and end-only. KeyHandler unchanged.",
+      "exit_gate_result": "MEASURED",
+      "exit_gate_criterion": "oneshot_transfer_hits >= 1, prefix_harms 0, no invented text",
+      "exit_gate_actual": "oneshot_transfer_hits 3, oneshot_extra 3, oneshot_offered 4, prefix_harms 0, harmful_overrides 0",
+      "conclusion": "Accepting 再說 or 做事 once fixed 別再說, 不要再說, and 別做事. 再說一遍 stayed 再說一變. Do not wire silent per-key re-suggest. KeyHandler UI is a later slice."
     }
   ]
 }
