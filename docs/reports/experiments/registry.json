@@ -1898,6 +1898,31 @@
       "exit_gate_criterion": "oneshot_transfer_hits >= 1, prefix_harms 0, no invented text",
       "exit_gate_actual": "oneshot_transfer_hits 3, oneshot_extra 3, oneshot_offered 4, prefix_harms 0, harmful_overrides 0",
       "conclusion": "Accepting 再說 or 做事 once fixed 別再說, 不要再說, and 別做事. 再說一遍 stayed 再說一變. Do not wire silent per-key re-suggest. KeyHandler UI is a later slice."
+    },
+    {
+      "id": "uom-halflife-2026-08-18",
+      "name": "UserOverrideModel half-life suggest-delay measurement",
+      "status": "measured",
+      "date": "2026-08-18T11:40:00+08:00",
+      "branch": "slm-halflife-replay",
+      "model": null,
+      "results_dir": "docs/reports/experiments/adaptation/",
+      "summary_file": "docs/reports/experiments/adaptation/uom_halflife_2026_08_18_summary.json",
+      "result_files": [
+        "docs/reports/experiments/adaptation/uom_halflife_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_halflife_d0_hl5400_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_halflife_d28800_hl5400_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_halflife_d108000_hl5400_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_halflife_d28800_hl86400_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_halflife_d28800_hl604800_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_halflife_d113400_hl5400_2026_08_18.jsonl",
+        "docs/reports/experiments/adaptation/uom_halflife_2026_08_18.md"
+      ],
+      "description": "Replay-only --halflife and --suggest-delay. Observe stays at kNow. Production kObservedOverrideHalflife stays 5400. Public n-gram stays closed.",
+      "exit_gate_result": "MEASURED",
+      "exit_gate_criterion": "harmful_overrides 0 and prefix_harms 0 on every matrix arm; no production half-life change without a user gate",
+      "exit_gate_actual": "five arms same_key 2 transfer 0 prefix_harms 0 harmful_overrides 0; delay 113400 at 5400 same_key 0; LanguageModelManager.mm unchanged",
+      "conclusion": "Suggest-delay moves replay counts after 20 half-lives. Exactly 20 half-lives still has same_key 2. Do not change production 5400. Do not train public n-gram. User gate still required before LanguageModelManager.mm."
     }
   ]
 }
