@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "Engine/McBopomofoLM.h"
+#include "Engine/OneShotOverride.h"
 #include "Engine/UserOverrideModel.h"
 #include "Engine/gramambular2/reading_grid.h"
 
@@ -515,80 +516,26 @@ static CandidateProbe probeCandidates(
   return probe;
 }
 
-static std::string walkValueCovering(
-    const Formosa::Gramambular2::ReadingGrid::WalkResult& walk, size_t loc) {
-  size_t covered = 0;
-  for (const auto& node : walk.nodes) {
-    const size_t start = covered;
-    covered += node->spanningLength();
-    if (loc >= start && loc < covered) {
-      return node->value();
-    }
-  }
-  return "";
-}
-
 static std::string applyOneshot(
     Formosa::Gramambular2::ReadingGrid* grid,
     McBopomofo::UserOverrideModel* uom, double timestamp) {
-  if (uom == nullptr || grid->length() == 0) {
-    return "";
-  }
-  const auto walk = grid->walk();
-  std::string bestValue;
-  size_t bestLoc = 0;
-  size_t bestSize = 0;
-  for (size_t loc = 0; loc < grid->length(); ++loc) {
-    const std::string key = syllableKey(grid, loc, KeyStyle::HeadNext);
-    if (key.empty()) {
-      continue;
-    }
-    const auto suggestion = uom->suggest(key, timestamp);
-    if (suggestion.empty()) {
-      continue;
-    }
-    const std::string current = walkValueCovering(walk, loc);
-    if (current.find(suggestion.candidate) != std::string::npos) {
-      continue;
-    }
-    std::vector<size_t> locs = {loc};
-    if (loc > 0) {
-      locs.push_back(loc - 1);
-    }
-    for (size_t candLoc : locs) {
-      for (const auto& candidate : grid->candidatesAt(candLoc)) {
-        if (readingSpan(candidate.reading) < 2 || candidate.value.empty()) {
-          continue;
-        }
-        if (candidate.value.find(suggestion.candidate) == std::string::npos) {
-          continue;
-        }
-        if (walkValueCovering(walk, candLoc) == candidate.value) {
-          continue;
-        }
-        if (candidate.value.size() > bestSize) {
-          bestSize = candidate.value.size();
-          bestValue = candidate.value;
-          bestLoc = candLoc;
-        }
-      }
-    }
-  }
-  if (bestValue.empty()) {
+  const McBopomofo::OneShotOverride pick =
+      McBopomofo::PickOneShotOverride(*grid, uom, timestamp);
+  if (pick.empty()) {
     return "";
   }
   const bool ok = grid->overrideCandidate(
-      bestLoc, bestValue,
+      pick.loc, pick.value,
       Formosa::Gramambular2::ReadingGrid::Node::OverrideType::
           kOverrideValueWithHighScore);
   if (!ok) {
     return "";
   }
   if (debugReplay()) {
-    fprintf(stderr, "oneshot loc=%zu value='%s' walk='%s'\n", bestLoc,
-            bestValue.c_str(), joinWalk(grid->walk()).c_str());
+    fprintf(stderr, "oneshot loc=%zu value='%s' walk='%s'\n", pick.loc,
+            pick.value.c_str(), joinWalk(grid->walk()).c_str());
   }
-  return bestValue;
+  return pick.value;
 }
 
 static std::string convertWithUom(

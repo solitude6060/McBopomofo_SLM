@@ -19,6 +19,7 @@
 		6A4F5F982879E838008C4307 /* reading_grid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6A4F5F932879E838008C4307 /* reading_grid.cpp */; };
 		6A660A702EAF371000D53D7B /* ByteBlockBackedDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6A660A6F2EAF371000D53D7B /* ByteBlockBackedDictionary.cpp */; };
 		D4C0DE132F33A00100D53D7B /* DeterministicContextualScorer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C0DE122F33A00100D53D7B /* DeterministicContextualScorer.cpp */; };
+		D4C0DE322F3B180100D53D7B /* OneShotOverride.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C0DE312F3B180100D53D7B /* OneShotOverride.cpp */; };
 		6A68C1C32EC7F2C0005284A0 /* Localizable.stringsdict in Resources */ = {isa = PBXBuildFile; fileRef = 6A68C1C12EC7F2C0005284A0 /* Localizable.stringsdict */; };
 		6A6ED16B2797650A0012872E /* template-phrases-replacement.txt in Resources */ = {isa = PBXBuildFile; fileRef = 6A6ED1632797650A0012872E /* template-phrases-replacement.txt */; };
 		6A6ED16C2797650A0012872E /* template-data.txt in Resources */ = {isa = PBXBuildFile; fileRef = 6A6ED1652797650A0012872E /* template-data.txt */; };
@@ -152,6 +153,8 @@
 		D4C0DE102F33A00100D53D7B /* ContextualScorer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContextualScorer.h; sourceTree = "<group>"; };
 		D4C0DE112F33A00100D53D7B /* DeterministicContextualScorer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeterministicContextualScorer.h; sourceTree = "<group>"; };
 		D4C0DE122F33A00100D53D7B /* DeterministicContextualScorer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DeterministicContextualScorer.cpp; sourceTree = "<group>"; };
+		D4C0DE302F3B180100D53D7B /* OneShotOverride.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OneShotOverride.h; sourceTree = "<group>"; };
+		D4C0DE312F3B180100D53D7B /* OneShotOverride.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = OneShotOverride.cpp; sourceTree = "<group>"; };
 		6A68C1C22EC7F2C0005284A0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = en; path = en.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
 		6A68C1C42EC7F6B7005284A0 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.stringsdict"; sourceTree = "<group>"; };
 		6A6ED1642797650A0012872E /* Base */ = {isa = PBXFileReference; lastKnownFileType = text; name = Base; path = "Base.lproj/template-phrases-replacement.txt"; sourceTree = "<group>"; };
@@ -399,6 +402,8 @@
 				D44FB74C2792189A003C80A6 /* PhraseReplacementMap.h */,
 				D47F7DD2278C1263002F9DD7 /* UserOverrideModel.cpp */,
 				D47F7DD1278C1263002F9DD7 /* UserOverrideModel.h */,
+				D4C0DE312F3B180100D53D7B /* OneShotOverride.cpp */,
+				D4C0DE302F3B180100D53D7B /* OneShotOverride.h */,
 				D41355DC278EA3ED005E5CBD /* UserPhrasesLM.cpp */,
 				D41355DD278EA3ED005E5CBD /* UserPhrasesLM.h */,
 				6ADF5B162BA513E000577D98 /* UTF8Helper.cpp */,
@@ -782,6 +787,7 @@
 				D47F7DCE278BFB57002F9DD7 /* PreferencesWindowController.swift in Sources */,
 				D41355DB278E6D17005E5CBD /* McBopomofoLM.cpp in Sources */,
 				D47F7DD3278C1263002F9DD7 /* UserOverrideModel.cpp in Sources */,
+				D4C0DE322F3B180100D53D7B /* OneShotOverride.cpp in Sources */,
 				6A0D4F4515FC0EB100ABF4B3 /* Mandarin.cpp in Sources */,
 				6ACC3D452793701600F1B140 /* ParselessLM.cpp in Sources */,
 				D4CB1A5B2B389B78006EA984 /* DictionaryService.swift in Sources */,
